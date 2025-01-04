@@ -29,20 +29,17 @@ Covers:
   - async CRUD operations
 - `Redis` in-memory storage
   - async operations
-- `.env` based configuration parsing
-- `tracing` based logs
-- `Docker` based configurations
-  - `PostgreSQL` and `Redis` services
-  - Building a full stack: API + `PostgreSQL` + `Redis`
+- Configuration settings
+  - loading and parsing `.env` file
+  - using environment variables
+- Logs
+  - `tracing` based logs
 - Tests
   - `Docker` based end-to-end tests
   - GitHub CI configuration for running tests
-
-## REST API
-
-Please check for available API: [tests/endpoints.http](/tests/endpoints.http)
-
-Visual Studio Code [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) is helpfull to play with API.
+- `Docker` based configurations
+  - `PostgreSQL` and `Redis` services
+  - building a full stack services: API + `PostgreSQL` + `Redis`
 
 ## Run
 
@@ -59,21 +56,52 @@ Running the Docker based full stack build: [docker-compose.full.yml](docker-comp
 docker-compose -f docker-compose.full.yml up -d
 ```
 
-Running the service in test configuration:
+## REST API endpoints
 
-```shell
-ENV_TEST=1 cargo run
-```
+Please check for the list of available REST API endpoints: [tests/endpoints.http](/tests/endpoints.http)
+
+REST API endpoints can be easily tested using following tools:
+
+- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
+- [curl](https://curl.se/) samples:
+
+  Heartbeat
+
+  ```shell
+  curl -i http://127.0.0.1:8080/v1/heartbeat/1
+  ```
+
+  Login
+
+  ```shell
+  curl -i http://127.0.0.1:8080/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password_hash":"7c44575b741f02d49c3e988ba7aa95a8fb6d90c0ef63a97236fa54bfcfbd9d51"}'
+  ```
+
+  List of users
+
+  ```shell
+  curl -i http://127.0.0.1:8080/v1/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkNTFlNjE4Ny1jYmFjLTQ0ZmEtOWE5NS04ZjFkZWJkYmFlZWEiLCJqdGkiOiIwN2Y3OWE0OC1kMWFhLTQ1ZjItOWE5NS05Y2M5MGZiY2UyYTciLCJpYXQiOjE3MzYwMTA3MjIsImV4cCI6MTczNjAxNDMyMiwidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.3f2c_5PyPXMhgu0FIX4--SGjnSDW1GLxL0ba6gSImfM"
+  ```
 
 ## Tests
 
 REST API tests: [/tests](/tests)
 
-Running the API tests:
+Running tests:
 
 ```shell
 docker-compose up -d
 cargo test
+```
+
+Running the service in test configuration:
+
+```shell
+ENV_TEST=1 cargo run
 ```
 
 ## Logging
