@@ -38,6 +38,12 @@ Covers:
   - `docker` based end-to-end tests
   - GitHub CI configuration for running tests
 
+## REST API
+
+Please check for available API: [tests/endpoints.http](/tests/endpoints.http)
+
+Visual Studio Code [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) is helpfull to play with API.
+
 ## Run
 
 Running the REST API service (debug release):
@@ -47,17 +53,17 @@ docker-compose up -d
 cargo run
 ```
 
+Running the Docker based full stack build: [docker-compose.full.yml](docker-compose.full.yml)
+
+```shell
+docker-compose -f docker-compose.full.yml up -d
+```
+
 Running the service in test configuration:
 
 ```shell
 ENV_TEST=1 cargo run
 ```
-
-## REST API
-
-Please check for available API: [tests/endpoints.http](/tests/endpoints.http)
-
-Visual Studio Code [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) is helpfull to play with API.
 
 ## Tests
 
@@ -76,20 +82,6 @@ Setting the `RUST_LOG` - logging level on the launch:
 
 ```shell
 RUST_LOG=info,hyper=debug,axum_web=trace cargo run
-```
-
-## Using Docker
-
-Running the Redis and PostgreSQL services: [docker-compose.full.yml](docker-compose.full.yml)
-
-```shell
-docker-compose up -d
-```
-
-Running the full stack build: [docker-compose.full.yml](docker-compose.full.yml)
-
-```shell
-docker-compose -f docker-compose.full.yml up -d
 ```
 
 ## Project Stage
