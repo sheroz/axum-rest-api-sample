@@ -6,15 +6,15 @@ pub static CONFIG: OnceLock<Config> = OnceLock::new();
 
 #[derive(Debug)]
 pub struct Config {
-    // service
+    // REST API configuration.
     pub service_host: String,
     pub service_port: u16,
 
-    // redis
+    // Redis configuration.
     pub redis_host: String,
     pub redis_port: u16,
 
-    // postgres
+    // PostgreSQL configuration.
     pub postgres_user: String,
     pub postgres_password: String,
     pub postgres_host: String,
@@ -22,7 +22,7 @@ pub struct Config {
     pub postgres_db: String,
     pub postgres_connection_pool: u32,
 
-    // JWT
+    // JWT configuration.
     pub jwt_secret: String,
     pub jwt_keys: JwtKeys,
     pub jwt_expire_access_token_seconds: i64,
@@ -36,7 +36,7 @@ pub struct JwtKeys {
     pub decoding: DecodingKey,
 }
 
-// a blank impl fmt::Debug for JwtKeys
+// A blank impl fmt::Debug for JwtKeys
 // there is no debug(skip) option for #[derive(Debug)] currently in Rust 1.74
 impl fmt::Debug for JwtKeys {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -86,7 +86,7 @@ pub fn load() {
         ".env"
     };
 
-    // try to load environment variables from file
+    // Try to load environment variables from file.
     if dotenvy::from_filename(env_file).is_ok() {
         tracing::info!("{} file loaded", env_file);
     } else {
@@ -95,7 +95,7 @@ pub fn load() {
 
     let jwt_secret = env_get("JWT_SECRET");
 
-    // parse configuration
+    // Parse configuration.
     let config = Config {
         service_host: env_get("SERVICE_HOST"),
         service_port: env_parse("SERVICE_PORT"),

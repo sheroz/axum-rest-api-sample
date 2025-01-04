@@ -2,11 +2,11 @@ use redis::{aio::MultiplexedConnection, AsyncCommands, RedisResult};
 use std::collections::HashMap;
 use tokio::sync::MutexGuard;
 
-use super::{
+use crate::application::{
     app_const::*,
     security::jwt_claims::{ClaimsMethods, RefreshClaims},
+    state::SharedState,
 };
-use crate::application::state::SharedState;
 
 pub async fn revoke_global(state: &SharedState) -> bool {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
@@ -46,7 +46,7 @@ async fn is_global_revoked<T: ClaimsMethods>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
 ) -> Option<bool> {
-    // check in global revoke
+    // Check in global revoke.
     let redis_result: RedisResult<Option<String>> =
         redis.get(JWT_REDIS_REVOKE_GLOBAL_BEFORE_KEY).await;
     match redis_result {
@@ -77,7 +77,7 @@ async fn is_user_revoked<T: ClaimsMethods>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
 ) -> Option<bool> {
-    // check in user revoke
+    // Check in user revoke.
     let user_id = claims.get_sub();
     let redis_result: RedisResult<Option<String>> =
         redis.hget(JWT_REDIS_REVOKE_USER_BEFORE_KEY, user_id).await;
@@ -109,7 +109,7 @@ async fn is_token_revoked<T: ClaimsMethods>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
 ) -> Option<bool> {
-    // check the token in revoked list
+    // Check the token in revoked list.
     let redis_result: RedisResult<bool> = redis
         .hexists(JWT_REDIS_REVOKED_TOKENS_KEY, claims.get_jti())
         .await;
@@ -167,8 +167,8 @@ pub async fn is_revoked<T: std::fmt::Debug + ClaimsMethods>(
 }
 
 pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -> bool {
-    // adds the both refersh token and its paired access token into revoked list in Redis
-    // tokens are tracked by JWT ID that handles the cases of reusing lost tokens and multi-device scenarios
+    // Adds refersh token and its paired access token into revoked list in Redis.
+    // Tokens are tracked by JWT ID that handles the cases of reusing lost tokens and multi-device scenarios.
 
     let mut redis = state.redis.lock().await;
     let list_to_revoke = vec![&claims.jti, &claims.prf];

@@ -1,6 +1,6 @@
 [package]
 name = "axum-web"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Sheroz Khaydarov"]
 description = "Kick-start template for building REST API Web service in Rust using axum, JWT, SQLx, PostgreSQL, and Redis"
@@ -10,20 +10,20 @@ license = "MIT"
 
 [dependencies]
 dotenvy = "0.15"
-axum = { version = "0.7" }
-axum-extra = { version = "0.9", features = ["typed-header"] }
-tokio = { version = "1.40", features = ["full"] }
-bytes = "1.7"
+axum = { version = "0.8" }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tokio = { version = "1.42", features = ["full"] }
+bytes = "1.9"
 tower-http = { version = "0.6", features = ["cors"] }
 tracing = { version = "0.1", features = ["attributes"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http-body-util = { version = "0.1" }
-hyper = { version = "1.4", features = ["full"] }
+hyper = { version = "1.5", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-uuid = { version = "1.10", features = [
+uuid = { version = "1.11", features = [
     "v4",
     "fast-rng",
     "macro-diagnostics",
@@ -43,5 +43,5 @@ sqlx = { version = "0.8", features = [
 jsonwebtoken = { version = "9.3" }
 
 [dev-dependencies]
-serial_test = "3.1"
+serial_test = "3.2"
 reqwest = { version = "0.12", features = ["json"] }

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use axum::{
-    async_trait,
     extract::{FromRef, FromRequestParts},
     http::request::Parts,
     RequestPartsExt,
@@ -15,11 +14,9 @@ use serde::{Deserialize, Serialize};
 use crate::application::{
     api_error::ApiError,
     config,
-    security::{self, auth_error::*},
+    security::{self, auth_error::*, jwt_auth},
     state::SharedState,
 };
-
-use super::jwt_auth;
 
 /// [JWT Claims]
 /// [RFC7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4)
@@ -29,37 +26,37 @@ use super::jwt_auth;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccessClaims {
-    /// Subject
+    /// Subject.
     pub sub: String,
-    /// JWT ID
+    /// JWT ID.
     pub jti: String,
-    /// Issued At
+    /// Issued time.
     pub iat: usize,
-    /// Expiration Time
+    /// Expiration time.
     pub exp: usize,
-    /// Token Type
+    /// Token type.
     pub typ: u8,
-    /// Roles
+    /// Roles.
     pub roles: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RefreshClaims {
-    /// Subject
+    /// Subject.
     pub sub: String,
-    /// JWT ID
+    /// JWT ID.
     pub jti: String,
-    /// Issued At
+    /// Issued time.
     pub iat: usize,
-    /// Expiration Time
+    /// Expiration time.
     pub exp: usize,
-    /// Reference to paired access token
+    /// Reference to paired access token,
     pub prf: String,
-    /// Expiration time of paired access token
+    /// Expiration time of paired access token,
     pub pex: usize,
-    /// Token Type
+    /// Token type.
     pub typ: u8,
-    /// Roles
+    /// Roles.
     pub roles: String,
 }
 
@@ -136,7 +133,6 @@ fn is_role_admin(roles: &str) -> Result<(), AuthError> {
     Ok(())
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for AccessClaims
 where
     SharedState: FromRef<S>,
@@ -149,7 +145,6 @@ where
     }
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for RefreshClaims
 where
     SharedState: FromRef<S>,
@@ -168,7 +163,7 @@ where
     S: Send + Sync,
     T: for<'de> serde::Deserialize<'de> + std::fmt::Debug + ClaimsMethods,
 {
-    // extract the token from the authorization header
+    // Extract the token from the authorization header.
     let TypedHeader(Authorization(bearer)) = parts
         .extract::<TypedHeader<Authorization<Bearer>>>()
         .await
@@ -177,10 +172,10 @@ where
             AuthError::WrongCredentials
         })?;
 
-    // decode the token
+    // Decode the token.
     let claims = decode_token::<T>(bearer.token())?;
 
-    // check for revoked tokens if enabled by configuration
+    // Check for revoked tokens if enabled by configuration.
     if config::get().jwt_enable_revoked_tokens {
         let shared_state: SharedState = Arc::from_ref(state);
         jwt_auth::validate_revoked(&claims, &shared_state).await?

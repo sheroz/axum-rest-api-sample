@@ -1,6 +1,7 @@
-use super::{utils, GenericResult};
 use axum_web::domain::models::user::User;
 use uuid::Uuid;
+
+use super::{utils, GenericResult};
 
 const PATH_USERS: &str = "users";
 const API_V1: &str = "v1";
