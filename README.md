@@ -31,11 +31,11 @@ Covers:
   - async operations
 - `.env` based configuration parsing
 - `tracing` based logs
-- `docker-compose` configuration
-  - `Redis` service
-  - `PostgreSQL` service
+- `Docker` based configurations
+  - `PostgreSQL` and `Redis` services
+  - Building a full stack: API + `PostgreSQL` + `Redis`
 - Tests
-  - `docker` based end-to-end tests
+  - `Docker` based end-to-end tests
   - GitHub CI configuration for running tests
 
 ## REST API
