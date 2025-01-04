@@ -1,13 +1,16 @@
-use crate::{
-    application::{
-        api_error::ApiError, config, redis_service, repository::user_repo, state::SharedState,
-    },
-    domain::models::user::User,
-};
 use hyper::StatusCode;
 use uuid::Uuid;
 
-use super::{auth_error::*, jwt_claims::*};
+use crate::{
+    application::{
+        api_error::ApiError,
+        config, redis_service,
+        repository::user_repo,
+        security::{auth_error::*, jwt_claims::*},
+        state::SharedState,
+    },
+    domain::models::user::User,
+};
 
 pub struct JwtTokens {
     pub access_token: String,
@@ -15,9 +18,9 @@ pub struct JwtTokens {
 }
 
 pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), ApiError> {
-    // checking the configuration if the usage of the list of revoked tokens is enabled
+    // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if config::get().jwt_enable_revoked_tokens {
-        // decode and validate the refresh token
+        // Decode and validate the refresh token.
         if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
             return Err(AuthError::InvalidToken.into());
         }
@@ -31,12 +34,12 @@ pub async fn refresh(
     refresh_claims: RefreshClaims,
     state: SharedState,
 ) -> Result<JwtTokens, ApiError> {
-    // decode and validate the refresh token
+    // Decode and validate the refresh token.
     if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
         return Err(AuthError::InvalidToken.into());
     }
 
-    // checking the configuration if the usage of the list of revoked tokens is enabled
+    // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if config::get().jwt_enable_revoked_tokens {
         revoke_refresh_token(&refresh_claims, &state).await?;
     }
@@ -57,7 +60,7 @@ pub async fn cleanup_revoked_and_expired(
     _access_claims: &AccessClaims,
     state: &SharedState,
 ) -> Result<usize, ApiError> {
-    // checking the configuration if the usage of the list of revoked tokens is enabled
+    // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if !config::get().jwt_enable_revoked_tokens {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     }
@@ -85,7 +88,7 @@ async fn revoke_refresh_token(
     refresh_claims: &RefreshClaims,
     state: &SharedState,
 ) -> Result<(), ApiError> {
-    // check the validity of refresh token
+    // Check the validity of refresh token.
     validate_revoked(refresh_claims, state).await?;
     if redis_service::revoke_refresh_token(refresh_claims, state).await {
         return Ok(());

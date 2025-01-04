@@ -5,9 +5,9 @@
 
 Kick-start template for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `PostgreSQL`, and `Redis`
 
-The project covers:
+Covers:
 
-- REST API based on `axum`
+- REST API based on [axum](https://github.com/tokio-rs/axum)
   - routing
   - api versioning
   - CORS settings
@@ -40,7 +40,7 @@ The project covers:
 
 ## Run
 
-Running the REST API service:
+Running the REST API service (debug release):
 
 ```shell
 docker-compose up -d
@@ -78,7 +78,7 @@ Setting the `RUST_LOG` - logging level on the launch:
 RUST_LOG=info,hyper=debug,axum_web=trace cargo run
 ```
 
-## Docker files
+## Using Docker
 
 Running the Redis and PostgreSQL services: [docker-compose.full.yml](docker-compose.full.yml)
 

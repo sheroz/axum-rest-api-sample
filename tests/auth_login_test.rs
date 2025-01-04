@@ -7,10 +7,10 @@ use common::{auth, route, utils, *};
 #[tokio::test]
 #[serial]
 async fn login_test() {
-    // load the test configuration and start the api server
+    // Load the test configuration and start the api server.
     utils::start_api().await;
 
-    // try unauthorized access to the root handler
+    // Try unauthorized access to the root handler.
     assert_eq!(
         route::fetch_root("").await.unwrap(),
         StatusCode::UNAUTHORIZED
@@ -37,7 +37,7 @@ async fn login_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    // access to the root handler
+    // Access to the root handler.
     assert_eq!(
         route::fetch_root(&access_token).await.unwrap(),
         StatusCode::OK

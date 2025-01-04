@@ -1,21 +1,21 @@
-pub mod common;
+use common::{auth, utils, *};
+use reqwest::StatusCode;
+use serial_test::serial;
+use uuid::Uuid;
+
 use axum_web::{
     application::security::jwt_claims::{self, AccessClaims},
     domain::models::user::User,
 };
-use common::{auth, utils, *};
-use reqwest::StatusCode;
-use serial_test::serial;
 
-use uuid::Uuid;
-
+pub mod common;
 #[tokio::test]
 #[serial]
 async fn list_users_test() {
-    // load the test configuration and start the api server
+    // Load the test configuration and start the api server.
     utils::start_api().await;
 
-    // try unauthorized access to the users handler
+    // Try unauthorized access to the users handler.
     let (status, _) = users::list("xyz").await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
@@ -28,7 +28,7 @@ async fn list_users_test() {
     let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token).unwrap();
     let user_id = access_claims.sub.parse().unwrap();
 
-    // try authorized access to the users handler
+    // Try authorized access to the users handler.
     let (status, result) = users::list(&access_token).await.unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
     assert!(result.is_some());
@@ -41,10 +41,10 @@ async fn list_users_test() {
 #[tokio::test]
 #[serial]
 async fn get_user_test() {
-    // load the test configuration and start the api server
+    // Load the test configuration and start the api server.
     utils::start_api().await;
 
-    // try unauthorized access to the get user handler
+    // Try unauthorized access to the get user handler
     let (status, _) = users::get(uuid::Uuid::new_v4(), "").await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
@@ -57,7 +57,7 @@ async fn get_user_test() {
     let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token).unwrap();
     let user_id = access_claims.sub.parse().unwrap();
 
-    // get the user
+    // Get the user.
     let (status, result) = users::get(user_id, &access_token).await.unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
     assert!(result.is_some());
@@ -69,7 +69,7 @@ async fn get_user_test() {
 #[tokio::test]
 #[serial]
 async fn add_get_update_delete_user_test() {
-    // load the test configuration and start the api server
+    // Load the test configuration and start the api server.
     utils::start_api().await;
 
     let username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
@@ -85,7 +85,7 @@ async fn add_get_update_delete_user_test() {
         updated_at: None,
     };
 
-    // try unauthorized access to user handlers
+    // Try unauthorized access to user handlers.
     let access_token = "xyz".to_string();
     let (status, _) = users::get(user.id, &access_token).await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
@@ -105,7 +105,7 @@ async fn add_get_update_delete_user_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    // add the user
+    // Add a user.
     let (status, result) = users::add(user.clone(), &access_token).await.unwrap();
     assert_eq!(status, StatusCode::CREATED);
     assert!(result.is_some());
@@ -117,14 +117,14 @@ async fn add_get_update_delete_user_test() {
     user.updated_at = user_result.updated_at;
     assert_eq!(user_result, user);
 
-    // get the added user
+    // Get the added user.
     let (status, result) = users::get(user.id, &access_token).await.unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
     assert!(result.is_some());
     let user_result = result.unwrap();
     assert_eq!(user_result, user);
 
-    // update user
+    // Update user.
     user.username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
     let (status, result) = users::update(user.clone(), &access_token).await.unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
@@ -134,11 +134,11 @@ async fn add_get_update_delete_user_test() {
     user.updated_at = user_result.updated_at;
     assert_eq!(user_result, user);
 
-    // delete user
+    // Delete user.
     let status = users::delete(user.id, &access_token).await.unwrap();
     assert_eq!(status, StatusCode::OK);
 
-    // check the user
+    // Check the user.
     let (status, _) = users::get(user.id, &access_token).await.unwrap();
     assert_eq!(status, reqwest::StatusCode::NOT_FOUND);
 }

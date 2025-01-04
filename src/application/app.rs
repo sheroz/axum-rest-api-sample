@@ -11,23 +11,23 @@ use tokio::{
 use tower_http::cors::{Any, CorsLayer};
 
 pub async fn start_server(api_ready: oneshot::Sender<()>) {
-    // load configuration
+    // Load configuration.
     config::load();
     let config = config::get();
 
-    // connect to redis
+    // Connect to Redis.
     let redis = redis::open(config).await;
 
-    // connect to postgres
+    // Connect to PostgreSQL.
     let pgpool = postgres::pgpool(config).await;
 
-    // run migrations
+    // Run migrations.
     sqlx::migrate!("src/infrastructure/postgres/migrations")
         .run(&pgpool)
         .await
         .unwrap();
 
-    // build a CORS layer
+    // Build a CORS layer.
     // see https://docs.rs/tower-http/latest/tower_http/cors/index.html
     // for more details
     let cors_layer = CorsLayer::new().allow_origin(Any);
@@ -44,27 +44,27 @@ pub async fn start_server(api_ready: oneshot::Sender<()>) {
     //      .allow_credentials(true)
     //      .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
-    // get the listening address
+    // Get the listening address.
     let addr = config.service_socket_addr();
 
-    // build the state
+    // Build the application state.
     let shared_state = Arc::new(AppState {
         pgpool,
         redis: Mutex::new(redis),
     });
 
-    // build the app
+    // Build the app.
     let app = router::routes(shared_state)
         .layer(cors_layer)
         .layer(axum::middleware::from_fn(router::logging_middleware));
 
-    // build the listener
+    // Build the listener.
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     tracing::info!("listening on {}", addr);
 
     api_ready.send(()).expect("Couild not send a ready signal");
 
-    // start the service
+    // Start the API service.
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await

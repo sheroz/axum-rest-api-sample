@@ -10,7 +10,7 @@ use axum::{
 use serde_json::json;
 use std::collections::HashMap;
 
-use super::{auth, users};
+use crate::api::{auth, users};
 
 use crate::application::{
     api_error::ApiError,
@@ -21,17 +21,17 @@ use crate::application::{
 };
 
 pub fn routes(state: SharedState) -> Router {
-    // build the service routes
+    // Build the service routes.
     Router::new()
         .route("/", get(root_handler))
         .route("/head", get(head_request_handler))
         .route("/any", any(any_request_handler))
-        .route("/:version/heartbeat/:id", get(heartbeat_handler))
-        // nesting the authentication related routes
-        .nest("/:version/auth", auth::routes())
-        // nesting the user related routes
-        .nest("/:version/users", users::routes())
-        // add a fallback service for handling routes to unknown paths
+        .route("/{version}/heartbeat/{id}", get(heartbeat_handler))
+        // Nesting the authentication related routes.
+        .nest("/{version}/auth", auth::routes())
+        // Nesting the user related routes.
+        .nest("/{version}/users", users::routes())
+        // Add a fallback service for handling routes to unknown paths.
         .fallback(error_404_handler)
         .with_state(state)
 }
@@ -78,8 +78,7 @@ async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoResponse, 
 }
 
 async fn head_request_handler(method: Method) -> Response {
-    // it usually only makes sense to special-case HEAD
-    // if computing the body has some relevant cost
+    // Using HEAD requests makes sense if processing (computing) the response body is costly.
     if method == Method::HEAD {
         tracing::debug!("HEAD method found");
         return [("x-some-header", "header from HEAD")].into_response();

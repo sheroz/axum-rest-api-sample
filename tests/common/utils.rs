@@ -3,13 +3,14 @@ use std::time::Duration;
 use tokio::sync::oneshot;
 use tokio::time::{timeout_at, Instant};
 
+// TODO: Use isolated database for tests and remove `serial` dependency.
 pub async fn start_api() {
     std::env::set_var("ENV_TEST", "1");
     config::load();
 
     let (api_ready_tx, api_ready_rx) = oneshot::channel();
 
-    // run the api server
+    // Run the api server.
     tokio::spawn(async move {
         axum_web::application::app::start_server(api_ready_tx).await;
     });

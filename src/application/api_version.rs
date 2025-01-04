@@ -1,12 +1,12 @@
+use std::collections::HashMap;
+
 use axum::{
-    async_trait,
     extract::{FromRequestParts, Path},
     http::{request::Parts, StatusCode},
     RequestPartsExt,
 };
-use std::collections::HashMap;
 
-use super::api_error::ApiError;
+use crate::application::api_error::ApiError;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {
@@ -46,7 +46,6 @@ pub fn parse_version(version: &str) -> Result<ApiVersion, ApiError> {
     }
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for ApiVersion
 where
     S: Send + Sync,

@@ -6,7 +6,7 @@ use tokio::net::TcpStream;
 
 use super::GenericResult;
 
-// fetch using `hyper`
+// Fetch using `hyper`.
 pub async fn fetch_url_hyper(url: &str) -> GenericResult<String> {
     let uri = url.parse::<hyper::Uri>().unwrap();
     let host = uri.host().expect("uri has no host");
@@ -25,7 +25,7 @@ pub async fn fetch_url_hyper(url: &str) -> GenericResult<String> {
 
     let authority = uri.authority().unwrap().clone();
 
-    // Fetch the url
+    // Fetch the url.
     let req = Request::builder()
         .uri(uri)
         .header(hyper::header::HOST, authority.as_str())
@@ -33,7 +33,7 @@ pub async fn fetch_url_hyper(url: &str) -> GenericResult<String> {
 
     let res = sender.send_request(req).await?;
 
-    // asynchronously aggregate the chunks of the body
+    // Asynchronously aggregate the chunks of the body.
     let body = res.collect().await?.aggregate();
     let content = String::from_utf8(body.chunk().to_vec())?;
     Ok(content)

@@ -22,9 +22,9 @@ pub fn routes() -> Router<SharedState> {
     Router::new()
         .route("/", get(list_users_handler))
         .route("/", post(add_user_handler))
-        .route("/:id", get(get_user_handler))
-        .route("/:id", put(update_user_handler))
-        .route("/:id", delete(delete_user_handler))
+        .route("/{id}", get(get_user_handler))
+        .route("/{id}", put(update_user_handler))
+        .route("/{id}", delete(delete_user_handler))
 }
 
 async fn list_users_handler(

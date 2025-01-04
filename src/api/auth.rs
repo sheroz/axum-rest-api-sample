@@ -77,7 +77,7 @@ async fn refresh_handler(
     Ok(tokens_to_response(new_tokens))
 }
 
-// revoke all issued tokens until now
+// Revoke all issued tokens until now.
 async fn revoke_all_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
@@ -91,7 +91,7 @@ async fn revoke_all_handler(
     Ok(())
 }
 
-// revoke tokens issued to user until now
+// Revoke tokens issued to user until now.
 async fn revoke_user_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
@@ -100,7 +100,7 @@ async fn revoke_user_handler(
 ) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     if access_claims.sub != revoke_user.user_id.to_string() {
-        // only admin can revoke tokens of other users
+        // Only admin can revoke tokens of other users.
         access_claims.validate_role_admin()?;
     }
     tracing::trace!("revoke_user: {:?}", revoke_user);
