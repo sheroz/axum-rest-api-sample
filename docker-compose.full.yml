@@ -1,18 +1,18 @@
 services:
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     volumes:
       - redis:/data      
     ports:
       - '6379:6379'
 
   postgres:
-    image: postgres:alpine
+    image: postgres:17-alpine
     restart: always
     volumes:
       - postgres:/var/lib/postgresql/data
     env_file:
-      - .env
+      - .env_docker
     ports:
       - "5432:5432"
   
@@ -22,9 +22,9 @@ services:
       - postgres
       - redis
     ports:
-      - "3000:3000"
+      - "8080:8080"
     env_file:
-      - .env_test_docker
+      - .env_docker
 
 volumes:
   redis:

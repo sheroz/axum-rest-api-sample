@@ -1,8 +1,9 @@
-### heartbeat check (public)
-GET http://127.0.0.1:3000/v1/heartbeat/1
+### Heartbeat check (public)
+GET http://127.0.0.1:8080/v1/heartbeat/1
 
-### login 
-POST http://127.0.0.1:3000/v1/auth/login
+### Login
+### Note: keep the returned tokens to access the protected routes
+POST http://127.0.0.1:8080/v1/auth/login
 Content-type: application/json; charset=utf8
 
 {
@@ -10,48 +11,57 @@ Content-type: application/json; charset=utf8
     "password_hash": "7c44575b741f02d49c3e988ba7aa95a8fb6d90c0ef63a97236fa54bfcfbd9d51"
 }
 
-### root (protected) 
-GET http://127.0.0.1:3000
+### Root (protected) 
+### Note: use the `access_token` in `Authorization` header.
+GET http://127.0.0.1:8080
 Content-type: application/json; charset=utf8
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVDo2NTZlZGI3OC03MDlhLTRjMTQtOWIyOC1mNDAwMzk0MjkxMjgiLCJpYXQiOjE3MDM4OTAxNzEsImV4cCI6MTcwMzg5Mzc3MX0.-pduSKuPUn2HF9dMVHyVswTtV59DabmgiNB5sf7M3qo
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2YTlkYjE4ZC1iZTE2LTQ2ZTUtOGM5Yy0yMjdjZGFjNWE0ZDYiLCJqdGkiOiJlNmEzODFhMy1lMjRlLTQ2YTAtOWY0YS04YTI2N2ViMjBjODMiLCJpYXQiOjE3MzU5ODU0NTcsImV4cCI6MTczNTk4OTA1NywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0._Fzanf_VsXO8fRpSlHSujnEGYmnCXtvbT9r7ujFSzbs
 
-### refresh tokens
-POST http://127.0.0.1:3000/v1/auth/refresh
+### Refresh tokens
+### Note: use the `refresh_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/auth/refresh
 Content-type: application/json; charset=utf8
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVDo2NTZlZGI3OC03MDlhLTRjMTQtOWIyOC1mNDAwMzk0MjkxMjgiLCJpYXQiOjE3MDM4OTAxNzEsImV4cCI6MTcwMzg5Mzc3MX0.-pduSKuPUn2HF9dMVHyVswTtV59DabmgiNB5sf7M3qo
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2YTlkYjE4ZC1iZTE2LTQ2ZTUtOGM5Yy0yMjdjZGFjNWE0ZDYiLCJqdGkiOiJjNTk4MjliOC01Y2MyLTQ4ZDYtYjkzMy0yNTNhZWQ0OTBlYzAiLCJpYXQiOjE3MzU5ODUxMzgsImV4cCI6MTczNTk4ODczOCwidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.uS5vlB5l4TL0xFqEwcHwJApsJPjFFuxwRnLVuhm2wyk
 
-### logout 
-POST http://127.0.0.1:3000/v1/auth/logout
+### Logout 
+### Note: use the `refresh_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/auth/logout
 Content-type: application/json; charset=utf8
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVDo2NTZlZGI3OC03MDlhLTRjMTQtOWIyOC1mNDAwMzk0MjkxMjgiLCJpYXQiOjE3MDM4OTAxNzEsImV4cCI6MTcwMzg5Mzc3MX0.-pduSKuPUn2HF9dMVHyVswTtV59DabmgiNB5sf7M3qo
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2YTlkYjE4ZC1iZTE2LTQ2ZTUtOGM5Yy0yMjdjZGFjNWE0ZDYiLCJqdGkiOiIwNWE2YjRhZi03N2Y1LTQzMWMtOTZkNC1mZDlhYTUzYzkzMTIiLCJpYXQiOjE3MzU5ODUzMzgsImV4cCI6MTc0Mzc2MTMzOCwicHJmIjoiMjRkMzc0NWEtMmI1ZS00OTBkLWFlYmUtNzVhMDc1NDEyMTY0IiwicGV4IjoxNzM1OTg4OTM4LCJ0eXAiOjEsInJvbGVzIjoiYWRtaW4ifQ.NVF-mdpK-b6cLEFFLj103dW5fmzmjV9gaNxAph6AXME
 
-### revoke user 
-POST http://127.0.0.1:3000/v1/auth/revoke-user
+### Revoke user 
+### Note: use the `access_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/auth/revoke-user
 Content-type: application/json; charset=utf8
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVDo2NTZlZGI3OC03MDlhLTRjMTQtOWIyOC1mNDAwMzk0MjkxMjgiLCJpYXQiOjE3MDM4OTAxNzEsImV4cCI6MTcwMzg5Mzc3MX0.-pduSKuPUn2HF9dMVHyVswTtV59DabmgiNB5sf7M3qo
 
 { "user_id" : "617646a0-7437-48a0-bb03-a7aa830f8f81" }
 
-### revoke all 
-POST http://127.0.0.1:3000/v1/auth/revoke-all
+### Revoke all 
+### Note: use the `access_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/auth/revoke-all
 Content-type: application/json; charset=utf8
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVDo2NTZlZGI3OC03MDlhLTRjMTQtOWIyOC1mNDAwMzk0MjkxMjgiLCJpYXQiOjE3MDM4OTAxNzEsImV4cCI6MTcwMzg5Mzc3MX0.-pduSKuPUn2HF9dMVHyVswTtV59DabmgiNB5sf7M3qo
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2YTlkYjE4ZC1iZTE2LTQ2ZTUtOGM5Yy0yMjdjZGFjNWE0ZDYiLCJqdGkiOiJlNmEzODFhMy1lMjRlLTQ2YTAtOWY0YS04YTI2N2ViMjBjODMiLCJpYXQiOjE3MzU5ODU0NTcsImV4cCI6MTczNTk4OTA1NywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0._Fzanf_VsXO8fRpSlHSujnEGYmnCXtvbT9r7ujFSzbs
 
-### cleanup revoked tokens 
-POST http://127.0.0.1:3000/v1/auth/cleanup
+### Cleanup revoked tokens 
+### Note: use the `access_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/auth/cleanup
 Content-type: application/json; charset=utf8
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVDo2NTZlZGI3OC03MDlhLTRjMTQtOWIyOC1mNDAwMzk0MjkxMjgiLCJpYXQiOjE3MDM4OTAxNzEsImV4cCI6MTcwMzg5Mzc3MX0.-pduSKuPUn2HF9dMVHyVswTtV59DabmgiNB5sf7M3qo
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2YTlkYjE4ZC1iZTE2LTQ2ZTUtOGM5Yy0yMjdjZGFjNWE0ZDYiLCJqdGkiOiJmYzRiMTM2NC0zMTQ5LTQ1OWYtYmM1Ni05YTRlNTc2NDFjNTIiLCJpYXQiOjE3MzU5ODU1MTAsImV4cCI6MTczNTk4OTExMCwidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.w4Q-fU1CcOoQxiimDbKcecAH05YCEYMrtQ6Pq8Sv8p4
 
-### list users
-GET http://127.0.0.1:3000/v1/users
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOTZhN2E4OS04NjczLTRhYTYtYjI0YS04YWU5ZmFhZGI4MDYiLCJqdGkiOiJmOTlkNDVkMS00NmNmLTQ2YWEtYmUxMC05ZTE5ZjYxZWZlYTMiLCJpYXQiOjE3MDUwMDQyNDMsImV4cCI6MTcwNTAwNzg0MywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.bzESfqPs2emVtAksS-zs7sjMQmFeSam-psM4wdlO3MU
+### List users
+### Note: use the `access_token` in `Authorization` header.
+GET http://127.0.0.1:8080/v1/users
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxY2I2N2JjZC1mYTZiLTRlYTAtYWU4YS03YThhMDhlZWVkY2IiLCJqdGkiOiI2MWYzODU2Yy1iNTFjLTRkZjEtYTNmNC1iYWE0YmRjMDI1ZTkiLCJpYXQiOjE3MzU5OTM5OTAsImV4cCI6MTczNTk5NzU5MCwidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.QlrSwP-w-OzdlKyClEVexlydjf0qJlibY1Rjf3PUqTU
 
-### get user
-GET http://127.0.0.1:3000/v1/users/617646a0-7437-48a0-bb03-a7aa830f8f81
+### Get user
+### Note: use the `access_token` in `Authorization` header.
+GET http://127.0.0.1:8080/v1/users/617646a0-7437-48a0-bb03-a7aa830f8f81
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVGUxODcxNjcwLTU3OTAtNDk0ZS1iMWQwLWYzOWM2NzJmYjg5YyIsImlhdCI6MTcwMzc3ODQwOSwiZXhwIjoxNzAzNzgyMDA5fQ.FWd0cyS5FfcmANp87kEVLt1lJtwgoe4d7rh49ZGKrC0
 
-### add a new user
-POST http://127.0.0.1:3000/v1/users
+### Add a new user
+### Note: use the `access_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/users
 Content-type: application/json; charset=utf8
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVGUxODcxNjcwLTU3OTAtNDk0ZS1iMWQwLWYzOWM2NzJmYjg5YyIsImlhdCI6MTcwMzc3ODQwOSwiZXhwIjoxNzAzNzgyMDA5fQ.FWd0cyS5FfcmANp87kEVLt1lJtwgoe4d7rh49ZGKrC0
 
@@ -63,8 +73,9 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwM
     "password_salt": "pjZKk6A8YtC8$9p&UIp62bv4PLwD7@dF"
 }
 
-### update user
-PUT http://127.0.0.1:3000/v1/users/917646a0-7437-48a0-bb03-a7aa830f8f81
+### Update user
+### Note: use the `access_token` in `Authorization` header.
+PUT http://127.0.0.1:8080/v1/users/917646a0-7437-48a0-bb03-a7aa830f8f81
 Content-type: application/json; charset=utf8
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVGUxODcxNjcwLTU3OTAtNDk0ZS1iMWQwLWYzOWM2NzJmYjg5YyIsImlhdCI6MTcwMzc3ODQwOSwiZXhwIjoxNzAzNzgyMDA5fQ.FWd0cyS5FfcmANp87kEVLt1lJtwgoe4d7rh49ZGKrC0
 
@@ -76,8 +87,9 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwM
     "password_salt": "pjZKk6A8YtC8$9p&UIp62bv4PLwD7@dF"
 }
 
-### delete user
-DELETE http://127.0.0.1:3000/v1/users/917646a0-7437-48a0-bb03-a7aa830f8f81
+### Delete user
+### Note: use the `access_token` in `Authorization` header.
+DELETE http://127.0.0.1:8080/v1/users/917646a0-7437-48a0-bb03-a7aa830f8f81
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVGUxODcxNjcwLTU3OTAtNDk0ZS1iMWQwLWYzOWM2NzJmYjg5YyIsImlhdCI6MTcwMzc3ODQwOSwiZXhwIjoxNzAzNzgyMDA5fQ.FWd0cyS5FfcmANp87kEVLt1lJtwgoe4d7rh49ZGKrC0
 
-###
+### END.

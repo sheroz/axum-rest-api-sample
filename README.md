@@ -42,26 +42,30 @@ The project covers:
 
 Running the REST API service:
 
-```text
+```shell
 docker-compose up -d
 cargo run
 ```
 
 Running the service in test configuration:
 
-```text
+```shell
 ENV_TEST=1 cargo run
 ```
+
+## REST API
+
+Please check for available API: [tests/endpoints.http](/tests/endpoints.http)
+
+Visual Studio Code [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) is helpfull to play with API.
 
 ## Tests
 
 REST API tests: [/tests](/tests)
 
-REST API parameters: [tests/endpoints.http](/tests/endpoints.http)
-
 Running the API tests:
 
-```text
+```shell
 docker-compose up -d
 cargo test
 ```
@@ -70,10 +74,24 @@ cargo test
 
 Setting the `RUST_LOG` - logging level on the launch:
 
-```text
+```shell
 RUST_LOG=info,hyper=debug,axum_web=trace cargo run
+```
+
+## Docker files
+
+Running the Redis and PostgreSQL services: [docker-compose.full.yml](docker-compose.full.yml)
+
+```shell
+docker-compose up -d
+```
+
+Running the full stack build: [docker-compose.full.yml](docker-compose.full.yml)
+
+```shell
+docker-compose -f docker-compose.full.yml up -d
 ```
 
 ## Project Stage
 
-**Development**: this project is under development, you should not expect stability yet.
+**Development**: this project is under development.
