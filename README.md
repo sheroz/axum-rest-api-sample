@@ -1,45 +1,46 @@
-# Getting started with REST API Web Services in Rust
+# Getting started with REST API Web Services in Rust using Axum, PostgreSQL, Redis, and JWT
 
 [![build & test](https://github.com/sheroz/axum-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/axum-web/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/axum-web)](https://github.com/sheroz/axum-web/tree/main/LICENSE)
 
-Kick-start template for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `PostgreSQL`, and `Redis`
+A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `PostgreSQL`, and `Redis`
 
 Covers:
 
 - REST API based on [axum](https://github.com/tokio-rs/axum)
-  - routing
-  - api versioning
+  - Routing
+  - API versioning
   - CORS settings
-  - basic error handling
-  - graceful shutdown
-- `JSON Web Tokens (JWT)` based authentication & authorization
-  - login, logout, refresh, and revoking operations
-  - role based authorization
-  - generating and validating of access and refresh tokens
-  - setting the tokens expiry time (based on configuration)
-  - using the refresh tokens rotation technique
-  - revoking the issued tokens by using `Redis` (based on configuration)
-    - revoke all tokens issued until the current time
-    - revoke tokens belonging to a user issued until the current time
-    - cleanup of revoked tokens
-- `PostgreSQL`database with `SQLx` driver
-  - database migrations
-  - async connection pooling
-  - async CRUD operations
-- `Redis` in-memory storage
-  - async operations
+  - Error handling (basic)
+  - Graceful shutdown
+- Authentication & authorization using `JSON Web Tokens (JWT)`
+  - Login, logout, refresh, and revoking operations
+  - Role based authorization
+  - Generating and validating access and refresh tokens
+  - Setting tokens expiry time (based on configuration)
+  - Using refresh tokens rotation technique
+  - Revoking issued tokens by using Redis (based on configuration)
+    - Revoke all tokens issued until the current time
+    - Revoke tokens belonging to the user issued until the current time
+    - Cleanup of revoked tokens
+- Using `PostgreSQL`database with `SQLx` driver
+  - Database migrations
+  - Async connection pooling
+  - Async CRUD operations
+- Using `Redis` in-memory storage
+  - Async `Redis` operations
 - Configuration settings
-  - loading and parsing `.env` file
-  - using environment variables
+  - Loading and parsing `.env` file
+  - Using environment variables
 - Logs
   - `tracing` based logs
 - Tests
   - `Docker` based end-to-end tests
   - GitHub CI configuration for running tests
-- `Docker` based configurations
-  - `PostgreSQL` and `Redis` services
-  - building a full stack services: API + `PostgreSQL` + `Redis`
+- Using `Docker` for running services
+  - `PostgreSQL` and `Redis`
+  - Building the application using the official `Rust` image
+  - Running the full stack: API + `PostgreSQL` + `Redis`
 
 ## Run
 
