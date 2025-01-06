@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum::{
     body::Body,
     extract::{Path, Query, Request},
@@ -8,16 +10,16 @@ use axum::{
     Json, Router,
 };
 use serde_json::json;
-use std::collections::HashMap;
 
-use crate::api::{auth, users};
-
-use crate::application::{
-    api_error::ApiError,
-    api_version::{self, ApiVersion},
-    app_const::*,
-    security::jwt_claims::AccessClaims,
-    state::SharedState,
+use crate::{
+    api::{auth, users},
+    application::{
+        api_error::ApiError,
+        api_version::{self, ApiVersion},
+        app_const::*,
+        security::jwt_claims::AccessClaims,
+        state::SharedState,
+    },
 };
 
 pub fn routes(state: SharedState) -> Router {
@@ -83,7 +85,6 @@ async fn head_request_handler(method: Method) -> Response {
         tracing::debug!("HEAD method found");
         return [("x-some-header", "header from HEAD")].into_response();
     }
-
     ([("x-some-header", "header from GET")], "body from GET").into_response()
 }
 
@@ -99,7 +100,6 @@ async fn any_request_handler(
         tracing::debug!("params: {:?}", params);
         tracing::debug!("request: {:?}", request);
     }
-
     StatusCode::OK
 }
 
