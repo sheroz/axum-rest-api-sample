@@ -162,7 +162,7 @@ pub fn generate_tokens(user: User) -> JwtTokens {
     }
 }
 
-pub async fn validate_revoked<T: std::fmt::Debug + ClaimsMethods>(
+pub async fn validate_revoked<T: std::fmt::Debug + ClaimsMethods + Sync + Send>(
     claims: &T,
     state: &SharedState,
 ) -> Result<(), ApiError> {

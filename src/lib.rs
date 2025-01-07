@@ -1,4 +1,5 @@
 #![allow(clippy::all)]
+#![warn(clippy::nursery)]
 #![allow(clippy::uninlined_format_args)]
 
 pub mod api;

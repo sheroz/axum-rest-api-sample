@@ -145,12 +145,12 @@ fn env_get_or(key: &str, value: &str) -> String {
 
 #[inline]
 fn env_parse<T: std::str::FromStr>(key: &str) -> T {
-    match env_get(key).parse() {
-        Ok(v) => v,
-        Err(_) => {
+    env_get(key).parse().map_or_else(
+        |_| {
             let msg = format!("Failed to parse: {}", key);
             tracing::error!(msg);
             panic!("{msg}");
-        }
-    }
+        },
+        |v| v,
+    )
 }

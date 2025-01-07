@@ -29,7 +29,7 @@ impl IntoResponse for ApiError {
 
 impl From<StatusCode> for ApiError {
     fn from(status_code: StatusCode) -> Self {
-        ApiError {
+        Self {
             status_code,
             error_message: status_code.to_string(),
         }

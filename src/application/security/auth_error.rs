@@ -17,7 +17,8 @@ impl From<AuthError> for ApiError {
             AuthError::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token creation error"),
             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, "Invalid token"),
         };
-        ApiError {
+
+        Self {
             status_code,
             error_message: error_message.to_owned(),
         }

@@ -1,5 +1,6 @@
-use redis::{aio::MultiplexedConnection, AsyncCommands, RedisResult};
 use std::collections::HashMap;
+
+use redis::{aio::MultiplexedConnection, AsyncCommands, RedisResult};
 use tokio::sync::MutexGuard;
 
 use crate::application::{
@@ -12,8 +13,10 @@ pub async fn revoke_global(state: &SharedState) -> bool {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
     tracing::debug!("setting a timestamp for global revoke: {}", timestamp_now);
 
-    let mut redis = state.redis.lock().await;
-    let redis_result: RedisResult<()> = redis
+    let redis_result: RedisResult<()> = state
+        .redis
+        .lock()
+        .await
         .set(JWT_REDIS_REVOKE_GLOBAL_BEFORE_KEY, timestamp_now)
         .await;
     if let Err(e) = redis_result {
@@ -31,8 +34,10 @@ pub async fn revoke_user_tokens(user_id: &str, state: &SharedState) -> bool {
         timestamp_now
     );
 
-    let mut redis = state.redis.lock().await;
-    let redis_result: RedisResult<()> = redis
+    let redis_result: RedisResult<()> = state
+        .redis
+        .lock()
+        .await
         .hset(JWT_REDIS_REVOKE_USER_BEFORE_KEY, user_id, timestamp_now)
         .await;
     if let Err(e) = redis_result {
@@ -42,7 +47,7 @@ pub async fn revoke_user_tokens(user_id: &str, state: &SharedState) -> bool {
     true
 }
 
-async fn is_global_revoked<T: ClaimsMethods>(
+async fn is_global_revoked<T: ClaimsMethods + Sync + Send>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
 ) -> Option<bool> {
@@ -73,7 +78,7 @@ async fn is_global_revoked<T: ClaimsMethods>(
     Some(false)
 }
 
-async fn is_user_revoked<T: ClaimsMethods>(
+async fn is_user_revoked<T: ClaimsMethods + Sync + Send>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
 ) -> Option<bool> {
@@ -105,7 +110,7 @@ async fn is_user_revoked<T: ClaimsMethods>(
     Some(false)
 }
 
-async fn is_token_revoked<T: ClaimsMethods>(
+async fn is_token_revoked<T: ClaimsMethods + Sync + Send>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
 ) -> Option<bool> {
@@ -122,7 +127,7 @@ async fn is_token_revoked<T: ClaimsMethods>(
     }
 }
 
-pub async fn is_revoked<T: std::fmt::Debug + ClaimsMethods>(
+pub async fn is_revoked<T: std::fmt::Debug + ClaimsMethods + Send + Sync>(
     claims: &T,
     state: &SharedState,
 ) -> Option<bool> {
@@ -170,9 +175,10 @@ pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -
     // Adds refersh token and its paired access token into revoked list in Redis.
     // Tokens are tracked by JWT ID that handles the cases of reusing lost tokens and multi-device scenarios.
 
-    let mut redis = state.redis.lock().await;
     let list_to_revoke = vec![&claims.jti, &claims.prf];
     tracing::debug!("adding jwt tokens into revoked list: {:#?}", list_to_revoke);
+
+    let mut redis = state.redis.lock().await;
     for claims_jti in list_to_revoke {
         let redis_result: RedisResult<()> = redis
             .hset(JWT_REDIS_REVOKED_TOKENS_KEY, claims_jti, claims.exp)
@@ -186,6 +192,8 @@ pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -
     if tracing::enabled!(tracing::Level::TRACE) {
         log_revoked_tokens_count(&mut redis).await;
     }
+    drop(redis);
+
     true
 }
 
@@ -209,6 +217,7 @@ async fn delete_expired_tokens(state: &SharedState) -> RedisResult<usize> {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
 
     let mut redis = state.redis.lock().await;
+
     let revoked_tokens: HashMap<String, String> =
         redis.hgetall(JWT_REDIS_REVOKED_TOKENS_KEY).await?;
 
@@ -231,6 +240,7 @@ async fn delete_expired_tokens(state: &SharedState) -> RedisResult<usize> {
     if tracing::enabled!(tracing::Level::TRACE) {
         log_revoked_tokens_count(&mut redis).await;
     }
+    drop(redis);
 
     Ok(deleted)
 }
