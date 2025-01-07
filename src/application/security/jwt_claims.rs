@@ -18,11 +18,11 @@ use crate::application::{
     state::SharedState,
 };
 
-/// [JWT Claims]
-/// [RFC7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4)
-/// ToDo: implement role based validation: is_role(admin)
-/// roles, groups: https://www.rfc-editor.org/rfc/rfc7643.html#section-4.1.2
-/// https://www.rfc-editor.org/rfc/rfc9068.html#name-authorization-claims
+// [JWT Claims]
+// [RFC7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4)
+// ToDo: implement role based validation: is_role(admin)
+// roles, groups: https://www.rfc-editor.org/rfc/rfc7643.html#section-4.1.2
+// https://www.rfc-editor.org/rfc/rfc9068.html#name-authorization-claims
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccessClaims {
@@ -161,7 +161,7 @@ async fn decode_token_from_request_part<S, T>(parts: &mut Parts, state: &S) -> R
 where
     SharedState: FromRef<S>,
     S: Send + Sync,
-    T: for<'de> serde::Deserialize<'de> + std::fmt::Debug + ClaimsMethods,
+    T: for<'de> serde::Deserialize<'de> + std::fmt::Debug + ClaimsMethods + Sync + Send,
 {
     // Extract the token from the authorization header.
     let TypedHeader(Authorization(bearer)) = parts

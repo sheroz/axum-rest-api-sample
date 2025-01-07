@@ -18,8 +18,8 @@ impl std::str::FromStr for ApiVersion {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "v1" => Ok(ApiVersion::V1),
-            "v2" => Ok(ApiVersion::V2),
+            "v1" => Ok(Self::V1),
+            "v2" => Ok(Self::V2),
             _ => Err(()),
         }
     }
@@ -28,22 +28,23 @@ impl std::str::FromStr for ApiVersion {
 impl std::fmt::Display for ApiVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let v: &str = match self {
-            ApiVersion::V1 => "v1",
-            ApiVersion::V2 => "v2",
+            Self::V1 => "v1",
+            Self::V2 => "v2",
         };
         write!(f, "{}", v)
     }
 }
 
 pub fn parse_version(version: &str) -> Result<ApiVersion, ApiError> {
-    match version.parse() {
-        Ok(v) => Ok(v),
-        Err(_) => Err(ApiVersionError::InvalidApiVersion(format!(
-            "Unknown API Version: {}",
-            version
-        ))
-        .into()),
-    }
+    version.parse().map_or_else(
+        |_| {
+            Err(
+                ApiVersionError::InvalidApiVersion(format!("Unknown API Version: {}", version))
+                    .into(),
+            )
+        },
+        |v| Ok(v),
+    )
 }
 
 impl<S> FromRequestParts<S> for ApiVersion
@@ -88,7 +89,8 @@ impl From<ApiVersionError> for ApiError {
                 "Could not extract api version".to_owned(),
             ),
         };
-        ApiError {
+
+        Self {
             status_code,
             error_message,
         }
