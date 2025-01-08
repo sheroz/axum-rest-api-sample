@@ -12,7 +12,7 @@ license = "MIT"
 dotenvy = "0.15"
 axum = { version = "0.8" }
 axum-extra = { version = "0.10", features = ["typed-header"] }
-tokio = { version = "1.42", features = ["full"] }
+tokio = { version = "1.43", features = ["full"] }
 bytes = "1.9"
 tower-http = { version = "0.6", features = ["cors"] }
 tracing = { version = "0.1", features = ["attributes"] }
