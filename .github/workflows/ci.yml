@@ -16,11 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Fmt
+    - name: Rust Version
+      run: rustc --version
+    - name: Formatting Check
       run: cargo fmt --all -- --check
-    - name: Clippy
+    - name: Clippy Check
       run:  cargo clippy --all-targets --all-features
-    - name: Deny
+    - name: Deny Check
       run: cargo deny check
     - name: Build
       run: cargo build --verbose

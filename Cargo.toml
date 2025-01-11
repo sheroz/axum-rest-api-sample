@@ -7,7 +7,7 @@ description = "A sample starter project for building REST API Web service in Rus
 readme = "README.md"
 repository = "https://github.com/sheroz/axum-web"
 license = "MIT"
-rust-version = "1.84"
+rust-version = "1.83"
 
 [dependencies]
 dotenvy = "0.15"
