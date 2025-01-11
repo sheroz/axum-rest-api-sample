@@ -1,9 +1,9 @@
-# Getting started with REST API Web Services in Rust using Axum, PostgreSQL, Redis, and JWT
+# Getting started with REST API Web Services in Rust using Axum, JWT, SQLx, PostgreSQL, and Redis
 
 [![build & test](https://github.com/sheroz/axum-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/axum-web/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/axum-web)](https://github.com/sheroz/axum-web/tree/main/LICENSE)
 
-A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `PostgreSQL`, and `Redis`
+A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
 
 Covers:
 
@@ -23,7 +23,7 @@ Covers:
     - Revoke all tokens issued until the current time
     - Revoke tokens belonging to the user issued until the current time
     - Cleanup of revoked tokens
-- Using `PostgreSQL`database with `SQLx` driver
+- Using `PostgreSQL`database with `SQLx`
   - Database migrations
   - Async connection pooling
   - Async CRUD operations
