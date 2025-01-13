@@ -1,4 +1,3 @@
-use common::{auth, utils, *};
 use reqwest::StatusCode;
 use serial_test::serial;
 use uuid::Uuid;
@@ -9,6 +8,12 @@ use axum_web::{
 };
 
 pub mod common;
+use common::{
+    auth,
+    constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
+    users, utils,
+};
+
 #[tokio::test]
 #[serial]
 async fn list_users_test() {

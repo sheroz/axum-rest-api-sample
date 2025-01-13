@@ -35,7 +35,7 @@ async fn list_users_handler(
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
-    match user_repo::get_all(&state).await {
+    match user_repo::list(&state).await {
         Ok(users) => Ok(Json(users)),
         Err(e) => {
             tracing::error!("{}", e);

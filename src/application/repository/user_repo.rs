@@ -3,11 +3,11 @@ use sqlx::query_as;
 use uuid::Uuid;
 
 use crate::{
-    application::{app_const::USER_ROLE_GUEST, repository::RepositoryResult, state::SharedState},
+    application::{repository::RepositoryResult, security::roles::UserRole, state::SharedState},
     domain::models::user::User,
 };
 
-pub async fn get_all(state: &SharedState) -> RepositoryResult<Vec<User>> {
+pub async fn list(state: &SharedState) -> RepositoryResult<Vec<User>> {
     let users = query_as::<_, User>("SELECT * FROM users")
         .fetch_all(&state.pgpool)
         .await?;
@@ -37,7 +37,7 @@ pub async fn add(user: User, state: &SharedState) -> RepositoryResult<User> {
     .bind(user.password_hash)
     .bind(user.password_salt)
     .bind(true)
-    .bind(USER_ROLE_GUEST)
+    .bind(UserRole::Guest.to_string())
     .bind(time_now)
     .bind(time_now)
     .fetch_one(&state.pgpool)
@@ -54,7 +54,7 @@ pub async fn get_by_id(id: Uuid, state: &SharedState) -> RepositoryResult<User> 
     Ok(user)
 }
 
-pub async fn get_user_by_username(username: &str, state: &SharedState) -> RepositoryResult<User> {
+pub async fn get_by_username(username: &str, state: &SharedState) -> RepositoryResult<User> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1")
         .bind(username)
         .fetch_one(&state.pgpool)

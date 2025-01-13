@@ -1,6 +1,6 @@
 use axum_web::application::config;
 
-use super::GenericResult;
+use crate::common::GenericResult;
 
 pub async fn fetch_root(access_token: &str) -> GenericResult<reqwest::StatusCode> {
     let url = config::get().service_http_addr();

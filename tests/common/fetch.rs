@@ -4,7 +4,7 @@ use hyper::Request;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 
-use super::GenericResult;
+use crate::common::GenericResult;
 
 // Fetch using `hyper`.
 pub async fn fetch_url_hyper(url: &str) -> GenericResult<String> {

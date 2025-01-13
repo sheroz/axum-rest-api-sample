@@ -2,7 +2,11 @@ use reqwest::StatusCode;
 use serial_test::serial;
 
 pub mod common;
-use common::{auth, route, utils, *};
+use common::{
+    auth,
+    constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
+    route, utils,
+};
 
 #[tokio::test]
 #[serial]

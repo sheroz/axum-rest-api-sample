@@ -127,7 +127,7 @@ impl ClaimsMethods for RefreshClaims {
 }
 
 fn is_role_admin(roles: &str) -> Result<(), AuthError> {
-    if !security::roles::is_role_admin(roles) {
+    if !security::roles::contains_role_admin(roles) {
         return Err(AuthError::WrongCredentials);
     }
     Ok(())

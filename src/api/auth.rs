@@ -6,13 +6,13 @@ use uuid::Uuid;
 use crate::application::{
     api_error::ApiError,
     api_version::ApiVersion,
-    redis_service,
     repository::user_repo,
     security::{
         auth_error::AuthError,
         jwt_auth::{self, JwtTokens},
         jwt_claims::{AccessClaims, ClaimsMethods, RefreshClaims},
     },
+    service::token_service,
     state::SharedState,
 };
 
@@ -44,7 +44,7 @@ async fn login_handler(
     Json(login): Json<LoginUser>,
 ) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
-    if let Ok(user) = user_repo::get_user_by_username(&login.username, &state).await {
+    if let Ok(user) = user_repo::get_by_username(&login.username, &state).await {
         if user.active && user.password_hash == login.password_hash {
             tracing::trace!("access granted, user: {}", user.id);
             let tokens = jwt_auth::generate_tokens(user);
@@ -85,7 +85,7 @@ async fn revoke_all_handler(
 ) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
-    if !redis_service::revoke_global(&state).await {
+    if !token_service::revoke_global(&state).await {
         return Err(ApiError::from(StatusCode::INTERNAL_SERVER_ERROR));
     }
     Ok(())
@@ -104,7 +104,7 @@ async fn revoke_user_handler(
         access_claims.validate_role_admin()?;
     }
     tracing::trace!("revoke_user: {:?}", revoke_user);
-    if !redis_service::revoke_user_tokens(&revoke_user.user_id.to_string(), &state).await {
+    if !token_service::revoke_user_tokens(&revoke_user.user_id.to_string(), &state).await {
         return Err(ApiError::from(StatusCode::INTERNAL_SERVER_ERROR));
     }
     Ok(())

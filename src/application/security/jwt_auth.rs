@@ -4,9 +4,10 @@ use uuid::Uuid;
 use crate::{
     application::{
         api_error::ApiError,
-        config, redis_service,
+        config,
         repository::user_repo,
         security::{auth_error::*, jwt_claims::*},
+        service::token_service,
         state::SharedState,
     },
     domain::models::user::User,
@@ -65,7 +66,7 @@ pub async fn cleanup_revoked_and_expired(
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     }
 
-    if let Some(deleted) = redis_service::cleanup_expired(state).await {
+    if let Some(deleted) = token_service::cleanup_expired(state).await {
         return Ok(deleted);
     }
 
@@ -90,7 +91,7 @@ async fn revoke_refresh_token(
 ) -> Result<(), ApiError> {
     // Check the validity of refresh token.
     validate_revoked(refresh_claims, state).await?;
-    if redis_service::revoke_refresh_token(refresh_claims, state).await {
+    if token_service::revoke_refresh_token(refresh_claims, state).await {
         return Ok(());
     }
     Err(StatusCode::INTERNAL_SERVER_ERROR.into())
@@ -166,7 +167,7 @@ pub async fn validate_revoked<T: std::fmt::Debug + ClaimsMethods + Sync + Send>(
     claims: &T,
     state: &SharedState,
 ) -> Result<(), ApiError> {
-    match redis_service::is_revoked(claims, state).await {
+    match token_service::is_revoked(claims, state).await {
         Some(revoked) => {
             if revoked {
                 return Err(AuthError::WrongCredentials.into());

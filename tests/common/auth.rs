@@ -1,15 +1,13 @@
-use crate::common::utils;
-
-use super::GenericResult;
-
-const PATH_AUTH: &str = "auth";
-const API_V1: &str = "v1";
+use crate::common::{
+    constants::{API_AUTH_PATH, API_V1},
+    utils, GenericResult,
+};
 
 pub async fn login(
     username: &str,
     password_hash: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<(String, String)>)> {
-    let url = utils::build_url(API_V1, PATH_AUTH, "login");
+    let url = utils::build_url(API_V1, API_AUTH_PATH, "login");
 
     let params = format!(
         "{{\"username\":\"{}\", \"password_hash\":\"{}\"}}",
@@ -42,7 +40,7 @@ pub async fn login(
 pub async fn refresh(
     refresh_token: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<(String, String)>)> {
-    let url = utils::build_url(API_V1, PATH_AUTH, "refresh");
+    let url = utils::build_url(API_V1, API_AUTH_PATH, "refresh");
 
     let authorization = format!("Bearer {}", refresh_token);
     let response = reqwest::Client::new()
@@ -68,7 +66,7 @@ pub async fn refresh(
 }
 
 pub async fn logout(refresh_token: &str) -> GenericResult<reqwest::StatusCode> {
-    let url = utils::build_url(API_V1, PATH_AUTH, "logout");
+    let url = utils::build_url(API_V1, API_AUTH_PATH, "logout");
 
     let authorization = format!("Bearer {}", refresh_token);
     let response = reqwest::Client::new()
@@ -82,7 +80,7 @@ pub async fn logout(refresh_token: &str) -> GenericResult<reqwest::StatusCode> {
 }
 
 pub async fn revoke_all(access_token: &str) -> GenericResult<reqwest::StatusCode> {
-    let url = utils::build_url(API_V1, PATH_AUTH, "revoke-all");
+    let url = utils::build_url(API_V1, API_AUTH_PATH, "revoke-all");
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
         .post(url.as_str())
@@ -94,7 +92,7 @@ pub async fn revoke_all(access_token: &str) -> GenericResult<reqwest::StatusCode
 }
 
 pub async fn revoke_user(access_token: &str, user_id: &str) -> GenericResult<reqwest::StatusCode> {
-    let url = utils::build_url(API_V1, PATH_AUTH, "revoke-user");
+    let url = utils::build_url(API_V1, API_AUTH_PATH, "revoke-user");
     let params = format!("{{\"user_id\":\"{}\"}}", user_id);
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -109,7 +107,7 @@ pub async fn revoke_user(access_token: &str, user_id: &str) -> GenericResult<req
 }
 
 pub async fn cleanup(access_token: &str) -> GenericResult<u64> {
-    let url = utils::build_url(API_V1, PATH_AUTH, "cleanup");
+    let url = utils::build_url(API_V1, API_AUTH_PATH, "cleanup");
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
         .post(url.as_str())
