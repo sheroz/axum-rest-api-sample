@@ -35,12 +35,17 @@ Covers:
 - Logs
   - `tracing` based logs
 - Tests
-  - `Docker` based end-to-end tests
-  - GitHub CI configuration for running tests
+  - End-to-end API tests
 - Using `Docker` for running services
   - `PostgreSQL` and `Redis`
   - Building the application using the official `Rust` image
   - Running the full stack: API + `PostgreSQL` + `Redis`
+- GitHub CI configuration
+  - Running cargo-deny check
+  - Running fmt check
+  - Running clippy check
+  - Running tests
+  - Building the app
 
 ## Run
 
