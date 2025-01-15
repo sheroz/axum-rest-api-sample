@@ -24,6 +24,7 @@ async fn list_users_test() {
     let (status, _) = users::list("xyz").await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -53,6 +54,7 @@ async fn get_user_test() {
     let (status, _) = users::get(uuid::Uuid::new_v4(), "").await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -104,6 +106,7 @@ async fn add_get_update_delete_user_test() {
     let status = users::delete(user.id, &access_token).await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();

@@ -16,6 +16,7 @@ async fn refresh_test() {
     // Load the test configuration and start the api server.
     utils::start_api().await;
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -53,6 +54,7 @@ async fn refresh_logout_test() {
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();

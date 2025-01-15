@@ -35,6 +35,7 @@ async fn login_test() {
     let (status, _) = auth::login(&username_wrong, &password_wrong).await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();

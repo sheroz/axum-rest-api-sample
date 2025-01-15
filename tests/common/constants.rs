@@ -1,6 +1,8 @@
 pub const API_V1: &str = "v1";
 pub const API_AUTH_PATH: &str = "auth";
 pub const API_USERS_PATH: &str = "users";
+pub const API_ACCOUNTS_PATH: &str = "accounts";
+pub const API_TRANSACTIONS_PATH: &str = "transactions";
 
 pub const TEST_ADMIN_USERNAME: &str = "admin";
 pub const TEST_ADMIN_PASSWORD_HASH: &str =

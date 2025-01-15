@@ -23,6 +23,7 @@ async fn revoke_user_test() {
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -57,6 +58,7 @@ async fn revoke_all_test() {
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -85,7 +87,7 @@ async fn cleanup_test() {
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
-    // Login.
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();

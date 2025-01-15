@@ -26,6 +26,7 @@ async fn logout_test() {
         StatusCode::UNAUTHORIZED
     );
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();

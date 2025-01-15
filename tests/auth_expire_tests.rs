@@ -20,6 +20,7 @@ async fn access_token_expire_test() {
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -60,7 +61,7 @@ async fn refresh_token_expire_test() {
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
-    // Login.
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
