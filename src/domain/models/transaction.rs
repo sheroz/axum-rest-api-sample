@@ -7,6 +7,6 @@ pub struct Transaction {
     pub id: Uuid,
     pub from_account_id: Uuid,
     pub to_account_id: Uuid,
-    pub amount: f64,
+    pub amount_cents: u64,
     pub created_at: Option<NaiveDateTime>,
 }

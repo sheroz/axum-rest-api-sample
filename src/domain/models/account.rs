@@ -6,7 +6,7 @@ use sqlx::{types::Uuid, FromRow};
 pub struct Account {
     pub id: Uuid,
     pub user_id: Uuid,
-    pub balance: f64,
+    pub balance_cents: u64,
     pub created_at: Option<NaiveDateTime>,
     pub updated_at: Option<NaiveDateTime>,
 }

@@ -6,11 +6,10 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     password_salt TEXT NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
-    roles TEXT NOT NULL, 
+    roles TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
-
 -- populate users table
 INSERT INTO users (
         username,

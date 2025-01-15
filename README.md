@@ -42,8 +42,8 @@ Covers:
   - Running the full stack: API + `PostgreSQL` + `Redis`
 - GitHub CI configuration
   - Running `cargo-deny` to check for security vulnerabilities and licenses
-  - Running `cargo fmt` to check for the Rust code format according to style guidelines.
-  - Running `cargo clippy` to catch common mistakes and improving the Rust code.
+  - Running `cargo fmt` to check for the Rust code format according to style guidelines
+  - Running `cargo clippy` to catch common mistakes and improving the Rust code
   - Running tests
   - Building the app
 
