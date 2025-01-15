@@ -36,14 +36,14 @@ Covers:
   - `tracing` based logs
 - Tests
   - End-to-end API tests
-- Using `Docker` for running services
-  - `PostgreSQL` and `Redis`
+- Using `Docker`
+  - Running `PostgreSQL` and `Redis` services
   - Building the application using the official `Rust` image
   - Running the full stack: API + `PostgreSQL` + `Redis`
 - GitHub CI configuration
-  - Running cargo-deny check
-  - Running fmt check
-  - Running clippy check
+  - Running `cargo-deny` to check for security vulnerabilities and licenses
+  - Running `cargo fmt` to check for the Rust code format according to style guidelines.
+  - Running `cargo clippy` to catch common mistakes and improving the Rust code.
   - Running tests
   - Building the app
 
