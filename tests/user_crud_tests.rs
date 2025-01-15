@@ -1,4 +1,3 @@
-use reqwest::StatusCode;
 use serial_test::serial;
 use uuid::Uuid;
 
@@ -6,6 +5,7 @@ use axum_web::{
     application::security::jwt_claims::{self, AccessClaims},
     domain::models::user::User,
 };
+use reqwest::StatusCode;
 
 pub mod common;
 use common::{
@@ -31,7 +31,7 @@ async fn list_users_test() {
     let (access_token, _) = result.unwrap();
 
     let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token).unwrap();
-    let user_id = access_claims.sub.parse().unwrap();
+    let user_id: Uuid = access_claims.sub.parse().unwrap();
 
     // Try authorized access to the users handler.
     let (status, result) = users::list(&access_token).await.unwrap();
