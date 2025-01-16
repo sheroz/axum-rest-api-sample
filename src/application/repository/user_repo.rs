@@ -68,18 +68,17 @@ pub async fn update(id: Uuid, user: User, state: &SharedState) -> RepositoryResu
     let time_now = Utc::now().naive_utc();
     let user = sqlx::query_as::<_, User>(
         r#"UPDATE users
-         SET id = $1,
-         username = $2,
-         email = $3,
-         password_hash = $4,
-         password_salt = $5,
-         active = $6,
-         roles = $7,
-         updated_at = $8
-         WHERE id = $9
+         SET 
+         username = $1,
+         email = $2,
+         password_hash = $3,
+         password_salt = $4,
+         active = $5,
+         roles = $6,
+         updated_at = $7
+         WHERE id = $8
          RETURNING users.*"#,
     )
-    .bind(user.id)
     .bind(user.username)
     .bind(user.email)
     .bind(user.password_hash)

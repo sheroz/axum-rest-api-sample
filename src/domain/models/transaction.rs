@@ -7,11 +7,11 @@ pub struct Transaction {
     pub id: Uuid,
     pub from_account_id: Uuid,
     pub to_account_id: Uuid,
-    pub amount_cents: u64,
+    pub amount_cents: i64,
     pub created_at: Option<NaiveDateTime>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum TransactionResult {
     Success(Transaction),
     InsufficientFunds,

@@ -33,7 +33,7 @@ pub async fn get(
 pub async fn transfer(
     from_account_id: Uuid,
     to_account_id: Uuid,
-    amount: u64,
+    amount: i64,
     access_token: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<TransactionResult>)> {
     Ok((reqwest::StatusCode::NOT_IMPLEMENTED, None))
