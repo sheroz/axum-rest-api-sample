@@ -19,11 +19,11 @@ pub async fn start_server(api_ready: oneshot::Sender<()>) {
     let redis = redis::open(config).await;
 
     // Connect to PostgreSQL.
-    let pgpool = postgres::pgpool(config).await;
+    let db_pool = postgres::pgpool(config).await;
 
     // Run migrations.
     sqlx::migrate!("src/infrastructure/postgres/migrations")
-        .run(&pgpool)
+        .run(&db_pool)
         .await
         .unwrap();
 
@@ -49,7 +49,7 @@ pub async fn start_server(api_ready: oneshot::Sender<()>) {
 
     // Build the application state.
     let shared_state = Arc::new(AppState {
-        pgpool,
+        db_pool,
         redis: Mutex::new(redis),
     });
 

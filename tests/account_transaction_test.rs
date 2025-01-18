@@ -266,7 +266,7 @@ async fn account_transaction_test() {
         transactions::transfer(account_bob.id, account_alice.id, amount, &access_token)
             .await
             .unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
+    assert_eq!(status, reqwest::StatusCode::UNPROCESSABLE_ENTITY);
     assert!(matches!(
         result.unwrap(),
         TransactionResult::InsufficientFunds
@@ -279,7 +279,7 @@ async fn account_transaction_test() {
         transactions::transfer(account_id, account_bob.id, amount, &access_token)
             .await
             .unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
+    assert_eq!(status, reqwest::StatusCode::UNPROCESSABLE_ENTITY);
     let transaction_result = result.unwrap();
     assert!(matches!(
         transaction_result,
@@ -296,7 +296,7 @@ async fn account_transaction_test() {
         transactions::transfer(account_alice.id, account_id, amount, &access_token)
             .await
             .unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
+    assert_eq!(status, reqwest::StatusCode::UNPROCESSABLE_ENTITY);
     let transaction_result = result.unwrap();
     assert!(matches!(
         transaction_result,

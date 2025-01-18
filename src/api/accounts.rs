@@ -34,8 +34,11 @@ async fn list_accounts_handler(
 ) -> Result<Json<Vec<Account>>, ApiError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
+
     access_claims.validate_role_admin()?;
-    match account_repo::list(&state).await {
+
+    let mut connection = state.db_pool.acquire().await.unwrap();
+    match account_repo::list(&mut connection).await {
         Ok(accounts) => Ok(Json(accounts)),
         Err(e) => {
             tracing::error!("{}", e);
@@ -52,8 +55,11 @@ async fn add_account_handler(
 ) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
+
     access_claims.validate_role_admin()?;
-    match account_repo::add(account, &state).await {
+
+    let mut connection = state.db_pool.acquire().await.unwrap();
+    match account_repo::add(account, &mut connection).await {
         Ok(account) => Ok((StatusCode::CREATED, Json(account))),
         Err(e) => {
             tracing::error!("{}", e);
@@ -71,8 +77,11 @@ async fn get_account_handler(
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
+
     access_claims.validate_role_admin()?;
-    match account_repo::get_by_id(id, &state).await {
+
+    let mut connection = state.db_pool.acquire().await.unwrap();
+    match account_repo::get_by_id(id, &mut connection).await {
         Ok(account) => Ok(Json(account)),
         Err(e) => {
             tracing::error!("{}", e);
@@ -91,8 +100,11 @@ async fn update_account_handler(
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
+    tracing::trace!("account: {:?}", account);
     access_claims.validate_role_admin()?;
-    match account_repo::update(id, account, &state).await {
+
+    let mut connection = state.db_pool.acquire().await.unwrap();
+    match account_repo::update(account, &mut connection).await {
         Ok(account) => Ok(Json(account)),
         Err(e) => {
             tracing::error!("{}", e);
@@ -111,7 +123,9 @@ async fn delete_account_handler(
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
     access_claims.validate_role_admin()?;
-    match account_repo::delete(id, &state).await {
+
+    let mut connection = state.db_pool.acquire().await.unwrap();
+    match account_repo::delete(id, &mut connection).await {
         Ok(true) => Ok(StatusCode::OK),
         Ok(false) => Err(ApiError {
             status_code: StatusCode::NOT_FOUND,

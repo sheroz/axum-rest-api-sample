@@ -13,6 +13,7 @@ use crate::{
         api_version::{self, ApiVersion},
         repository::transaction_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
+        service::transaction_service,
         state::SharedState,
     },
     domain::models::transaction::{Transaction, TransactionResult},
@@ -62,7 +63,7 @@ async fn transfer_handler(
 
     access_claims.validate_role_admin()?;
 
-    match transaction_repo::transfer(
+    match transaction_service::transfer(
         transfer_order.from_account_id,
         transfer_order.to_account_id,
         transfer_order.amount_cents,

@@ -92,7 +92,7 @@ async fn update_user_handler(
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
     access_claims.validate_role_admin()?;
-    match user_repo::update(id, user, &state).await {
+    match user_repo::update(user, &state).await {
         Ok(user) => Ok(Json(user)),
         Err(e) => {
             tracing::error!("{}", e);

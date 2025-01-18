@@ -9,7 +9,7 @@ use crate::{
 
 pub async fn list(state: &SharedState) -> RepositoryResult<Vec<User>> {
     let users = query_as::<_, User>("SELECT * FROM users")
-        .fetch_all(&state.pgpool)
+        .fetch_all(&state.db_pool)
         .await?;
 
     Ok(users)
@@ -40,7 +40,7 @@ pub async fn add(user: User, state: &SharedState) -> RepositoryResult<User> {
     .bind(UserRole::Guest.to_string())
     .bind(time_now)
     .bind(time_now)
-    .fetch_one(&state.pgpool)
+    .fetch_one(&state.db_pool)
     .await?;
 
     Ok(user)
@@ -49,7 +49,7 @@ pub async fn add(user: User, state: &SharedState) -> RepositoryResult<User> {
 pub async fn get_by_id(id: Uuid, state: &SharedState) -> RepositoryResult<User> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
         .bind(id)
-        .fetch_one(&state.pgpool)
+        .fetch_one(&state.db_pool)
         .await?;
     Ok(user)
 }
@@ -57,13 +57,13 @@ pub async fn get_by_id(id: Uuid, state: &SharedState) -> RepositoryResult<User> 
 pub async fn get_by_username(username: &str, state: &SharedState) -> RepositoryResult<User> {
     let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1")
         .bind(username)
-        .fetch_one(&state.pgpool)
+        .fetch_one(&state.db_pool)
         .await?;
 
     Ok(user)
 }
 
-pub async fn update(id: Uuid, user: User, state: &SharedState) -> RepositoryResult<User> {
+pub async fn update(user: User, state: &SharedState) -> RepositoryResult<User> {
     tracing::trace!("user: {:#?}", user);
     let time_now = Utc::now().naive_utc();
     let user = sqlx::query_as::<_, User>(
@@ -86,8 +86,8 @@ pub async fn update(id: Uuid, user: User, state: &SharedState) -> RepositoryResu
     .bind(user.active)
     .bind(user.roles)
     .bind(time_now)
-    .bind(id)
-    .fetch_one(&state.pgpool)
+    .bind(user.id)
+    .fetch_one(&state.db_pool)
     .await?;
 
     Ok(user)
@@ -96,7 +96,7 @@ pub async fn update(id: Uuid, user: User, state: &SharedState) -> RepositoryResu
 pub async fn delete(id: Uuid, state: &SharedState) -> RepositoryResult<bool> {
     let query_result = sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(id)
-        .execute(&state.pgpool)
+        .execute(&state.db_pool)
         .await?;
 
     Ok(query_result.rows_affected() == 1)
