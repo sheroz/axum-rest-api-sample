@@ -3,6 +3,8 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
+use crate::application::service::transaction_service::TransactionError;
+
 // TODO: get rid of boilerplate handlers
 // TODO: support for structured (detailed) errors
 pub struct ApiError {
@@ -32,6 +34,15 @@ impl From<StatusCode> for ApiError {
         Self {
             status_code,
             error_message: status_code.to_string(),
+        }
+    }
+}
+
+impl From<TransactionError> for ApiError {
+    fn from(err: TransactionError) -> Self {
+        Self {
+            status_code: StatusCode::UNPROCESSABLE_ENTITY,
+            error_message: err.to_string(),
         }
     }
 }

@@ -169,6 +169,7 @@ dependencies = [
  "serde_json",
  "serial_test",
  "sqlx",
+ "thiserror",
  "tokio",
  "tower-http",
  "tracing",

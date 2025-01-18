@@ -2,8 +2,8 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    application::security::roles::UserRole,
-    domain::models::{account::Account, transaction::TransactionResult, user::User},
+    application::{security::roles::UserRole, service::transaction_service::TransactionError},
+    domain::models::{account::Account, user::User},
 };
 use reqwest::StatusCode;
 
@@ -14,8 +14,9 @@ use common::{
     transactions, users, utils,
 };
 
-#[tokio::test]
+// TODO: Use isolated database for tests and remove `serial` dependency.
 #[serial]
+#[tokio::test]
 async fn account_transaction_test() {
     // Load the test configuration and start the api server.
     utils::start_api().await;
@@ -43,13 +44,23 @@ async fn account_transaction_test() {
 
     // Try unauthorized access to transaction handlers.
     let some_id = Uuid::new_v4();
-    let (status, _) = transactions::get(some_id, &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = transactions::get(some_id, &access_token).await;
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        transactions::RequestError::Response(response) => {
+            assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+        }
+        _ => panic!("invalid transaction result"),
+    }
 
-    let (status, _) = transactions::transfer(some_id, some_id, 0, &access_token)
-        .await
-        .unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = transactions::transfer(some_id, some_id, 0, &access_token).await;
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        transactions::RequestError::Response(response) => {
+            assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED)
+        }
+        _ => panic!("invalid transaction transfer result"),
+    }
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -191,28 +202,20 @@ async fn account_transaction_test() {
     assert_eq!(account_result, account_bob);
 
     // Transfer money from Alice to Bob.
-    let amount = 25;
-    let (status, result) =
-        transactions::transfer(account_alice.id, account_bob.id, amount, &access_token)
+    let amount_cents = 25;
+    let transaction =
+        transactions::transfer(account_alice.id, account_bob.id, amount_cents, &access_token)
             .await
             .unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
-    let transaction_result = result.unwrap();
-    assert!(matches!(transaction_result, TransactionResult::Success(_)));
 
     // Check for transaction details.
-    if let TransactionResult::Success(transaction) = transaction_result {
-        assert_eq!(transaction.from_account_id, account_alice.id);
-        assert_eq!(transaction.to_account_id, account_bob.id);
-        assert_eq!(transaction.amount_cents, amount);
-        let (status, result) = transactions::get(transaction.id, &access_token)
-            .await
-            .unwrap();
-        assert_eq!(status, StatusCode::OK);
-        assert_eq!(result.unwrap(), transaction);
-    } else {
-        panic!("Invalid transaction result.")
-    }
+    assert_eq!(transaction.from_account_id, account_alice.id);
+    assert_eq!(transaction.to_account_id, account_bob.id);
+    assert_eq!(transaction.amount_cents, amount_cents);
+    let transaction_persisted = transactions::get(transaction.id, &access_token)
+        .await
+        .unwrap();
+    assert_eq!(transaction_persisted, transaction);
 
     // Check for transfer results.
     let (status, result) = accounts::get(account_alice.id, &access_token)
@@ -226,28 +229,23 @@ async fn account_transaction_test() {
     assert_eq!(result.unwrap().balance_cents, 125);
 
     // Transfer money from Bob to Alice.
-    let amount = 30;
-    let (status, result) =
-        transactions::transfer(account_bob.id, account_alice.id, amount, &access_token)
+    let amount_cents = 30;
+    let transaction =
+        transactions::transfer(account_bob.id, account_alice.id, amount_cents, &access_token)
             .await
             .unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
-    let transaction_result = result.unwrap();
-    assert!(matches!(transaction_result, TransactionResult::Success(_)));
 
     // Check for transaction details.
-    if let TransactionResult::Success(transaction) = transaction_result {
-        assert_eq!(transaction.from_account_id, account_bob.id);
-        assert_eq!(transaction.to_account_id, account_alice.id);
-        assert_eq!(transaction.amount_cents, amount);
-        let (status, result) = transactions::get(transaction.id, &access_token)
-            .await
-            .unwrap();
-        assert_eq!(status, StatusCode::OK);
-        assert_eq!(result.unwrap(), transaction);
-    } else {
-        panic!("Invalid transaction result.")
-    }
+    assert_eq!(transaction.from_account_id, account_bob.id);
+    assert_eq!(transaction.to_account_id, account_alice.id);
+    assert_eq!(transaction.amount_cents, amount_cents);
+
+    // Check for persisted transaction.
+    let transaction_persisted = transactions::get(transaction.id, &access_token)
+        .await
+        .unwrap();
+    assert_eq!(transaction_persisted, transaction);
 
     // Check for transfer results.
     let (status, result) = accounts::get(account_alice.id, &access_token)
@@ -261,50 +259,44 @@ async fn account_transaction_test() {
     assert_eq!(result.unwrap().balance_cents, 95);
 
     // Check for unsufficient funds.
-    let amount = 200;
-    let (status, result) =
-        transactions::transfer(account_bob.id, account_alice.id, amount, &access_token)
-            .await
-            .unwrap();
-    assert_eq!(status, reqwest::StatusCode::UNPROCESSABLE_ENTITY);
-    assert!(matches!(
-        result.unwrap(),
-        TransactionResult::InsufficientFunds
-    ));
+    let amount_cents = 200;
+    let result =
+        transactions::transfer(account_bob.id, account_alice.id, amount_cents, &access_token).await;
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        transactions::RequestError::Response(response) => {
+            assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
+            let err_text = response.text().await.unwrap();
+            assert!(err_text.contains(&TransactionError::InsufficientFunds.to_string()))
+        }
+        _ => panic!("invalid transaction transfer result"),
+    }
 
     // Check for invalid source account.
-    let amount = 200;
     let account_id = Uuid::new_v4();
-    let (status, result) =
-        transactions::transfer(account_id, account_bob.id, amount, &access_token)
-            .await
-            .unwrap();
-    assert_eq!(status, reqwest::StatusCode::UNPROCESSABLE_ENTITY);
-    let transaction_result = result.unwrap();
-    assert!(matches!(
-        transaction_result,
-        TransactionResult::SourceAccountNotFound(_)
-    ));
-    if let TransactionResult::SourceAccountNotFound(id) = transaction_result {
-        assert_eq!(id, account_id);
-    } else {
-        panic!("Invalid transaction result.")
+    let result = transactions::transfer(account_id, account_bob.id, amount_cents, &access_token).await;
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        transactions::RequestError::Response(response) => {
+            assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
+            let err_text = response.text().await.unwrap();
+            assert!(
+                err_text.contains(&TransactionError::SourceAccountNotFound(account_id).to_string())
+            )
+        }
+        _ => panic!("invalid transaction transfer result"),
     }
 
     // Check for invalid destination account.
-    let (status, result) =
-        transactions::transfer(account_alice.id, account_id, amount, &access_token)
-            .await
-            .unwrap();
-    assert_eq!(status, reqwest::StatusCode::UNPROCESSABLE_ENTITY);
-    let transaction_result = result.unwrap();
-    assert!(matches!(
-        transaction_result,
-        TransactionResult::DestinationAccountNotFound(_)
-    ));
-    if let TransactionResult::DestinationAccountNotFound(id) = transaction_result {
-        assert_eq!(id, account_id);
-    } else {
-        panic!("Invalid transaction result.")
+    let result = transactions::transfer(account_alice.id, account_id, amount_cents, &access_token).await;
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        transactions::RequestError::Response(response) => {
+            assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
+            let err_text = response.text().await.unwrap();
+            assert!(err_text
+                .contains(&TransactionError::DestinationAccountNotFound(account_id).to_string()))
+        }
+        _ => panic!("invalid transaction transfer result"),
     }
 }

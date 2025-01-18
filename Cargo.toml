@@ -31,6 +31,7 @@ uuid = { version = "1.12", features = [
     "serde",
 ] }
 chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2"
 
 redis = { version = "0.28", features = ["tokio-comp"] }
 sqlx = { version = "0.8.3", features = [

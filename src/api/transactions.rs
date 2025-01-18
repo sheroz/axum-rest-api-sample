@@ -16,14 +16,14 @@ use crate::{
         service::transaction_service,
         state::SharedState,
     },
-    domain::models::transaction::{Transaction, TransactionResult},
+    domain::models::transaction::Transaction,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
-struct TransferOrder {
-    from_account_id: Uuid,
-    to_account_id: Uuid,
-    amount_cents: i64,
+pub struct TransferOrder {
+    pub from_account_id: Uuid,
+    pub to_account_id: Uuid,
+    pub amount_cents: i64,
 }
 
 pub fn routes() -> Router<SharedState> {
@@ -56,25 +56,20 @@ async fn transfer_handler(
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(transfer_order): Json<TransferOrder>,
-) -> Result<Json<TransactionResult>, ApiError> {
+) -> Result<Json<Transaction>, ApiError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("transfer: {:?}", transfer_order);
 
     access_claims.validate_role_admin()?;
 
-    match transaction_service::transfer(
+    let transaction = transaction_service::transfer(
         transfer_order.from_account_id,
         transfer_order.to_account_id,
         transfer_order.amount_cents,
         &state,
     )
-    .await
-    {
-        Ok(transaction_result) => Ok(Json(transaction_result)),
-        Err(e) => {
-            tracing::error!("{}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into())
-        }
-    }
+    .await?;
+
+    Ok(Json(transaction))
 }

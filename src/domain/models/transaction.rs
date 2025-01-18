@@ -10,11 +10,3 @@ pub struct Transaction {
     pub amount_cents: i64,
     pub created_at: Option<NaiveDateTime>,
 }
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum TransactionResult {
-    Success(Transaction),
-    InsufficientFunds,
-    SourceAccountNotFound(Uuid),
-    DestinationAccountNotFound(Uuid),
-}

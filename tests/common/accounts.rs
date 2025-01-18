@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use axum_web::domain::models::{account::Account, transaction::TransactionResult};
+use axum_web::domain::models::account::Account;
 
 use crate::common::{
     constants::{API_ACCOUNTS_PATH, API_V1},
