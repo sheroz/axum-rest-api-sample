@@ -203,10 +203,14 @@ async fn account_transaction_test() {
 
     // Transfer money from Alice to Bob.
     let amount_cents = 25;
-    let transaction =
-        transactions::transfer(account_alice.id, account_bob.id, amount_cents, &access_token)
-            .await
-            .unwrap();
+    let transaction = transactions::transfer(
+        account_alice.id,
+        account_bob.id,
+        amount_cents,
+        &access_token,
+    )
+    .await
+    .unwrap();
 
     // Check for transaction details.
     assert_eq!(transaction.from_account_id, account_alice.id);
@@ -230,10 +234,14 @@ async fn account_transaction_test() {
 
     // Transfer money from Bob to Alice.
     let amount_cents = 30;
-    let transaction =
-        transactions::transfer(account_bob.id, account_alice.id, amount_cents, &access_token)
-            .await
-            .unwrap();
+    let transaction = transactions::transfer(
+        account_bob.id,
+        account_alice.id,
+        amount_cents,
+        &access_token,
+    )
+    .await
+    .unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
 
     // Check for transaction details.
@@ -260,8 +268,13 @@ async fn account_transaction_test() {
 
     // Check for unsufficient funds.
     let amount_cents = 200;
-    let result =
-        transactions::transfer(account_bob.id, account_alice.id, amount_cents, &access_token).await;
+    let result = transactions::transfer(
+        account_bob.id,
+        account_alice.id,
+        amount_cents,
+        &access_token,
+    )
+    .await;
     assert!(result.is_err());
     match result.err().unwrap() {
         transactions::RequestError::Response(response) => {
@@ -274,7 +287,8 @@ async fn account_transaction_test() {
 
     // Check for invalid source account.
     let account_id = Uuid::new_v4();
-    let result = transactions::transfer(account_id, account_bob.id, amount_cents, &access_token).await;
+    let result =
+        transactions::transfer(account_id, account_bob.id, amount_cents, &access_token).await;
     assert!(result.is_err());
     match result.err().unwrap() {
         transactions::RequestError::Response(response) => {
@@ -288,7 +302,8 @@ async fn account_transaction_test() {
     }
 
     // Check for invalid destination account.
-    let result = transactions::transfer(account_alice.id, account_id, amount_cents, &access_token).await;
+    let result =
+        transactions::transfer(account_alice.id, account_id, amount_cents, &access_token).await;
     assert!(result.is_err());
     match result.err().unwrap() {
         transactions::RequestError::Response(response) => {
