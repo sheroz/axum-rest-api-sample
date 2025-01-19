@@ -1,9 +1,30 @@
+use chrono::{DateTime, Utc};
+use serde::Serialize;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
 
 use crate::application::service::transaction_service::TransactionError;
+
+pub struct DetailedError<Detail>
+where
+    Detail: Serialize,
+{
+    pub status: StatusCode,
+    pub code: String,
+    pub kind: String,
+    pub message: String,
+    pub description: String,
+    pub detail: Detail,
+    pub reason: String,
+    pub instance: String,
+    pub trace_id: String,
+    pub timestamp: DateTime<Utc>,
+    pub help: String,
+    pub info_url: String,
+}
 
 pub struct ApiError {
     pub status_code: StatusCode,
@@ -57,14 +78,14 @@ API error response sample:
     {
         "status": 404,
         "code": "user_not_found",
-        "type": "resource_not_found",
+        "kind": "resource_not_found",
         "message": "The user does not exist",
         "description": "Ghe user with the ID '12345' does not exist",
         "detail": { "user_id": "12345" },
         "reason": "resource must exist",
-        "timestamp": "2024-01-19T16:58:34.123+0000",
-        "trace_id": "b8fe4d093d5bd6df",
         "instance": "/api/v1/users/12345",
+        "trace_id": "b8fe4d093d5bd6df",
+        "timestamp": "2024-01-19T16:58:34.123+0000",
         "help": "Please check if the user ID is correct or refer to our documentation at https://api.example.com/docs/errors#user_not_found for more information",
         "info_url": "https://api.example.com/docs/errors"
     }
@@ -76,42 +97,42 @@ API error response sample:
     {
         "status": 422,
         "code": "invalid_email",
-        "type": "validation_error",
+        "kind": "validation_error",
         "message": "The user email is not valid",
         "description": "Validation error in your request",
         "detail": { "email": "xyz@12345" },
         "reason": "must be a valid email address",
-        "timestamp": "2024-01-19T16:58:35.225+0000",
-        "trace_id": "a97563baf79bb8fe",
         "instance": "/api/v1/users/12345",
+        "trace_id": "a97563baf79bb8fe",
+        "timestamp": "2024-01-19T16:58:35.225+0000",
         "help": "Please check if the user email is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_email for more information",
         "info_url": "https://api.example.com/docs/errors"
     },
     {
         "status": 422,
         "code": "invalid_birthdate",
-        "type": "validation_error",
+        "kind": "validation_error",
         "message": "The user birthdate is not correct",
         "description": "Validation error in your request",
         "detail": { "birthdate": "2050.02.30" },
         "reason": "must be a valid calendar date in the past",
-        "timestamp": "2024-01-19T16:59:03.124+0000",
-        "trace_id": "7563baf79b46c9a9",
         "instance": "/api/v1/users/12345",
+        "trace_id": "7563baf79b46c9a9",
+        "timestamp": "2024-01-19T16:59:03.124+0000",
         "help": "Please check if the user birthdate is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information."
         "info_url": "https://api.example.com/docs/errors"
     },
     {
         "status": 422
         "code": "invalid_role",
-        "type": "validation_error",
+        "kind": "validation_error",
         "message": "The user birthdate is not correct",
         "description": "Validation error in your request",
         "detail": { role: "superadmin" },
         "reason": "allowed roles: ['customer', 'guest']",
-        "timestamp": "2024-01-19T16:59:03.124+0000",
-        "trace_id": "7563baf79b46c9a9",
         "instance": "/api/v1/users/12345",
+        "trace_id": "7563baf79b46c9a9",
+        "timestamp": "2024-01-19T16:59:03.124+0000",
         "help": "Please check if the user role is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information",
         "info_url": "https://api.example.com/docs/errors"
     },
