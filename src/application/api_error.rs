@@ -78,22 +78,32 @@ use crate::application::service::transaction_service::TransactionError;
 //     },
 //   ]
 // }
+#[derive(Debug, Serialize)]
 pub struct DetailedError<Detail>
 where
     Detail: Serialize,
 {
-    pub status: StatusCode,
-    pub code: String,
-    pub kind: String,
+    pub status: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
     pub message: String,
-    pub description: String,
-    pub detail: Detail,
-    pub reason: String,
-    pub instance: String,
-    pub trace_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<Detail>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instance: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trace_id: Option<String>,
     pub timestamp: DateTime<Utc>,
-    pub help: String,
-    pub info_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub info_url: Option<String>,
 }
 
 pub struct ApiError {
