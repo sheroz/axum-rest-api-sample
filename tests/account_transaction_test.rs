@@ -1,11 +1,14 @@
-use serial_test::serial;
-use uuid::Uuid;
-
 use axum_web::{
-    application::{security::roles::UserRole, service::transaction_service::TransactionError},
+    application::{
+        api_error::{DetailedError, DetailedErrorCode, DetailedErrorKind},
+        security::roles::UserRole,
+        service::transaction_service::TransactionError,
+    },
     domain::models::{account::Account, user::User},
 };
 use reqwest::StatusCode;
+use serial_test::serial;
+use uuid::Uuid;
 
 pub mod common;
 use common::{
@@ -47,19 +50,19 @@ async fn account_transaction_test() {
     let result = transactions::get(some_id, &access_token).await;
     assert!(result.is_err());
     match result.err().unwrap() {
-        transactions::RequestError::Response(response) => {
+        transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
         }
-        _ => panic!("invalid transaction result"),
+        _ => panic!("invalid access result"),
     }
 
     let result = transactions::transfer(some_id, some_id, 0, &access_token).await;
     assert!(result.is_err());
     match result.err().unwrap() {
-        transactions::RequestError::Response(response) => {
+        transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED)
         }
-        _ => panic!("invalid transaction transfer result"),
+        _ => panic!("invalid access result"),
     }
 
     // Login as an admin.
@@ -266,6 +269,30 @@ async fn account_transaction_test() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(result.unwrap().balance_cents, 95);
 
+    // Check for non existing transaction.
+    let transaction_id = Uuid::new_v4();
+    let result = transactions::get(transaction_id, &access_token).await;
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        transactions::TransactionResponseError::UnexpectedResponse(response) => {
+            assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
+            let body = response.text().await.unwrap();
+            let error = serde_json::from_str::<DetailedError>(&body).unwrap();
+            assert_eq!(
+                error.code,
+                serde_json::to_string(&DetailedErrorCode::TransactionNotFound).ok()
+            );
+            assert_eq!(error.kind, Some(DetailedErrorKind::ResourceNotFound));
+            assert_eq!(
+                error.message,
+                TransactionError::TransactionNotFound(transaction_id).to_string()
+            );
+            let detail = error.detail.unwrap();
+            assert_eq!(detail["transaction_id"], transaction_id.to_string());
+        }
+        _ => panic!("invalid transaction result"),
+    }
+
     // Check for unsufficient funds.
     let amount_cents = 200;
     let result = transactions::transfer(
@@ -277,10 +304,20 @@ async fn account_transaction_test() {
     .await;
     assert!(result.is_err());
     match result.err().unwrap() {
-        transactions::RequestError::Response(response) => {
+        transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
-            let err_text = response.text().await.unwrap();
-            assert!(err_text.contains(&TransactionError::InsufficientFunds.to_string()))
+            let body = response.text().await.unwrap();
+            let error = serde_json::from_str::<DetailedError>(&body).unwrap();
+            assert_eq!(
+                error.code,
+                serde_json::to_string(&DetailedErrorCode::InsufficientFunds).ok()
+            );
+            assert_eq!(error.kind, Some(DetailedErrorKind::ValidationError));
+            assert_eq!(
+                error.message,
+                TransactionError::InsufficientFunds.to_string()
+            );
+            assert_eq!(error.detail, None);
         }
         _ => panic!("invalid transaction transfer result"),
     }
@@ -291,12 +328,21 @@ async fn account_transaction_test() {
         transactions::transfer(account_id, account_bob.id, amount_cents, &access_token).await;
     assert!(result.is_err());
     match result.err().unwrap() {
-        transactions::RequestError::Response(response) => {
+        transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
-            let err_text = response.text().await.unwrap();
-            assert!(
-                err_text.contains(&TransactionError::SourceAccountNotFound(account_id).to_string())
-            )
+            let body = response.text().await.unwrap();
+            let error = serde_json::from_str::<DetailedError>(&body).unwrap();
+            assert_eq!(
+                error.code,
+                serde_json::to_string(&DetailedErrorCode::SourceAccountNotFound).ok()
+            );
+            assert_eq!(error.kind, Some(DetailedErrorKind::ValidationError));
+            assert_eq!(
+                error.message,
+                TransactionError::SourceAccountNotFound(account_id).to_string()
+            );
+            let detail = error.detail.unwrap();
+            assert_eq!(detail["account_id"], account_id.to_string());
         }
         _ => panic!("invalid transaction transfer result"),
     }
@@ -306,11 +352,21 @@ async fn account_transaction_test() {
         transactions::transfer(account_alice.id, account_id, amount_cents, &access_token).await;
     assert!(result.is_err());
     match result.err().unwrap() {
-        transactions::RequestError::Response(response) => {
+        transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
-            let err_text = response.text().await.unwrap();
-            assert!(err_text
-                .contains(&TransactionError::DestinationAccountNotFound(account_id).to_string()))
+            let body = response.text().await.unwrap();
+            let error = serde_json::from_str::<DetailedError>(&body).unwrap();
+            assert_eq!(
+                error.code,
+                serde_json::to_string(&DetailedErrorCode::DestinationAccountNotFound).ok()
+            );
+            assert_eq!(error.kind, Some(DetailedErrorKind::ValidationError));
+            assert_eq!(
+                error.message,
+                TransactionError::DestinationAccountNotFound(account_id).to_string()
+            );
+            let detail = error.detail.unwrap();
+            assert_eq!(detail["account_id"], account_id.to_string());
         }
         _ => panic!("invalid transaction transfer result"),
     }

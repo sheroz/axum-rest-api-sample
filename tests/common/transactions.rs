@@ -1,8 +1,7 @@
+use axum_web::{api::transactions::TransferOrder, domain::models::transaction::Transaction};
 use reqwest::Response;
 use thiserror::Error;
 use uuid::Uuid;
-
-use axum_web::{api::transactions::TransferOrder, domain::models::transaction::Transaction};
 
 use crate::common::{
     constants::{API_TRANSACTIONS_PATH, API_V1},
@@ -10,14 +9,17 @@ use crate::common::{
 };
 
 #[derive(Debug, Error)]
-pub enum RequestError {
+pub enum TransactionResponseError {
     #[error("unexpected response")]
-    Response(Response),
+    UnexpectedResponse(Response),
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
 }
 
-pub async fn get(transaction_id: Uuid, access_token: &str) -> Result<Transaction, RequestError> {
+pub async fn get(
+    transaction_id: Uuid,
+    access_token: &str,
+) -> Result<Transaction, TransactionResponseError> {
     let url = utils::build_url(API_V1, API_TRANSACTIONS_PATH, &transaction_id.to_string());
 
     let authorization = format!("Bearer {}", access_token);
@@ -35,7 +37,7 @@ pub async fn get(transaction_id: Uuid, access_token: &str) -> Result<Transaction
         return Ok(transaction);
     }
 
-    Err(RequestError::Response(response))
+    Err(TransactionResponseError::UnexpectedResponse(response))
 }
 
 pub async fn transfer(
@@ -43,7 +45,7 @@ pub async fn transfer(
     to_account_id: Uuid,
     amount_cents: i64,
     access_token: &str,
-) -> Result<Transaction, RequestError> {
+) -> Result<Transaction, TransactionResponseError> {
     let url = utils::build_url(API_V1, API_TRANSACTIONS_PATH, "transfer");
 
     let transfer_order = TransferOrder {
@@ -69,5 +71,5 @@ pub async fn transfer(
         return Ok(transaction);
     }
 
-    Err(RequestError::Response(response))
+    Err(TransactionResponseError::UnexpectedResponse(response))
 }

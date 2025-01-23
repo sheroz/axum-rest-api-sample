@@ -9,18 +9,6 @@ use crate::{
     domain::models::transaction::Transaction,
 };
 
-#[derive(Debug, Error)]
-pub enum TransactionError {
-    #[error("insufficient funds")]
-    InsufficientFunds,
-    #[error("source account not found: {0}")]
-    SourceAccountNotFound(Uuid),
-    #[error("destination account not found: {0}")]
-    DestinationAccountNotFound(Uuid),
-    #[error(transparent)]
-    SQLxError(#[from] sqlx::Error),
-}
-
 pub async fn transfer(
     from_account_id: Uuid,
     to_account_id: Uuid,
@@ -74,4 +62,18 @@ pub async fn transfer(
     tx.commit().await?;
 
     Ok(transaction)
+}
+
+#[derive(Debug, Error)]
+pub enum TransactionError {
+    #[error("transaction not found: {0}")]
+    TransactionNotFound(Uuid),
+    #[error("insufficient funds")]
+    InsufficientFunds,
+    #[error("source account not found: {0}")]
+    SourceAccountNotFound(Uuid),
+    #[error("destination account not found: {0}")]
+    DestinationAccountNotFound(Uuid),
+    #[error(transparent)]
+    SQLxError(#[from] sqlx::Error),
 }
