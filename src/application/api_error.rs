@@ -78,21 +78,18 @@ use crate::application::service::transaction_service::TransactionError;
 //     },
 //   ]
 // }
-#[derive(Debug, Serialize)]
-pub struct DetailedError<Detail>
-where
-    Detail: Serialize,
-{
+#[derive(Debug, Default, Serialize)]
+pub struct DetailedError {
     pub status: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<String>,
+    pub kind: Option<DetailedErrorKind>,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub detail: Option<Detail>,
+    pub detail: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -104,6 +101,85 @@ where
     pub help: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub info_url: Option<String>,
+}
+
+impl From<StatusCode> for DetailedError {
+    fn from(status_code: StatusCode) -> Self {
+        let status = status_code.into();
+        let timestamp = Utc::now();
+        Self {
+            status,
+            timestamp,
+            ..Default::default()
+        }
+    }
+}
+
+impl From<ApiError> for DetailedError {
+    fn from(api_error: ApiError) -> Self {
+        let mut error = DetailedError::from(api_error.status_code);
+        error.message = api_error.error_message;
+        error
+    }
+}
+
+impl IntoResponse for DetailedError {
+    fn into_response(self) -> Response {
+        tracing::error!("Error response: {:?}", self);
+        let status_code =
+            StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        let body = serde_json::to_string(&self).unwrap_or_else(|_| "".to_string());
+        (status_code, body).into_response()
+    }
+}
+
+impl From<TransactionError> for DetailedError {
+    fn from(transaction_error: TransactionError) -> Self {
+        let message = format!("{}", transaction_error);
+        let mut error = match transaction_error {
+            TransactionError::InsufficientFunds => {
+                let mut error = DetailedError::from(StatusCode::UNPROCESSABLE_ENTITY);
+                error.code = Some("insufficient_funds".to_string());
+                error.kind = Some(DetailedErrorKind::ValidationError);
+                error.description = Some(
+                    "there are insufficient funds in the source account for the transfer".into(),
+                );
+                error
+            }
+            TransactionError::SourceAccountNotFound(uuid) => {
+                let mut error = DetailedError::from(StatusCode::UNPROCESSABLE_ENTITY);
+                error.code = Some("source_account_not_found".to_string());
+                error.kind = Some(DetailedErrorKind::ValidationError);
+                error.detail = Some(format!("{{account_id: {}}}", uuid));
+                error
+            }
+            TransactionError::DestinationAccountNotFound(uuid) => {
+                let mut error = DetailedError::from(StatusCode::UNPROCESSABLE_ENTITY);
+                error.code = Some("destination_account_not_found".to_string());
+                error.kind = Some(DetailedErrorKind::ValidationError);
+                error.detail = Some(format!("{{account_id: {}}}", uuid));
+                error
+            }
+            TransactionError::SQLxError(e) => {
+                let mut error = DetailedError::from(StatusCode::INTERNAL_SERVER_ERROR);
+                error.code = serde_json::to_string(&DetailedErrorKind::DatabaseError).ok();
+                error.kind = Some(DetailedErrorKind::DatabaseError);
+                error.description =
+                    Some(format!("Database error occured during transaction: {}", e));
+                error
+            }
+        };
+        error.message = message;
+        error
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DetailedErrorKind {
+    ResourceNotFound,
+    ValidationError,
+    DatabaseError,
 }
 
 pub struct ApiError {
@@ -133,15 +209,6 @@ impl From<StatusCode> for ApiError {
         Self {
             status_code,
             error_message: status_code.to_string(),
-        }
-    }
-}
-
-impl From<TransactionError> for ApiError {
-    fn from(err: TransactionError) -> Self {
-        Self {
-            status_code: StatusCode::UNPROCESSABLE_ENTITY,
-            error_message: err.to_string(),
         }
     }
 }

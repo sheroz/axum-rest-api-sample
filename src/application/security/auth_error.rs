@@ -1,5 +1,6 @@
-use crate::application::api_error::ApiError;
 use axum::http::StatusCode;
+
+use crate::application::api_error::{ApiError, DetailedError};
 
 #[derive(Debug)]
 pub enum AuthError {
@@ -22,5 +23,12 @@ impl From<AuthError> for ApiError {
             status_code,
             error_message: error_message.to_owned(),
         }
+    }
+}
+
+impl From<AuthError> for DetailedError {
+    fn from(auth_errors: AuthError) -> Self {
+        let api_error = ApiError::from(auth_errors);
+        Self::from(api_error)
     }
 }

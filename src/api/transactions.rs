@@ -9,7 +9,7 @@ use sqlx::types::Uuid;
 
 use crate::{
     application::{
-        api_error::ApiError,
+        api_error::{ApiError, DetailedError},
         api_version::{self, ApiVersion},
         repository::transaction_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -56,7 +56,7 @@ async fn transfer_handler(
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(transfer_order): Json<TransferOrder>,
-) -> Result<Json<Transaction>, ApiError> {
+) -> Result<Json<Transaction>, DetailedError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("transfer: {:?}", transfer_order);
