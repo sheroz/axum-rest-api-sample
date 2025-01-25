@@ -305,7 +305,7 @@ async fn account_transaction_test() {
             let error = error_response.errors[0].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::InsufficientFunds).ok()
+                serde_json::to_string(&ApiErrorCode::TransactionInsufficientFunds).ok()
             );
             assert_eq!(
                 error.kind,
@@ -359,7 +359,7 @@ async fn transaction_account_validation_test() {
             let error = error_response.errors[0].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::SourceAccountNotFound).ok()
+                serde_json::to_string(&ApiErrorCode::TransactionSourceAccountNotFound).ok()
             );
             assert_eq!(
                 error.kind,
@@ -375,7 +375,7 @@ async fn transaction_account_validation_test() {
             let error = error_response.errors[1].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::DestinationAccountNotFound).ok()
+                serde_json::to_string(&ApiErrorCode::TransactionDestinationAccountNotFound).ok()
             );
             assert_eq!(
                 error.kind,

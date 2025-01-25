@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::{
     application::{
-        api_error::{ApiError, ApiErrorCode, ApiErrorKind, ErrorDetail},
+        api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind},
         api_version::{self, ApiVersion},
         repository::transaction_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -103,7 +103,7 @@ impl From<(StatusCode, Vec<TransactionError>)> for ApiError {
         let (status, errors) = error_from;
         Self {
             status,
-            errors: errors.into_iter().map(ErrorDetail::from).collect(),
+            errors: errors.into_iter().map(ApiErrorEntry::from).collect(),
         }
     }
 }
@@ -119,7 +119,7 @@ impl From<&TransactionError> for StatusCode {
     }
 }
 
-impl From<TransactionError> for ErrorDetail {
+impl From<TransactionError> for ApiErrorEntry {
     fn from(transaction_error: TransactionError) -> Self {
         let error = Self::new(&transaction_error.to_string());
         match transaction_error {
@@ -128,17 +128,17 @@ impl From<TransactionError> for ErrorDetail {
                 .kind(ApiErrorKind::ResourceNotFound)
                 .detail(serde_json::json!({"transaction_id": transaction_id})),
             TransactionError::InsufficientFunds => error
-                .code(ApiErrorCode::InsufficientFunds)
+                .code(ApiErrorCode::TransactionInsufficientFunds)
                 .kind(ApiErrorKind::ValidationError)
                 .description(
                     "there are insufficient funds in the source account for the transfer".into(),
                 ),
             TransactionError::SourceAccountNotFound(source_account_id) => error
-                .code(ApiErrorCode::SourceAccountNotFound)
+                .code(ApiErrorCode::TransactionSourceAccountNotFound)
                 .kind(ApiErrorKind::ValidationError)
                 .detail(serde_json::json!({"source_account_id": source_account_id})),
             TransactionError::DestinationAccountNotFound(destination_account_id) => error
-                .code(ApiErrorCode::DestinationAccountNotFound)
+                .code(ApiErrorCode::TransactionDestinationAccountNotFound)
                 .kind(ApiErrorKind::ValidationError)
                 .detail(serde_json::json!({"destination_account_id": destination_account_id})),
         }

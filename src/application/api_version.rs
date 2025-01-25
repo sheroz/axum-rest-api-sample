@@ -6,7 +6,7 @@ use axum::{
     RequestPartsExt,
 };
 
-use crate::application::api_error::{ApiError, ErrorDetail};
+use crate::application::api_error::{ApiError, ApiErrorEntry};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {
@@ -92,7 +92,7 @@ impl From<ApiVersionError> for ApiError {
 
         Self {
             status,
-            errors: vec![ErrorDetail::new(&message)],
+            errors: vec![ApiErrorEntry::new(&message)],
         }
     }
 }

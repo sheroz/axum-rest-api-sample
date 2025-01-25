@@ -76,17 +76,21 @@ use serde::{Deserialize, Serialize};
 pub struct ApiError {
     #[serde(skip)]
     pub status: StatusCode,
-    pub errors: Vec<ErrorDetail>,
+    pub errors: Vec<ApiErrorEntry>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ApiErrorCode {
-    AuthenticationError,
+    AuthWrongCredentials,
+    AuthMissingCredentials,
+    AuthTokenCreationError,
+    AuthInvalidToken,
     TransactionNotFound,
-    InsufficientFunds,
-    SourceAccountNotFound,
-    DestinationAccountNotFound,
+    TransactionInsufficientFunds,
+    TransactionSourceAccountNotFound,
+    TransactionDestinationAccountNotFound,
+    ResourceNotFound,
     DatabaseError,
 }
 
@@ -100,7 +104,7 @@ pub enum ApiErrorKind {
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct ErrorDetail {
+pub struct ApiErrorEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -123,7 +127,7 @@ pub struct ErrorDetail {
     pub info_url: Option<String>,
 }
 
-impl ErrorDetail {
+impl ApiErrorEntry {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_owned(),
@@ -132,12 +136,12 @@ impl ErrorDetail {
         }
     }
 
-    pub fn code(mut self, code: ApiErrorCode) -> Self {
+    pub fn code<S: Serialize>(mut self, code: S) -> Self {
         self.code = serde_json::to_string(&code).ok();
         self
     }
 
-    pub fn kind(mut self, kind: ApiErrorKind) -> Self {
+    pub fn kind<S: Serialize>(mut self, kind: S) -> Self {
         self.kind = serde_json::to_string(&kind).ok();
         self
     }
@@ -182,7 +186,7 @@ impl From<StatusCode> for ApiError {
     fn from(status: StatusCode) -> Self {
         Self {
             status,
-            errors: vec![ErrorDetail::new(&status.to_string())],
+            errors: vec![],
         }
     }
 }
@@ -202,16 +206,16 @@ impl From<sqlx::Error> for ApiError {
         };
         Self {
             status,
-            errors: vec![ErrorDetail::from(error)],
+            errors: vec![ApiErrorEntry::from(error)],
         }
     }
 }
 
-impl From<sqlx::Error> for ErrorDetail {
+impl From<sqlx::Error> for ApiErrorEntry {
     fn from(e: sqlx::Error) -> Self {
         Self::new(&e.to_string())
             .code(ApiErrorCode::DatabaseError)
             .kind(ApiErrorKind::DatabaseError)
-            .description(&format!("Database error occured: {}", e))
+            .description(&format!("Database error: {}", e))
     }
 }
