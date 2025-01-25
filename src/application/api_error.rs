@@ -82,6 +82,7 @@ pub struct ApiError {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ApiErrorCode {
+    AuthenticationError,
     TransactionNotFound,
     InsufficientFunds,
     SourceAccountNotFound,
@@ -92,6 +93,7 @@ pub enum ApiErrorCode {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ApiErrorKind {
+    AuthenticationError,
     ResourceNotFound,
     ValidationError,
     DatabaseError,
@@ -102,7 +104,7 @@ pub struct ErrorDetail {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<ApiErrorKind>,
+    pub kind: Option<String>,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -128,6 +130,25 @@ impl ErrorDetail {
             timestamp: Utc::now(),
             ..Default::default()
         }
+    }
+    pub fn code(mut self, code: ApiErrorCode) -> Self {
+        self.code = serde_json::to_string(&code).ok();
+        self
+    }
+
+    pub fn kind(mut self, kind: ApiErrorKind) -> Self {
+        self.kind = serde_json::to_string(&kind).ok();
+        self
+    }
+
+    pub fn description(mut self, description: String) -> Self {
+        self.description = Some(description);
+        self
+    }
+
+    pub fn detail(mut self, detail: serde_json::Value) -> Self {
+        self.detail = Some(detail);
+        self
     }
 }
 
@@ -162,10 +183,9 @@ impl From<sqlx::Error> for ApiError {
 
 impl From<sqlx::Error> for ErrorDetail {
     fn from(e: sqlx::Error) -> Self {
-        let mut error = Self::new(&e.to_string());
-        error.code = serde_json::to_string(&ApiErrorCode::DatabaseError).ok();
-        error.kind = Some(ApiErrorKind::DatabaseError);
-        error.description = Some(format!("Database error occured: {}", e));
-        error
+        Self::new(&e.to_string())
+            .code(ApiErrorCode::DatabaseError)
+            .kind(ApiErrorKind::DatabaseError)
+            .description(format!("Database error occured: {}", e))
     }
 }

@@ -121,33 +121,27 @@ impl From<&TransactionError> for StatusCode {
 
 impl From<TransactionError> for ErrorDetail {
     fn from(transaction_error: TransactionError) -> Self {
-        let mut error = Self::new(&transaction_error.to_string());
+        let error = Self::new(&transaction_error.to_string());
         match transaction_error {
-            TransactionError::TransactionNotFound(transaction_id) => {
-                error.code = serde_json::to_string(&ApiErrorCode::TransactionNotFound).ok();
-                error.kind = Some(ApiErrorKind::ResourceNotFound);
-                error.detail = Some(serde_json::json!({"transaction_id": transaction_id}));
-            }
-            TransactionError::InsufficientFunds => {
-                error.code = serde_json::to_string(&ApiErrorCode::SourceAccountNotFound).ok();
-                error.kind = Some(ApiErrorKind::ValidationError);
-                error.description = Some(
+            TransactionError::TransactionNotFound(transaction_id) => error
+                .code(ApiErrorCode::TransactionNotFound)
+                .kind(ApiErrorKind::ResourceNotFound)
+                .detail(serde_json::json!({"transaction_id": transaction_id})),
+            TransactionError::InsufficientFunds => error
+                .code(ApiErrorCode::InsufficientFunds)
+                .kind(ApiErrorKind::ValidationError)
+                .description(
                     "there are insufficient funds in the source account for the transfer".into(),
-                );
-            }
-            TransactionError::SourceAccountNotFound(source_account_id) => {
-                error.code = serde_json::to_string(&ApiErrorCode::SourceAccountNotFound).ok();
-                error.kind = Some(ApiErrorKind::ValidationError);
-                error.detail = Some(serde_json::json!({"source_account_id": source_account_id}));
-            }
-            TransactionError::DestinationAccountNotFound(destination_account_id) => {
-                error.code = serde_json::to_string(&ApiErrorCode::DestinationAccountNotFound).ok();
-                error.kind = Some(ApiErrorKind::ValidationError);
-                error.detail =
-                    Some(serde_json::json!({"destination_account_id": destination_account_id}));
-            }
+                ),
+            TransactionError::SourceAccountNotFound(source_account_id) => error
+                .code(ApiErrorCode::SourceAccountNotFound)
+                .kind(ApiErrorKind::ValidationError)
+                .detail(serde_json::json!({"source_account_id": source_account_id})),
+            TransactionError::DestinationAccountNotFound(destination_account_id) => error
+                .code(ApiErrorCode::DestinationAccountNotFound)
+                .kind(ApiErrorKind::ValidationError)
+                .detail(serde_json::json!({"destination_account_id": destination_account_id})),
         }
-        error
     }
 }
 
