@@ -13,15 +13,15 @@ use serde::{Deserialize, Serialize};
 //     {
 //         "code": "user_not_found",
 //         "kind": "resource_not_found",
-//         "message": "The user does not exist",
-//         "description": "Ghe user with the ID '12345' does not exist",
+//         "message": "user not found: 12345",
+//         "description": "user with the ID '12345' does not exist in our records",
 //         "detail": { "user_id": "12345" },
-//         "reason": "resource must exist",
+//         "reason": "must be an existing user",
 //         "instance": "/api/v1/users/12345",
-//         "trace_id": "b8fe4d093d5bd6df",
+//         "trace_id": "3d2b4f2d00694354a00522fe3bb86158",
 //         "timestamp": "2024-01-19T16:58:34.123+0000",
-//         "help": "Please check if the user ID is correct or refer to our documentation at https://api.example.com/docs/errors#user_not_found for more information",
-//         "info_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user ID is correct or refer to our documentation at https://api.example.com/docs/errors#user_not_found for more information",
+//         "doc_url": "https://api.example.com/docs/errors"
 //     }
 //   ]
 // }
@@ -31,41 +31,41 @@ use serde::{Deserialize, Serialize};
 //     {
 //         "code": "invalid_email",
 //         "kind": "validation_error",
-//         "message": "The user email is not valid",
-//         "description": "Validation error in your request",
+//         "message": "user email is not valid",
+//         "description": "validation error in your request",
 //         "detail": { "email": "xyz@12345" },
 //         "reason": "must be a valid email address",
 //         "instance": "/api/v1/users/12345",
-//         "trace_id": "a97563baf79bb8fe",
+//         "trace_id": "fbb9fdf5394d4abe8e42b49c3246310b",
 //         "timestamp": "2024-01-19T16:58:35.225+0000",
-//         "help": "Please check if the user email is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_email for more information",
-//         "info_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user email is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_email for more information",
+//         "doc_url": "https://api.example.com/docs/errors"
 //     },
 //     {
 //         "code": "invalid_birthdate",
 //         "kind": "validation_error",
-//         "message": "The user birthdate is not correct",
-//         "description": "Validation error in your request",
+//         "message": "user birthdate is not correct",
+//         "description": "validation error in your request",
 //         "detail": { "birthdate": "2050.02.30" },
 //         "reason": "must be a valid calendar date in the past",
 //         "instance": "/api/v1/users/12345",
-//         "trace_id": "7563baf79b46c9a9",
+//         "trace_id": "8a250eaa650943b085934771fb35ba54",
 //         "timestamp": "2024-01-19T16:59:03.124+0000",
-//         "help": "Please check if the user birthdate is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information."
-//         "info_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user birthdate is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information."
+//         "doc_url": "https://api.example.com/docs/errors"
 //     },
 //     {
 //         "code": "invalid_role",
 //         "kind": "validation_error",
-//         "message": "The user birthdate is not correct",
-//         "description": "Validation error in your request",
+//         "message": "user birthdate is not correct",
+//         "description": "validation error in your request",
 //         "detail": { role: "superadmin" },
 //         "reason": "allowed roles: ['customer', 'guest']",
 //         "instance": "/api/v1/users/12345",
-//         "trace_id": "7563baf79b46c9a9",
+//         "trace_id": "e023ebc3ab3e4c02b08247d9c5f03aa8",
 //         "timestamp": "2024-01-19T16:59:03.124+0000",
-//         "help": "Please check if the user role is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information",
-//         "info_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user role is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information",
+//         "doc_url": "https://api.example.com/docs/errors"
 //     },
 //   ]
 // }
@@ -83,6 +83,8 @@ pub enum ApiErrorCode {
     AuthMissingCredentials,
     AuthTokenCreationError,
     AuthInvalidToken,
+    AuthForbidden,
+    UserNotFound,
     TransactionNotFound,
     TransactionInsufficientFunds,
     TransactionSourceAccountNotFound,
@@ -121,7 +123,7 @@ pub struct ApiErrorEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub help: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub info_url: Option<String>,
+    pub doc_url: Option<String>,
 }
 
 impl ApiErrorEntry {
@@ -163,8 +165,11 @@ impl ApiErrorEntry {
         self
     }
 
-    pub fn trace_id(mut self, trace_id: &str) -> Self {
-        self.trace_id = Some(trace_id.to_owned());
+    pub fn trace_id(mut self) -> Self {
+        // Generate a new trace id.
+        let mut trace_id = uuid::Uuid::new_v4().to_string();
+        trace_id.retain(|c| c != '-');
+        self.trace_id = Some(trace_id);
         self
     }
 
@@ -173,9 +178,35 @@ impl ApiErrorEntry {
         self
     }
 
-    pub fn info_url(mut self, info_url: &str) -> Self {
-        self.info_url = Some(info_url.to_owned());
+    pub fn doc_url(mut self, doc_url: &str) -> Self {
+        self.doc_url = Some(doc_url.to_owned());
         self
+    }
+}
+
+impl From<sqlx::Error> for ApiErrorEntry {
+    fn from(e: sqlx::Error) -> Self {
+        Self::new(&e.to_string())
+            .code(ApiErrorCode::DatabaseError)
+            .kind(ApiErrorKind::DatabaseError)
+            .description(&format!("Database error: {}", e))
+    }
+}
+
+impl From<(StatusCode, Vec<ApiErrorEntry>)> for ApiError {
+    fn from(error_from: (StatusCode, Vec<ApiErrorEntry>)) -> Self {
+        let (status, errors) = error_from;
+        Self { status, errors }
+    }
+}
+
+impl From<(StatusCode, ApiErrorEntry)> for ApiError {
+    fn from(error_from: (StatusCode, ApiErrorEntry)) -> Self {
+        let (status, error_entry) = error_from;
+        Self {
+            status,
+            errors: vec![error_entry],
+        }
     }
 }
 
@@ -185,13 +216,6 @@ impl From<StatusCode> for ApiError {
             status,
             errors: vec![],
         }
-    }
-}
-
-impl IntoResponse for ApiError {
-    fn into_response(self) -> Response {
-        tracing::error!("Error response: {:?}", self);
-        (self.status, Json(self)).into_response()
     }
 }
 
@@ -208,11 +232,9 @@ impl From<sqlx::Error> for ApiError {
     }
 }
 
-impl From<sqlx::Error> for ApiErrorEntry {
-    fn from(e: sqlx::Error) -> Self {
-        Self::new(&e.to_string())
-            .code(ApiErrorCode::DatabaseError)
-            .kind(ApiErrorKind::DatabaseError)
-            .description(&format!("Database error: {}", e))
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        tracing::error!("Error response: {:?}", self);
+        (self.status, Json(self)).into_response()
     }
 }

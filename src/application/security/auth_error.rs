@@ -13,6 +13,8 @@ pub enum AuthError {
     TokenCreationError,
     #[error("invalid token")]
     InvalidToken,
+    #[error("forbidden")]
+    Forbidden,
 }
 
 impl From<AuthError> for ApiError {
@@ -30,6 +32,7 @@ impl From<AuthError> for ApiError {
                 ApiErrorCode::AuthTokenCreationError,
             ),
             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, ApiErrorCode::AuthInvalidToken),
+            AuthError::Forbidden => (StatusCode::FORBIDDEN, ApiErrorCode::AuthForbidden),
         };
 
         let error = ApiErrorEntry::new(&auth_error.to_string())

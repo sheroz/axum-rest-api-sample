@@ -6,10 +6,11 @@ use axum::{
     Json, Router,
 };
 use sqlx::types::Uuid;
+use thiserror::Error;
 
 use crate::{
     application::{
-        api_error::ApiError,
+        api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind},
         api_version::{self, ApiVersion},
         repository::user_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -62,7 +63,16 @@ async fn get_user_handler(
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
     access_claims.validate_role_admin()?;
-    let user = user_repo::get_by_id(id, &state).await?;
+    let user = user_repo::get_by_id(id, &state)
+        .await
+        .map_err(|e| match e {
+            sqlx::Error::RowNotFound => {
+                let user_error = UserError::UserNotFound(id);
+                (user_error.status_code(), ApiErrorEntry::from(user_error)).into()
+            }
+            _ => ApiError::from(e),
+        })?;
+
     Ok(Json(user))
 }
 
@@ -95,5 +105,38 @@ async fn delete_user_handler(
         Ok(StatusCode::OK)
     } else {
         Err(StatusCode::NOT_FOUND)?
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum UserError {
+    #[error("user not found: {0}")]
+    UserNotFound(Uuid),
+}
+
+impl UserError {
+    const fn status_code(&self) -> StatusCode {
+        match self {
+            Self::UserNotFound(_) => StatusCode::NOT_FOUND,
+        }
+    }
+}
+
+impl From<UserError> for ApiErrorEntry {
+    fn from(user_error: UserError) -> Self {
+        let message = user_error.to_string();
+        let doc_url = "https://api.example.com/docs/errors";
+        match user_error {
+            UserError::UserNotFound(user_id) => Self::new(&message)
+                .code(ApiErrorCode::UserNotFound)
+                .kind(ApiErrorKind::ResourceNotFound)
+                .description(&format!("user with the ID '{}' does not exist in our records", user_id))
+                .detail(serde_json::json!({"user_id": user_id}))
+                .reason("must be an existing user")
+                .instance(&format!("/api/v1/users/{}", user_id))
+                .trace_id()
+                .help(&format!("please check if the user ID is correct or refer to our documentation at {}#user_not_found for more information", doc_url))
+                .doc_url(doc_url)
+        }
     }
 }

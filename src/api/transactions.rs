@@ -92,9 +92,7 @@ pub enum TransactionError {
 
 impl From<TransactionError> for ApiError {
     fn from(error: TransactionError) -> Self {
-        let status = StatusCode::from(&error);
-        let errors = vec![error.into()];
-        (status, errors).into()
+        (error.status_code(), vec![ApiErrorEntry::from(error)]).into()
     }
 }
 
@@ -108,13 +106,11 @@ impl From<(StatusCode, Vec<TransactionError>)> for ApiError {
     }
 }
 
-impl From<&TransactionError> for StatusCode {
-    fn from(error: &TransactionError) -> Self {
-        match error {
-            TransactionError::TransactionNotFound(_) => Self::NOT_FOUND,
-            TransactionError::InsufficientFunds
-            | TransactionError::SourceAccountNotFound(_)
-            | TransactionError::DestinationAccountNotFound(_) => Self::UNPROCESSABLE_ENTITY,
+impl TransactionError {
+    const fn status_code(&self) -> StatusCode {
+        match self {
+            Self::TransactionNotFound(_) => StatusCode::NOT_FOUND,
+            _ => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 }
