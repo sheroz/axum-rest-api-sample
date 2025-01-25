@@ -1,7 +1,7 @@
-use thiserror::Error;
 use uuid::Uuid;
 
 use crate::{
+    api::transactions::{TransactionError, TransferError, TransferValidationErrors},
     application::{
         repository::{account_repo, transaction_repo},
         state::SharedState,
@@ -10,70 +10,86 @@ use crate::{
 };
 
 pub async fn transfer(
-    from_account_id: Uuid,
-    to_account_id: Uuid,
+    source_account_id: Uuid,
+    destination_account_id: Uuid,
     amount_cents: i64,
     state: &SharedState,
-) -> Result<Transaction, TransactionError> {
+) -> Result<Transaction, TransferError> {
     tracing::trace!(
-        "transfer: from_account_id: {}, to_account_id: {}, amount_cents: {} ",
-        from_account_id,
-        to_account_id,
+        "transfer: source_account_id: {}, destination_account_id: {}, amount_cents: {} ",
+        source_account_id,
+        destination_account_id,
         amount_cents
     );
 
     // Start transaction.
     let mut tx = state.db_pool.begin().await?;
 
+    let mut validation_errors = TransferValidationErrors::default();
+
     // Find the source account.
-    let mut from_account = account_repo::get_by_id(from_account_id, &mut tx)
-        .await
-        .map_err(|e| match e {
-            sqlx::Error::RowNotFound => TransactionError::SourceAccountNotFound(from_account_id),
-            _ => e.into(),
-        })?;
+    let mut source_account = match account_repo::get_by_id(source_account_id, &mut tx).await {
+        Ok(account) => Some(account),
+        Err(e) => {
+            let error = match e {
+                sqlx::Error::RowNotFound => {
+                    TransactionError::SourceAccountNotFound(source_account_id)
+                }
+                _ => e.into(),
+            };
+            validation_errors.add(error);
+            None
+        }
+    };
 
     // Find the destination account.
-    let mut to_account = account_repo::get_by_id(to_account_id, &mut tx)
-        .await
-        .map_err(|e| match e {
-            sqlx::Error::RowNotFound => TransactionError::DestinationAccountNotFound(to_account_id),
-            _ => e.into(),
-        })?;
+    let mut destination_account =
+        match account_repo::get_by_id(destination_account_id, &mut tx).await {
+            Ok(account) => Some(account),
+            Err(e) => {
+                let error = match e {
+                    sqlx::Error::RowNotFound => {
+                        TransactionError::DestinationAccountNotFound(destination_account_id)
+                    }
+                    _ => e.into(),
+                };
+                validation_errors.add(error);
+                None
+            }
+        };
 
-    // Check the source balance.
-    if from_account.balance_cents < amount_cents {
-        return Err(TransactionError::InsufficientFunds.into());
+    if validation_errors.exists() {
+        Err(validation_errors)?
     }
 
+    let mut source_account = source_account.take().unwrap();
+    // Check the source balance.
+    if source_account.balance_cents < amount_cents {
+        Err(TransactionError::InsufficientFunds)?
+    }
+
+    let mut destination_account = destination_account.take().unwrap();
+
     // Transfer money.
-    from_account.balance_cents -= amount_cents;
-    to_account.balance_cents += amount_cents;
+    source_account.balance_cents -= amount_cents;
+    destination_account.balance_cents += amount_cents;
 
     // Update accounts.
-    account_repo::update(from_account, &mut tx).await?;
-    account_repo::update(to_account, &mut tx).await?;
+    account_repo::update(source_account, &mut tx).await?;
+
+    account_repo::update(destination_account, &mut tx).await?;
 
     // Add transaction.
-    let transaction =
-        transaction_repo::add(from_account_id, to_account_id, amount_cents, &mut tx).await?;
+    let transaction = transaction_repo::add(
+        source_account_id,
+        destination_account_id,
+        amount_cents,
+        &mut tx,
+    )
+    .await?;
 
     // Commit transaction.
     tx.commit().await?;
 
     Ok(transaction)
-}
-
-#[derive(Debug, Error)]
-pub enum TransactionError {
-    #[error("transaction not found: {0}")]
-    TransactionNotFound(Uuid),
-    #[error("insufficient funds")]
-    InsufficientFunds,
-    #[error("source account not found: {0}")]
-    SourceAccountNotFound(Uuid),
-    #[error("destination account not found: {0}")]
-    DestinationAccountNotFound(Uuid),
-    #[error(transparent)]
-    SQLxError(#[from] sqlx::Error),
 }

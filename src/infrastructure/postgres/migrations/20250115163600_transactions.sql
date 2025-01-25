@@ -9,8 +9,8 @@ CREATE TABLE accounts (
 -- create transactions table
 CREATE TABLE transactions (
     id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    from_account_id UUID NOT NULL,
-    to_account_id UUID NOT NULL,
+    source_account_id UUID NOT NULL,
+    destination_account_id UUID NOT NULL,
     amount_cents bigint NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );

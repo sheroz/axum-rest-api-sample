@@ -1,7 +1,8 @@
-use axum_web::{api::transactions::TransferOrder, domain::models::transaction::Transaction};
 use reqwest::Response;
 use thiserror::Error;
 use uuid::Uuid;
+
+use axum_web::{api::transactions::TransferOrder, domain::models::transaction::Transaction};
 
 use crate::common::{
     constants::{API_TRANSACTIONS_PATH, API_V1},
@@ -41,16 +42,16 @@ pub async fn get(
 }
 
 pub async fn transfer(
-    from_account_id: Uuid,
-    to_account_id: Uuid,
+    source_account_id: Uuid,
+    destination_account_id: Uuid,
     amount_cents: i64,
     access_token: &str,
 ) -> Result<Transaction, TransactionResponseError> {
     let url = utils::build_url(API_V1, API_TRANSACTIONS_PATH, "transfer");
 
     let transfer_order = TransferOrder {
-        from_account_id,
-        to_account_id,
+        source_account_id,
+        destination_account_id,
         amount_cents,
     };
 

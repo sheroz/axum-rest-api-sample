@@ -6,7 +6,7 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum DetailedErrorCode {
     TransactionNotFound,
@@ -16,7 +16,7 @@ pub enum DetailedErrorCode {
     DatabaseError,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum DetailedErrorKind {
     ResourceNotFound,
@@ -98,7 +98,7 @@ pub struct DetailedErrorResponse {
     pub errors: Vec<DetailedError>,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct DetailedError {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
@@ -132,25 +132,21 @@ impl DetailedError {
     }
 }
 
-impl DetailedErrorResponse {
-    pub fn from(status_code: StatusCode, errors: Vec<DetailedError>) -> Self {
-        let status = status_code.into();
-        Self { status, errors }
-    }
-}
-
 impl From<StatusCode> for DetailedErrorResponse {
     fn from(status_code: StatusCode) -> Self {
-        Self::from(status_code, vec![])
+        Self {
+            status: status_code.as_u16(),
+            errors: vec![],
+        }
     }
 }
 
 impl From<ApiError> for DetailedErrorResponse {
     fn from(api_error: ApiError) -> Self {
-        Self::from(
-            api_error.status_code,
-            vec![DetailedError::new(&api_error.error_message)],
-        )
+        Self {
+            status: api_error.status_code.as_u16(),
+            errors: vec![DetailedError::new(&api_error.error_message)],
+        }
     }
 }
 

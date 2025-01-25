@@ -17,18 +17,18 @@ pub async fn get_by_id(id: Uuid, state: &SharedState) -> RepositoryResult<Transa
 }
 
 pub async fn add(
-    from_account_id: Uuid,
-    to_account_id: Uuid,
+    source_account_id: Uuid,
+    destination_account_id: Uuid,
     amount_cents: i64,
     connection: &mut DatabaseConnection,
 ) -> RepositoryResult<Transaction> {
     let transaction = query_as::<_, Transaction>(
-        r#"INSERT INTO transactions (from_account_id, to_account_id, amount_cents)
+        r#"INSERT INTO transactions (source_account_id, destination_account_id, amount_cents)
          VALUES ($1, $2, $3)
          RETURNING transactions.*"#,
     )
-    .bind(from_account_id)
-    .bind(to_account_id)
+    .bind(source_account_id)
+    .bind(destination_account_id)
     .bind(amount_cents)
     .fetch_one(connection)
     .await?;

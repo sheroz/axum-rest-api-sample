@@ -6,6 +6,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
+use thiserror::Error;
 
 use crate::{
     application::{
@@ -13,7 +14,7 @@ use crate::{
         api_version::{self, ApiVersion},
         repository::transaction_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
-        service::transaction_service::{self, TransactionError},
+        service::transaction_service,
         state::SharedState,
     },
     domain::models::transaction::Transaction,
@@ -21,8 +22,8 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransferOrder {
-    pub from_account_id: Uuid,
-    pub to_account_id: Uuid,
+    pub source_account_id: Uuid,
+    pub destination_account_id: Uuid,
     pub amount_cents: i64,
 }
 
@@ -45,8 +46,11 @@ async fn get_transaction_handler(
     let transaction = transaction_repo::get_by_id(id, &state)
         .await
         .map_err(|e| match e {
-            sqlx::Error::RowNotFound => TransactionError::TransactionNotFound(id),
-            _ => e.into(),
+            sqlx::Error::RowNotFound => (
+                StatusCode::NOT_FOUND,
+                TransactionError::TransactionNotFound(id),
+            ),
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, e.into()),
         })?;
 
     Ok(Json(transaction))
@@ -65,8 +69,8 @@ async fn transfer_handler(
     access_claims.validate_role_admin()?;
 
     let transaction = transaction_service::transfer(
-        transfer_order.from_account_id,
-        transfer_order.to_account_id,
+        transfer_order.source_account_id,
+        transfer_order.destination_account_id,
         transfer_order.amount_cents,
         &state,
     )
@@ -75,15 +79,60 @@ async fn transfer_handler(
     Ok(Json(transaction))
 }
 
-impl From<TransactionError> for DetailedErrorResponse {
+#[derive(Debug, Error)]
+pub enum TransactionError {
+    #[error("transaction not found: {0}")]
+    TransactionNotFound(Uuid),
+    #[error("insufficient funds")]
+    InsufficientFunds,
+    #[error("source account not found: {0}")]
+    SourceAccountNotFound(Uuid),
+    #[error("destination account not found: {0}")]
+    DestinationAccountNotFound(Uuid),
+    #[error(transparent)]
+    SQLxError(#[from] sqlx::Error),
+}
+
+impl From<(StatusCode, TransactionError)> for DetailedErrorResponse {
+    fn from(error_from: (StatusCode, TransactionError)) -> Self {
+        let (status_code, error) = error_from;
+        Self {
+            status: status_code.as_u16(),
+            errors: vec![DetailedError::from(error)],
+        }
+    }
+}
+
+impl From<(StatusCode, Vec<TransactionError>)> for DetailedErrorResponse {
+    fn from(error_from: (StatusCode, Vec<TransactionError>)) -> Self {
+        let (status_code, errors) = error_from;
+        Self {
+            status: status_code.as_u16(),
+            errors: errors.into_iter().map(DetailedError::from).collect(),
+        }
+    }
+}
+
+impl From<&TransactionError> for StatusCode {
+    fn from(error: &TransactionError) -> Self {
+        match error {
+            TransactionError::TransactionNotFound(_) => Self::NOT_FOUND,
+            TransactionError::InsufficientFunds
+            | TransactionError::SourceAccountNotFound(_)
+            | TransactionError::DestinationAccountNotFound(_) => Self::UNPROCESSABLE_ENTITY,
+            TransactionError::SQLxError(_) => Self::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+impl From<TransactionError> for DetailedError {
     fn from(transaction_error: TransactionError) -> Self {
-        let mut error = DetailedError::new(&transaction_error.to_string());
+        let mut error = Self::new(&transaction_error.to_string());
         match transaction_error {
             TransactionError::TransactionNotFound(transaction_id) => {
                 error.code = serde_json::to_string(&DetailedErrorCode::TransactionNotFound).ok();
                 error.kind = Some(DetailedErrorKind::ResourceNotFound);
                 error.detail = Some(serde_json::json!({"transaction_id": transaction_id}));
-                Self::from(StatusCode::NOT_FOUND, vec![error])
             }
             TransactionError::InsufficientFunds => {
                 error.code = serde_json::to_string(&DetailedErrorCode::SourceAccountNotFound).ok();
@@ -91,27 +140,75 @@ impl From<TransactionError> for DetailedErrorResponse {
                 error.description = Some(
                     "there are insufficient funds in the source account for the transfer".into(),
                 );
-                Self::from(StatusCode::UNPROCESSABLE_ENTITY, vec![error])
             }
-            TransactionError::SourceAccountNotFound(account_id) => {
+            TransactionError::SourceAccountNotFound(source_account_id) => {
                 error.code = serde_json::to_string(&DetailedErrorCode::SourceAccountNotFound).ok();
                 error.kind = Some(DetailedErrorKind::ValidationError);
-                error.detail = Some(serde_json::json!({"account_id": account_id}));
-                Self::from(StatusCode::UNPROCESSABLE_ENTITY, vec![error])
+                error.detail = Some(serde_json::json!({"source_account_id": source_account_id}));
             }
-            TransactionError::DestinationAccountNotFound(account_id) => {
+            TransactionError::DestinationAccountNotFound(destination_account_id) => {
                 error.code =
                     serde_json::to_string(&DetailedErrorCode::DestinationAccountNotFound).ok();
                 error.kind = Some(DetailedErrorKind::ValidationError);
-                error.detail = Some(serde_json::json!({"account_id": account_id}));
-                Self::from(StatusCode::UNPROCESSABLE_ENTITY, vec![error])
+                error.detail =
+                    Some(serde_json::json!({"destination_account_id": destination_account_id}));
             }
             TransactionError::SQLxError(e) => {
                 error.code = serde_json::to_string(&DetailedErrorCode::DatabaseError).ok();
                 error.kind = Some(DetailedErrorKind::DatabaseError);
                 error.description = Some(format!("Database error occured: {}", e));
-                Self::from(StatusCode::INTERNAL_SERVER_ERROR, vec![error])
             }
+        }
+        error
+    }
+}
+
+pub struct TransferError {
+    pub status: StatusCode,
+    pub errors: Vec<TransactionError>,
+}
+
+#[derive(Debug, Default)]
+pub struct TransferValidationErrors {
+    errors: Vec<TransactionError>,
+}
+
+impl TransferValidationErrors {
+    pub fn add(&mut self, error: TransactionError) {
+        self.errors.push(error);
+    }
+    pub fn exists(&self) -> bool {
+        self.errors.len() > 0
+    }
+}
+
+impl From<TransferError> for DetailedErrorResponse {
+    fn from(error: TransferError) -> Self {
+        (error.status, error.errors).into()
+    }
+}
+
+impl From<TransactionError> for TransferError {
+    fn from(error: TransactionError) -> Self {
+        let status = StatusCode::from(&error);
+        let errors = vec![error];
+        Self { status, errors }
+    }
+}
+
+impl From<TransferValidationErrors> for TransferError {
+    fn from(validation_errors: TransferValidationErrors) -> Self {
+        let status = StatusCode::UNPROCESSABLE_ENTITY;
+        let errors = validation_errors.errors;
+        Self { status, errors }
+    }
+}
+
+impl From<sqlx::Error> for TransferError {
+    fn from(error: sqlx::Error) -> Self {
+        Self {
+            status: StatusCode::INTERNAL_SERVER_ERROR,
+            errors: vec![TransactionError::from(error)],
         }
     }
 }
