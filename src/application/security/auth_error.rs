@@ -1,6 +1,6 @@
 use axum::http::StatusCode;
 
-use crate::application::api_error::{ApiError, DetailedErrorResponse};
+use crate::application::api_error::{ApiErrorSimple, ApiError};
 
 #[derive(Debug)]
 pub enum AuthError {
@@ -10,7 +10,7 @@ pub enum AuthError {
     InvalidToken,
 }
 
-impl From<AuthError> for ApiError {
+impl From<AuthError> for ApiErrorSimple {
     fn from(err: AuthError) -> Self {
         let (status_code, error_message) = match err {
             AuthError::WrongCredentials => (StatusCode::UNAUTHORIZED, "Wrong credentials"),
@@ -26,8 +26,8 @@ impl From<AuthError> for ApiError {
     }
 }
 
-impl From<AuthError> for DetailedErrorResponse {
+impl From<AuthError> for ApiError {
     fn from(auth_errors: AuthError) -> Self {
-        ApiError::from(auth_errors).into()
+        ApiErrorSimple::from(auth_errors).into()
     }
 }

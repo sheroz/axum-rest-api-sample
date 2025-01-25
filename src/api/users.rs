@@ -9,7 +9,7 @@ use sqlx::types::Uuid;
 
 use crate::{
     application::{
-        api_error::ApiError,
+        api_error::ApiErrorSimple,
         api_version::{self, ApiVersion},
         repository::user_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -31,7 +31,7 @@ async fn list_users_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
-) -> Result<Json<Vec<User>>, ApiError> {
+) -> Result<Json<Vec<User>>, ApiErrorSimple> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
@@ -49,7 +49,7 @@ async fn add_user_handler(
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(user): Json<User>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, ApiErrorSimple> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
@@ -66,7 +66,7 @@ async fn get_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<Json<User>, ApiError> {
+) -> Result<Json<User>, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -86,7 +86,7 @@ async fn update_user_handler(
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
     Json(user): Json<User>,
-) -> Result<Json<User>, ApiError> {
+) -> Result<Json<User>, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -105,7 +105,7 @@ async fn delete_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -113,7 +113,7 @@ async fn delete_user_handler(
     access_claims.validate_role_admin()?;
     match user_repo::delete(id, &state).await {
         Ok(true) => Ok(StatusCode::OK),
-        Ok(false) => Err(ApiError {
+        Ok(false) => Err(ApiErrorSimple {
             status_code: StatusCode::NOT_FOUND,
             error_message: format!("User not found for deletion: {}", id),
         }),

@@ -12,7 +12,7 @@ use axum_extra::{
 use serde::{Deserialize, Serialize};
 
 use crate::application::{
-    api_error::ApiError,
+    api_error::ApiErrorSimple,
     config,
     security::{self, auth_error::*, jwt_auth},
     state::SharedState,
@@ -138,7 +138,7 @@ where
     SharedState: FromRef<S>,
     S: Send + Sync,
 {
-    type Rejection = ApiError;
+    type Rejection = ApiErrorSimple;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         decode_token_from_request_part(parts, state).await
@@ -150,14 +150,14 @@ where
     SharedState: FromRef<S>,
     S: Send + Sync,
 {
-    type Rejection = ApiError;
+    type Rejection = ApiErrorSimple;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         decode_token_from_request_part(parts, state).await
     }
 }
 
-async fn decode_token_from_request_part<S, T>(parts: &mut Parts, state: &S) -> Result<T, ApiError>
+async fn decode_token_from_request_part<S, T>(parts: &mut Parts, state: &S) -> Result<T, ApiErrorSimple>
 where
     SharedState: FromRef<S>,
     S: Send + Sync,

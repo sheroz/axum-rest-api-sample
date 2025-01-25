@@ -6,7 +6,7 @@ use axum::{
     RequestPartsExt,
 };
 
-use crate::application::api_error::ApiError;
+use crate::application::api_error::ApiErrorSimple;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {
@@ -35,7 +35,7 @@ impl std::fmt::Display for ApiVersion {
     }
 }
 
-pub fn parse_version(version: &str) -> Result<ApiVersion, ApiError> {
+pub fn parse_version(version: &str) -> Result<ApiVersion, ApiErrorSimple> {
     version.parse().map_or_else(
         |_| {
             Err(
@@ -51,7 +51,7 @@ impl<S> FromRequestParts<S> for ApiVersion
 where
     S: Send + Sync,
 {
-    type Rejection = ApiError;
+    type Rejection = ApiErrorSimple;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         let params: Path<HashMap<String, String>> = parts
@@ -74,7 +74,7 @@ pub enum ApiVersionError {
     VersionExtractError,
 }
 
-impl From<ApiVersionError> for ApiError {
+impl From<ApiVersionError> for ApiErrorSimple {
     fn from(err: ApiVersionError) -> Self {
         let (status_code, error_message) = match err {
             ApiVersionError::InvalidApiVersion(error_message) => {

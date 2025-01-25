@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum DetailedErrorCode {
+pub enum ApiErrorCode {
     TransactionNotFound,
     InsufficientFunds,
     SourceAccountNotFound,
@@ -18,7 +18,7 @@ pub enum DetailedErrorCode {
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum DetailedErrorKind {
+pub enum ApiErrorKind {
     ResourceNotFound,
     ValidationError,
     DatabaseError,
@@ -30,7 +30,6 @@ pub enum DetailedErrorKind {
 // API error response samples:
 //
 // {
-//   "status": 404,
 //   "errors": [
 //     {
 //         "code": "user_not_found",
@@ -49,7 +48,6 @@ pub enum DetailedErrorKind {
 // }
 //
 // {
-//   "status": 422,
 //   "errors": [
 //     {
 //         "code": "invalid_email",
@@ -92,18 +90,19 @@ pub enum DetailedErrorKind {
 //     },
 //   ]
 // }
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct DetailedErrorResponse {
-    pub status: u16,
-    pub errors: Vec<DetailedError>,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApiError {
+    #[serde(skip)]
+    pub status: StatusCode,
+    pub errors: Vec<ErrorDetail>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct DetailedError {
+pub struct ErrorDetail {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<DetailedErrorKind>,
+    pub kind: Option<ApiErrorKind>,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -122,7 +121,7 @@ pub struct DetailedError {
     pub info_url: Option<String>,
 }
 
-impl DetailedError {
+impl ErrorDetail {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_owned(),
@@ -132,39 +131,37 @@ impl DetailedError {
     }
 }
 
-impl From<StatusCode> for DetailedErrorResponse {
-    fn from(status_code: StatusCode) -> Self {
+impl From<StatusCode> for ApiError {
+    fn from(status: StatusCode) -> Self {
         Self {
-            status: status_code.as_u16(),
-            errors: vec![],
+            status,
+            errors: vec![ErrorDetail::new(&status.to_string())],
         }
     }
 }
 
-impl From<ApiError> for DetailedErrorResponse {
-    fn from(api_error: ApiError) -> Self {
+impl From<ApiErrorSimple> for ApiError {
+    fn from(api_error: ApiErrorSimple) -> Self {
         Self {
-            status: api_error.status_code.as_u16(),
-            errors: vec![DetailedError::new(&api_error.error_message)],
+            status: api_error.status_code,
+            errors: vec![ErrorDetail::new(&api_error.error_message)],
         }
     }
 }
 
-impl IntoResponse for DetailedErrorResponse {
+impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         tracing::error!("Error response: {:?}", self);
-        let status_code =
-            StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-        (status_code, Json(self)).into_response()
+        (self.status, Json(self)).into_response()
     }
 }
 
-pub struct ApiError {
+pub struct ApiErrorSimple {
     pub status_code: StatusCode,
     pub error_message: String,
 }
 
-impl std::fmt::Display for ApiError {
+impl std::fmt::Display for ApiErrorSimple {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -174,14 +171,14 @@ impl std::fmt::Display for ApiError {
     }
 }
 
-impl IntoResponse for ApiError {
+impl IntoResponse for ApiErrorSimple {
     fn into_response(self) -> Response {
         tracing::error!("Error response: {}", self.to_string());
         (self.status_code, self.error_message).into_response()
     }
 }
 
-impl From<StatusCode> for ApiError {
+impl From<StatusCode> for ApiErrorSimple {
     fn from(status_code: StatusCode) -> Self {
         Self {
             status_code,

@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
     application::{
-        api_error::ApiError,
+        api_error::ApiErrorSimple,
         config,
         repository::user_repo,
         security::{auth_error::*, jwt_claims::*},
@@ -18,7 +18,7 @@ pub struct JwtTokens {
     pub refresh_token: String,
 }
 
-pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), ApiError> {
+pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), ApiErrorSimple> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if config::get().jwt_enable_revoked_tokens {
         // Decode and validate the refresh token.
@@ -34,7 +34,7 @@ pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result
 pub async fn refresh(
     refresh_claims: RefreshClaims,
     state: SharedState,
-) -> Result<JwtTokens, ApiError> {
+) -> Result<JwtTokens, ApiErrorSimple> {
     // Decode and validate the refresh token.
     if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
         return Err(AuthError::InvalidToken.into());
@@ -51,7 +51,7 @@ pub async fn refresh(
         return Ok(tokens);
     }
 
-    Err(ApiError {
+    Err(ApiErrorSimple {
         status_code: StatusCode::UNPROCESSABLE_ENTITY,
         error_message: format!("user not found: {}", user_id),
     })
@@ -60,7 +60,7 @@ pub async fn refresh(
 pub async fn cleanup_revoked_and_expired(
     _access_claims: &AccessClaims,
     state: &SharedState,
-) -> Result<usize, ApiError> {
+) -> Result<usize, ApiErrorSimple> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if !config::get().jwt_enable_revoked_tokens {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
@@ -88,7 +88,7 @@ pub fn validate_token_type(claims: &RefreshClaims, expected_type: JwtTokenType) 
 async fn revoke_refresh_token(
     refresh_claims: &RefreshClaims,
     state: &SharedState,
-) -> Result<(), ApiError> {
+) -> Result<(), ApiErrorSimple> {
     // Check the validity of refresh token.
     validate_revoked(refresh_claims, state).await?;
     if token_service::revoke_refresh_token(refresh_claims, state).await {
@@ -166,7 +166,7 @@ pub fn generate_tokens(user: User) -> JwtTokens {
 pub async fn validate_revoked<T: std::fmt::Debug + ClaimsMethods + Sync + Send>(
     claims: &T,
     state: &SharedState,
-) -> Result<(), ApiError> {
+) -> Result<(), ApiErrorSimple> {
     match token_service::is_revoked(claims, state).await {
         Some(revoked) => {
             if revoked {

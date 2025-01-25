@@ -14,7 +14,7 @@ use serde_json::json;
 use crate::{
     api::{accounts, auth, transactions, users},
     application::{
-        api_error::ApiError,
+        api_error::ApiErrorSimple,
         api_version::{self, ApiVersion},
         app_const::*,
         security::jwt_claims::AccessClaims,
@@ -54,7 +54,7 @@ pub async fn logging_middleware(request: Request<Body>, next: Next) -> Response 
 
 async fn heartbeat_handler(
     Path((version, id)): Path<(String, String)>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("heartbeat: api version: {}", api_version);
     tracing::trace!("heartbeat: received id: {}", id);
@@ -66,7 +66,7 @@ async fn heartbeat_handler(
     Ok(Json(map))
 }
 
-async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoResponse, ApiError> {
+async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoResponse, ApiErrorSimple> {
     if tracing::enabled!(tracing::Level::TRACE) {
         tracing::trace!(
             "current timestamp, chrono::Utc {}",

@@ -9,7 +9,7 @@ use sqlx::types::Uuid;
 
 use crate::{
     application::{
-        api_error::ApiError,
+        api_error::ApiErrorSimple,
         api_version::{self, ApiVersion},
         repository::account_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -31,7 +31,7 @@ async fn list_accounts_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
-) -> Result<Json<Vec<Account>>, ApiError> {
+) -> Result<Json<Vec<Account>>, ApiErrorSimple> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
 
@@ -52,7 +52,7 @@ async fn add_account_handler(
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(account): Json<Account>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, ApiErrorSimple> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
 
@@ -72,7 +72,7 @@ async fn get_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<Json<Account>, ApiError> {
+) -> Result<Json<Account>, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -95,7 +95,7 @@ async fn update_account_handler(
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
     Json(account): Json<Account>,
-) -> Result<Json<Account>, ApiError> {
+) -> Result<Json<Account>, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -117,7 +117,7 @@ async fn delete_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, ApiErrorSimple> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -127,7 +127,7 @@ async fn delete_account_handler(
     let mut connection = state.db_pool.acquire().await.unwrap();
     match account_repo::delete(id, &mut connection).await {
         Ok(true) => Ok(StatusCode::OK),
-        Ok(false) => Err(ApiError {
+        Ok(false) => Err(ApiErrorSimple {
             status_code: StatusCode::NOT_FOUND,
             error_message: format!("Account not found for deletion: {}", id),
         }),
