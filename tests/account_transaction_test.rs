@@ -307,7 +307,10 @@ async fn account_transaction_test() {
                 error.code,
                 serde_json::to_string(&ApiErrorCode::InsufficientFunds).ok()
             );
-            assert_eq!(error.kind, Some(ApiErrorKind::ValidationError));
+            assert_eq!(
+                error.kind,
+                serde_json::to_string(&ApiErrorKind::ValidationError).ok()
+            );
             assert_eq!(
                 error.message,
                 TransactionError::InsufficientFunds.to_string()
@@ -358,7 +361,10 @@ async fn transaction_account_validation_test() {
                 error.code,
                 serde_json::to_string(&ApiErrorCode::SourceAccountNotFound).ok()
             );
-            assert_eq!(error.kind, Some(ApiErrorKind::ValidationError));
+            assert_eq!(
+                error.kind,
+                serde_json::to_string(&ApiErrorKind::ValidationError).ok()
+            );
             assert_eq!(
                 error.message,
                 TransactionError::SourceAccountNotFound(source_account_id).to_string()
@@ -371,7 +377,10 @@ async fn transaction_account_validation_test() {
                 error.code,
                 serde_json::to_string(&ApiErrorCode::DestinationAccountNotFound).ok()
             );
-            assert_eq!(error.kind, Some(ApiErrorKind::ValidationError));
+            assert_eq!(
+                error.kind,
+                serde_json::to_string(&ApiErrorKind::ValidationError).ok()
+            );
             assert_eq!(
                 error.message,
                 TransactionError::DestinationAccountNotFound(destination_account_id).to_string()
@@ -417,7 +426,10 @@ async fn transaction_non_existing_test() {
                 error.code,
                 serde_json::to_string(&ApiErrorCode::TransactionNotFound).ok()
             );
-            assert_eq!(error.kind, Some(ApiErrorKind::ResourceNotFound));
+            assert_eq!(
+                error.kind,
+                serde_json::to_string(&ApiErrorKind::ResourceNotFound).ok()
+            );
             assert_eq!(
                 error.message,
                 TransactionError::TransactionNotFound(transaction_id).to_string()

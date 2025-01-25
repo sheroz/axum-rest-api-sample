@@ -131,6 +131,7 @@ impl ErrorDetail {
             ..Default::default()
         }
     }
+
     pub fn code(mut self, code: ApiErrorCode) -> Self {
         self.code = serde_json::to_string(&code).ok();
         self
@@ -141,13 +142,38 @@ impl ErrorDetail {
         self
     }
 
-    pub fn description(mut self, description: String) -> Self {
-        self.description = Some(description);
+    pub fn description(mut self, description: &str) -> Self {
+        self.description = Some(description.to_owned());
         self
     }
 
     pub fn detail(mut self, detail: serde_json::Value) -> Self {
         self.detail = Some(detail);
+        self
+    }
+
+    pub fn reason(mut self, reason: &str) -> Self {
+        self.reason = Some(reason.to_owned());
+        self
+    }
+
+    pub fn instance(mut self, instance: &str) -> Self {
+        self.instance = Some(instance.to_owned());
+        self
+    }
+
+    pub fn trace_id(mut self, trace_id: &str) -> Self {
+        self.trace_id = Some(trace_id.to_owned());
+        self
+    }
+
+    pub fn help(mut self, help: &str) -> Self {
+        self.help = Some(help.to_owned());
+        self
+    }
+
+    pub fn info_url(mut self, info_url: &str) -> Self {
+        self.info_url = Some(info_url.to_owned());
         self
     }
 }
@@ -186,6 +212,6 @@ impl From<sqlx::Error> for ErrorDetail {
         Self::new(&e.to_string())
             .code(ApiErrorCode::DatabaseError)
             .kind(ApiErrorKind::DatabaseError)
-            .description(format!("Database error occured: {}", e))
+            .description(&format!("Database error occured: {}", e))
     }
 }
