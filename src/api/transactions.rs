@@ -122,21 +122,25 @@ impl From<TransactionError> for ApiErrorEntry {
             TransactionError::TransactionNotFound(transaction_id) => error
                 .code(ApiErrorCode::TransactionNotFound)
                 .kind(ApiErrorKind::ResourceNotFound)
-                .detail(serde_json::json!({"transaction_id": transaction_id})),
+                .detail(serde_json::json!({"transaction_id": transaction_id}))
+                .trace_id(),
             TransactionError::InsufficientFunds => error
                 .code(ApiErrorCode::TransactionInsufficientFunds)
                 .kind(ApiErrorKind::ValidationError)
                 .description(
                     "there are insufficient funds in the source account for the transfer".into(),
-                ),
+                )
+                .trace_id(),
             TransactionError::SourceAccountNotFound(source_account_id) => error
                 .code(ApiErrorCode::TransactionSourceAccountNotFound)
                 .kind(ApiErrorKind::ValidationError)
-                .detail(serde_json::json!({"source_account_id": source_account_id})),
+                .detail(serde_json::json!({"source_account_id": source_account_id}))
+                .trace_id(),
             TransactionError::DestinationAccountNotFound(destination_account_id) => error
                 .code(ApiErrorCode::TransactionDestinationAccountNotFound)
                 .kind(ApiErrorKind::ValidationError)
-                .detail(serde_json::json!({"destination_account_id": destination_account_id})),
+                .detail(serde_json::json!({"destination_account_id": destination_account_id}))
+                .trace_id(),
         }
     }
 }
