@@ -4,7 +4,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::application::{
-    api_error::ApiErrorSimple,
+    api_error::ApiError,
     api_version::ApiVersion,
     repository::user_repo,
     security::{
@@ -42,26 +42,25 @@ async fn login_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     Json(login): Json<LoginUser>,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
-    if let Ok(user) = user_repo::get_by_username(&login.username, &state).await {
-        if user.active && user.password_hash == login.password_hash {
-            tracing::trace!("access granted, user: {}", user.id);
-            let tokens = jwt_auth::generate_tokens(user);
-            let response = tokens_to_response(tokens);
-            return Ok(response);
-        }
+    let user = user_repo::get_by_username(&login.username, &state).await?;
+    if user.active && user.password_hash == login.password_hash {
+        tracing::trace!("access granted, user: {}", user.id);
+        let tokens = jwt_auth::generate_tokens(user);
+        let response = tokens_to_response(tokens);
+        return Ok(response);
     }
 
     tracing::error!("access denied: {:#?}", login);
-    Err(AuthError::WrongCredentials.into())
+    Err(AuthError::WrongCredentials)?
 }
 
 async fn logout_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     refresh_claims: RefreshClaims,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("refresh_claims: {:?}", refresh_claims);
     jwt_auth::logout(refresh_claims, state).await
@@ -71,7 +70,7 @@ async fn refresh_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     refresh_claims: RefreshClaims,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     let new_tokens = jwt_auth::refresh(refresh_claims, state).await?;
     Ok(tokens_to_response(new_tokens))
@@ -82,11 +81,11 @@ async fn revoke_all_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
     if !token_service::revoke_global(&state).await {
-        return Err(ApiErrorSimple::from(StatusCode::INTERNAL_SERVER_ERROR));
+        Err(StatusCode::INTERNAL_SERVER_ERROR)?;
     }
     Ok(())
 }
@@ -97,7 +96,7 @@ async fn revoke_user_handler(
     State(state): State<SharedState>,
     access_claims: AccessClaims,
     Json(revoke_user): Json<RevokeUser>,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     if access_claims.sub != revoke_user.user_id.to_string() {
         // Only admin can revoke tokens of other users.
@@ -105,7 +104,7 @@ async fn revoke_user_handler(
     }
     tracing::trace!("revoke_user: {:?}", revoke_user);
     if !token_service::revoke_user_tokens(&revoke_user.user_id.to_string(), &state).await {
-        return Err(ApiErrorSimple::from(StatusCode::INTERNAL_SERVER_ERROR));
+        Err(StatusCode::INTERNAL_SERVER_ERROR)?;
     }
     Ok(())
 }
@@ -114,7 +113,7 @@ async fn cleanup_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
     tracing::trace!("authentication details: {:#?}", access_claims);

@@ -140,15 +140,6 @@ impl From<StatusCode> for ApiError {
     }
 }
 
-impl From<ApiErrorSimple> for ApiError {
-    fn from(api_error: ApiErrorSimple) -> Self {
-        Self {
-            status: api_error.status_code,
-            errors: vec![ErrorDetail::new(&api_error.error_message)],
-        }
-    }
-}
-
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         tracing::error!("Error response: {:?}", self);
@@ -156,33 +147,25 @@ impl IntoResponse for ApiError {
     }
 }
 
-pub struct ApiErrorSimple {
-    pub status_code: StatusCode,
-    pub error_message: String,
-}
-
-impl std::fmt::Display for ApiErrorSimple {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{{status_code: {}, error_message: {}}}",
-            self.status_code, self.error_message
-        )
-    }
-}
-
-impl IntoResponse for ApiErrorSimple {
-    fn into_response(self) -> Response {
-        tracing::error!("Error response: {}", self.to_string());
-        (self.status_code, self.error_message).into_response()
-    }
-}
-
-impl From<StatusCode> for ApiErrorSimple {
-    fn from(status_code: StatusCode) -> Self {
+impl From<sqlx::Error> for ApiError {
+    fn from(error: sqlx::Error) -> Self {
+        let status = match error {
+            sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        };
         Self {
-            status_code,
-            error_message: status_code.to_string(),
+            status,
+            errors: vec![ErrorDetail::from(error)],
         }
+    }
+}
+
+impl From<sqlx::Error> for ErrorDetail {
+    fn from(e: sqlx::Error) -> Self {
+        let mut error = Self::new(&e.to_string());
+        error.code = serde_json::to_string(&ApiErrorCode::DatabaseError).ok();
+        error.kind = Some(ApiErrorKind::DatabaseError);
+        error.description = Some(format!("Database error occured: {}", e));
+        error
     }
 }

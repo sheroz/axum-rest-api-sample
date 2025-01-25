@@ -9,7 +9,7 @@ use sqlx::types::Uuid;
 
 use crate::{
     application::{
-        api_error::ApiErrorSimple,
+        api_error::ApiError,
         api_version::{self, ApiVersion},
         repository::user_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -31,17 +31,12 @@ async fn list_users_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
-) -> Result<Json<Vec<User>>, ApiErrorSimple> {
+) -> Result<Json<Vec<User>>, ApiError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
-    match user_repo::list(&state).await {
-        Ok(users) => Ok(Json(users)),
-        Err(e) => {
-            tracing::error!("{}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into())
-        }
-    }
+    let users = user_repo::list(&state).await?;
+    Ok(Json(users))
 }
 
 async fn add_user_handler(
@@ -49,36 +44,26 @@ async fn add_user_handler(
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(user): Json<User>,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
-    match user_repo::add(user, &state).await {
-        Ok(user) => Ok((StatusCode::CREATED, Json(user))),
-        Err(e) => {
-            tracing::error!("{}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into())
-        }
-    }
+    let user = user_repo::add(user, &state).await?;
+    Ok((StatusCode::CREATED, Json(user)))
 }
 
 async fn get_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<Json<User>, ApiErrorSimple> {
+) -> Result<Json<User>, ApiError> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
     access_claims.validate_role_admin()?;
-    match user_repo::get_by_id(id, &state).await {
-        Ok(user) => Ok(Json(user)),
-        Err(e) => {
-            tracing::error!("{}", e);
-            Err(StatusCode::NOT_FOUND.into())
-        }
-    }
+    let user = user_repo::get_by_id(id, &state).await?;
+    Ok(Json(user))
 }
 
 async fn update_user_handler(
@@ -86,40 +71,29 @@ async fn update_user_handler(
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
     Json(user): Json<User>,
-) -> Result<Json<User>, ApiErrorSimple> {
+) -> Result<Json<User>, ApiError> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
     access_claims.validate_role_admin()?;
-    match user_repo::update(user, &state).await {
-        Ok(user) => Ok(Json(user)),
-        Err(e) => {
-            tracing::error!("{}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into())
-        }
-    }
+    let user = user_repo::update(user, &state).await?;
+    Ok(Json(user))
 }
 
 async fn delete_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<impl IntoResponse, ApiErrorSimple> {
+) -> Result<impl IntoResponse, ApiError> {
     let api_version: ApiVersion = api_version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
     access_claims.validate_role_admin()?;
-    match user_repo::delete(id, &state).await {
-        Ok(true) => Ok(StatusCode::OK),
-        Ok(false) => Err(ApiErrorSimple {
-            status_code: StatusCode::NOT_FOUND,
-            error_message: format!("User not found for deletion: {}", id),
-        }),
-        Err(e) => {
-            tracing::error!("{}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into())
-        }
+    if user_repo::delete(id, &state).await? {
+        Ok(StatusCode::OK)
+    } else {
+        Err(StatusCode::NOT_FOUND)?
     }
 }

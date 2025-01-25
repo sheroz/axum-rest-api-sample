@@ -6,7 +6,7 @@ use axum::{
     RequestPartsExt,
 };
 
-use crate::application::api_error::ApiErrorSimple;
+use crate::application::api_error::{ApiError, ErrorDetail};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {
@@ -35,7 +35,7 @@ impl std::fmt::Display for ApiVersion {
     }
 }
 
-pub fn parse_version(version: &str) -> Result<ApiVersion, ApiErrorSimple> {
+pub fn parse_version(version: &str) -> Result<ApiVersion, ApiError> {
     version.parse().map_or_else(
         |_| {
             Err(
@@ -51,7 +51,7 @@ impl<S> FromRequestParts<S> for ApiVersion
 where
     S: Send + Sync,
 {
-    type Rejection = ApiErrorSimple;
+    type Rejection = ApiError;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         let params: Path<HashMap<String, String>> = parts
@@ -74,9 +74,9 @@ pub enum ApiVersionError {
     VersionExtractError,
 }
 
-impl From<ApiVersionError> for ApiErrorSimple {
+impl From<ApiVersionError> for ApiError {
     fn from(err: ApiVersionError) -> Self {
-        let (status_code, error_message) = match err {
+        let (status, message) = match err {
             ApiVersionError::InvalidApiVersion(error_message) => {
                 (StatusCode::NOT_ACCEPTABLE, error_message)
             }
@@ -91,8 +91,8 @@ impl From<ApiVersionError> for ApiErrorSimple {
         };
 
         Self {
-            status_code,
-            error_message,
+            status,
+            errors: vec![ErrorDetail::new(&message)],
         }
     }
 }

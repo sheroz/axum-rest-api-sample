@@ -42,11 +42,13 @@ async fn get_transaction_handler(
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
+
     access_claims.validate_role_admin()?;
+
     let transaction = transaction_repo::get_by_id(id, &state)
         .await
         .map_err(|e| match e {
-            sqlx::Error::RowNotFound => TransactionError::TransactionNotFound(id),
+            sqlx::Error::RowNotFound => ApiError::from(TransactionError::TransactionNotFound(id)),
             _ => e.into(),
         })?;
 
@@ -86,14 +88,12 @@ pub enum TransactionError {
     SourceAccountNotFound(Uuid),
     #[error("destination account not found: {0}")]
     DestinationAccountNotFound(Uuid),
-    #[error(transparent)]
-    SQLxError(#[from] sqlx::Error),
 }
 
 impl From<TransactionError> for ApiError {
     fn from(error: TransactionError) -> Self {
         let status = StatusCode::from(&error);
-        let errors = vec![];
+        let errors = vec![error.into()];
         (status, errors).into()
     }
 }
@@ -115,7 +115,6 @@ impl From<&TransactionError> for StatusCode {
             TransactionError::InsufficientFunds
             | TransactionError::SourceAccountNotFound(_)
             | TransactionError::DestinationAccountNotFound(_) => Self::UNPROCESSABLE_ENTITY,
-            TransactionError::SQLxError(_) => Self::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -147,11 +146,6 @@ impl From<TransactionError> for ErrorDetail {
                 error.detail =
                     Some(serde_json::json!({"destination_account_id": destination_account_id}));
             }
-            TransactionError::SQLxError(e) => {
-                error.code = serde_json::to_string(&ApiErrorCode::DatabaseError).ok();
-                error.kind = Some(ApiErrorKind::DatabaseError);
-                error.description = Some(format!("Database error occured: {}", e));
-            }
         }
         error
     }
@@ -171,41 +165,10 @@ impl TransferValidationErrors {
     }
 }
 
-pub struct TransferError {
-    pub status: StatusCode,
-    pub errors: Vec<TransactionError>,
-}
-
-impl From<TransferError> for ApiError {
-    fn from(error: TransferError) -> Self {
-        (error.status, error.errors).into()
-    }
-}
-
-impl From<TransactionError> for TransferError {
-    fn from(error: TransactionError) -> Self {
-        let status = StatusCode::from(&error);
-        let errors = vec![error];
-        Self { status, errors }
-    }
-}
-
-impl From<TransferValidationErrors> for TransferError {
+impl From<TransferValidationErrors> for ApiError {
     fn from(validation_errors: TransferValidationErrors) -> Self {
         let status = StatusCode::UNPROCESSABLE_ENTITY;
         let errors = validation_errors.errors;
-        Self { status, errors }
-    }
-}
-
-impl From<sqlx::Error> for TransferError {
-    fn from(error: sqlx::Error) -> Self {
-        Self {
-            status: match error {
-                sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
-                _ => StatusCode::INTERNAL_SERVER_ERROR,
-            },
-            errors: vec![TransactionError::from(error)],
-        }
+        (status, errors).into()
     }
 }

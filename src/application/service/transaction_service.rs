@@ -1,8 +1,9 @@
 use uuid::Uuid;
 
 use crate::{
-    api::transactions::{TransactionError, TransferError, TransferValidationErrors},
+    api::transactions::{TransactionError, TransferValidationErrors},
     application::{
+        api_error::ApiError,
         repository::{account_repo, transaction_repo},
         state::SharedState,
     },
@@ -14,7 +15,7 @@ pub async fn transfer(
     destination_account_id: Uuid,
     amount_cents: i64,
     state: &SharedState,
-) -> Result<Transaction, TransferError> {
+) -> Result<Transaction, ApiError> {
     tracing::trace!(
         "transfer: source_account_id: {}, destination_account_id: {}, amount_cents: {} ",
         source_account_id,
@@ -35,7 +36,7 @@ pub async fn transfer(
                 sqlx::Error::RowNotFound => {
                     TransactionError::SourceAccountNotFound(source_account_id)
                 }
-                _ => e.into(),
+                _ => Err(e)?,
             };
             validation_errors.add(error);
             None
@@ -51,7 +52,7 @@ pub async fn transfer(
                     sqlx::Error::RowNotFound => {
                         TransactionError::DestinationAccountNotFound(destination_account_id)
                     }
-                    _ => e.into(),
+                    _ => Err(e)?,
                 };
                 validation_errors.add(error);
                 None
