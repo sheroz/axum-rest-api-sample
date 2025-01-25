@@ -6,9 +6,6 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-// TODO: support for structured (detailed) API errors
-// TODO: existing boilerplate error handlers need to be refactored
-//
 // API error response samples:
 //
 // {
