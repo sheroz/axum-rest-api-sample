@@ -1,4 +1,5 @@
 use std::sync::Arc;
+
 use tokio::sync::Mutex;
 
 use crate::infrastructure::types::DatabasePool;

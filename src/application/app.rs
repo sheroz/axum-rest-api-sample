@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
+use axum::middleware;
 use tokio::{
+    net::TcpListener,
     signal::{
         self,
         unix::{self, SignalKind},
@@ -61,10 +63,10 @@ pub async fn start_server(api_ready: oneshot::Sender<()>) {
     // Build the app.
     let app = router::routes(shared_state)
         .layer(cors_layer)
-        .layer(axum::middleware::from_fn(router::logging_middleware));
+        .layer(middleware::from_fn(router::logging_middleware));
 
     // Build the listener.
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let listener = TcpListener::bind(&addr).await.unwrap();
     tracing::info!("listening on {}", addr);
 
     api_ready.send(()).expect("Couild not send a ready signal");

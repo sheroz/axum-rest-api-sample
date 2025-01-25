@@ -1,6 +1,6 @@
-use core::fmt;
+use std::{fmt, net::SocketAddr, sync::OnceLock};
+
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use std::{net::SocketAddr, sync::OnceLock};
 
 pub static CONFIG: OnceLock<Config> = OnceLock::new();
 
