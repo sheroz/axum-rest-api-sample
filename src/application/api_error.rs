@@ -6,24 +6,6 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum ApiErrorCode {
-    TransactionNotFound,
-    InsufficientFunds,
-    SourceAccountNotFound,
-    DestinationAccountNotFound,
-    DatabaseError,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum ApiErrorKind {
-    ResourceNotFound,
-    ValidationError,
-    DatabaseError,
-}
-
 // TODO: support for structured (detailed) API errors
 // TODO: existing boilerplate error handlers need to be refactored
 //
@@ -95,6 +77,24 @@ pub struct ApiError {
     #[serde(skip)]
     pub status: StatusCode,
     pub errors: Vec<ErrorDetail>,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ApiErrorCode {
+    TransactionNotFound,
+    InsufficientFunds,
+    SourceAccountNotFound,
+    DestinationAccountNotFound,
+    DatabaseError,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ApiErrorKind {
+    ResourceNotFound,
+    ValidationError,
+    DatabaseError,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
