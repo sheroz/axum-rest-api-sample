@@ -1,14 +1,19 @@
+use std::sync::Arc;
+
+use tokio::{
+    signal::{
+        self,
+        unix::{self, SignalKind},
+    },
+    sync::{oneshot, Mutex},
+};
+use tower_http::cors::{Any, CorsLayer};
+
 use crate::{
     api::router,
     application::{config, state::AppState},
     infrastructure::{postgres, redis},
 };
-use std::sync::Arc;
-use tokio::{
-    signal,
-    sync::{oneshot, Mutex},
-};
-use tower_http::cors::{Any, CorsLayer};
 
 pub async fn start_server(api_ready: oneshot::Sender<()>) {
     // Load configuration.
@@ -82,7 +87,7 @@ async fn shutdown_signal() {
 
     #[cfg(unix)]
     let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
+        unix::signal(SignalKind::terminate())
             .expect("failed to install signal handler")
             .recv()
             .await;
