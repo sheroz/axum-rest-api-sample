@@ -5,7 +5,7 @@ use uuid::Uuid;
 use axum_web::{
     api::transactions::TransactionError,
     application::{
-        api_error::{ApiErrorCode, ApiErrorKind, ApiError},
+        api_error::{ApiError, ApiErrorCode, ApiErrorKind},
         security::roles::UserRole,
     },
     domain::models::{account::Account, user::User},
@@ -363,8 +363,8 @@ async fn transaction_account_validation_test() {
                 error.message,
                 TransactionError::SourceAccountNotFound(source_account_id).to_string()
             );
-            let detail = error.detail.unwrap();
-            assert_eq!(detail["source_account_id"], source_account_id.to_string());
+            let json = error.detail.unwrap();
+            assert_eq!(json["source_account_id"], source_account_id.to_string());
 
             let error = error_response.errors[1].clone();
             assert_eq!(
@@ -376,9 +376,9 @@ async fn transaction_account_validation_test() {
                 error.message,
                 TransactionError::DestinationAccountNotFound(destination_account_id).to_string()
             );
-            let detail = error.detail.unwrap();
+            let json = error.detail.unwrap();
             assert_eq!(
-                detail["destination_account_id"],
+                json["destination_account_id"],
                 destination_account_id.to_string()
             );
         }
@@ -422,8 +422,8 @@ async fn transaction_non_existing_test() {
                 error.message,
                 TransactionError::TransactionNotFound(transaction_id).to_string()
             );
-            let detail = error.detail.unwrap();
-            assert_eq!(detail["transaction_id"], transaction_id.to_string());
+            let json = error.detail.unwrap();
+            assert_eq!(json["transaction_id"], transaction_id.to_string());
         }
         _ => panic!("invalid transaction result"),
     }

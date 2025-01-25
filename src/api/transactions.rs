@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::{
     application::{
-        api_error::{ErrorDetail, ApiErrorCode, ApiErrorKind, ApiError},
+        api_error::{ApiError, ApiErrorCode, ApiErrorKind, ErrorDetail},
         api_version::{self, ApiVersion},
         repository::transaction_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
@@ -142,8 +142,7 @@ impl From<TransactionError> for ErrorDetail {
                 error.detail = Some(serde_json::json!({"source_account_id": source_account_id}));
             }
             TransactionError::DestinationAccountNotFound(destination_account_id) => {
-                error.code =
-                    serde_json::to_string(&ApiErrorCode::DestinationAccountNotFound).ok();
+                error.code = serde_json::to_string(&ApiErrorCode::DestinationAccountNotFound).ok();
                 error.kind = Some(ApiErrorKind::ValidationError);
                 error.detail =
                     Some(serde_json::json!({"destination_account_id": destination_account_id}));

@@ -157,7 +157,10 @@ where
     }
 }
 
-async fn decode_token_from_request_part<S, T>(parts: &mut Parts, state: &S) -> Result<T, ApiErrorSimple>
+async fn decode_token_from_request_part<S, T>(
+    parts: &mut Parts,
+    state: &S,
+) -> Result<T, ApiErrorSimple>
 where
     SharedState: FromRef<S>,
     S: Send + Sync,

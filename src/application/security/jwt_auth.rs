@@ -18,7 +18,10 @@ pub struct JwtTokens {
     pub refresh_token: String,
 }
 
-pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), ApiErrorSimple> {
+pub async fn logout(
+    refresh_claims: RefreshClaims,
+    state: SharedState,
+) -> Result<(), ApiErrorSimple> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if config::get().jwt_enable_revoked_tokens {
         // Decode and validate the refresh token.
