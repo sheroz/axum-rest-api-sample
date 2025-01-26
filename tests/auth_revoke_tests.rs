@@ -1,10 +1,7 @@
 use reqwest::StatusCode;
 use serial_test::serial;
 
-use axum_web::application::{
-    config,
-    security::jwt_claims::{self, AccessClaims},
-};
+use axum_web::application::security::jwt_claims::{self, AccessClaims};
 
 pub mod common;
 use common::{
@@ -16,9 +13,10 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn revoke_user_test() {
-    // Load the test configuration and start the api server.
-    let config = config::load();
+    // Start the api server.
     utils::run_app().await;
+
+    let config = utils::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
@@ -51,9 +49,10 @@ async fn revoke_user_test() {
 #[tokio::test]
 #[serial]
 async fn revoke_all_test() {
-    // Load the test configuration and start the api server.
-    let config = config::load();
+    // Start the api server.
     utils::run_app().await;
+
+    let config = utils::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
@@ -80,9 +79,10 @@ async fn revoke_all_test() {
 #[tokio::test]
 #[serial]
 async fn cleanup_test() {
-    // Load the test configuration and start the api server.
-    let config = config::load();
+    // Start the api server.
     utils::run_app().await;
+
+    let config = utils::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);

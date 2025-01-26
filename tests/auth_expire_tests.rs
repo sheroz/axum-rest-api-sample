@@ -1,8 +1,6 @@
 use reqwest::StatusCode;
 use serial_test::serial;
 
-use axum_web::application::config;
-
 pub mod common;
 use common::{
     auth,
@@ -56,7 +54,7 @@ async fn access_token_expire_test() {
 async fn refresh_token_expire_test() {
     // Load the test configuration and start the api server.
     utils::run_app().await;
-    let config = config::load();
+    let config = utils::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
