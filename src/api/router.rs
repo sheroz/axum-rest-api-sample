@@ -12,7 +12,10 @@ use axum::{
 use serde_json::json;
 
 use crate::{
-    api::{accounts, auth, transactions, users},
+    api::{
+        auth,
+        routes::{account_routes, transaction_routes, user_routes},
+    },
     application::{
         api_error::ApiError,
         api_version::{self, ApiVersion},
@@ -32,11 +35,11 @@ pub fn routes(state: SharedState) -> Router {
         // Nesting the authentication related routes.
         .nest("/{version}/auth", auth::routes())
         // Nesting the user related routes.
-        .nest("/{version}/users", users::routes())
+        .nest("/{version}/users", user_routes::routes())
         // Nesting the account related routes.
-        .nest("/{version}/accounts", accounts::routes())
+        .nest("/{version}/accounts", account_routes::routes())
         // Nesting the transaction related routes.
-        .nest("/{version}/transactions", transactions::routes())
+        .nest("/{version}/transactions", transaction_routes::routes())
         // Add a fallback service for handling routes to unknown paths.
         .fallback(error_404_handler)
         .with_state(state)

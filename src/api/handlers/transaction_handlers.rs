@@ -1,8 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    routing::{get, post},
-    Json, Router,
+    Json,
 };
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
@@ -14,7 +13,7 @@ use crate::{
         api_version::{self, ApiVersion},
         repository::transaction_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
-        service::transaction_service,
+        service::transaction_service::{self, TransferError, TransferValidationError},
         state::SharedState,
     },
     domain::models::transaction::Transaction,
@@ -27,13 +26,7 @@ pub struct TransferOrder {
     pub amount_cents: i64,
 }
 
-pub fn routes() -> Router<SharedState> {
-    Router::new()
-        .route("/transfer", post(transfer_handler))
-        .route("/{id}", get(get_transaction_handler))
-}
-
-async fn get_transaction_handler(
+pub async fn get_transaction_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
@@ -55,7 +48,7 @@ async fn get_transaction_handler(
     Ok(Json(transaction))
 }
 
-async fn transfer_handler(
+pub async fn transfer_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
@@ -82,12 +75,6 @@ async fn transfer_handler(
 pub enum TransactionError {
     #[error("transaction not found: {0}")]
     TransactionNotFound(Uuid),
-    #[error("insufficient funds")]
-    InsufficientFunds,
-    #[error("source account not found: {0}")]
-    SourceAccountNotFound(Uuid),
-    #[error("destination account not found: {0}")]
-    DestinationAccountNotFound(Uuid),
 }
 
 impl From<TransactionError> for ApiError {
@@ -96,21 +83,10 @@ impl From<TransactionError> for ApiError {
     }
 }
 
-impl From<(StatusCode, Vec<TransactionError>)> for ApiError {
-    fn from(error_from: (StatusCode, Vec<TransactionError>)) -> Self {
-        let (status, errors) = error_from;
-        Self {
-            status,
-            errors: errors.into_iter().map(ApiErrorEntry::from).collect(),
-        }
-    }
-}
-
 impl TransactionError {
     const fn status_code(&self) -> StatusCode {
         match self {
             Self::TransactionNotFound(_) => StatusCode::NOT_FOUND,
-            _ => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 }
@@ -124,45 +100,46 @@ impl From<TransactionError> for ApiErrorEntry {
                 .kind(ApiErrorKind::ResourceNotFound)
                 .detail(serde_json::json!({"transaction_id": transaction_id}))
                 .trace_id(),
-            TransactionError::InsufficientFunds => error
+        }
+    }
+}
+
+impl From<TransferError> for ApiError {
+    fn from(transfer_error: TransferError) -> Self {
+        match transfer_error {
+            TransferError::TransferValidationErrors(validation_errors) => {
+                let errors: Vec<_> = validation_errors
+                    .into_iter()
+                    .map(ApiErrorEntry::from)
+                    .collect();
+                (StatusCode::UNPROCESSABLE_ENTITY, errors).into()
+            }
+            TransferError::SQLxError(e) => e.into(),
+        }
+    }
+}
+
+impl From<TransferValidationError> for ApiErrorEntry {
+    fn from(transfer_validation_error: TransferValidationError) -> Self {
+        let error = Self::new(&transfer_validation_error.to_string());
+        match transfer_validation_error {
+            TransferValidationError::InsufficientFunds => error
                 .code(ApiErrorCode::TransactionInsufficientFunds)
                 .kind(ApiErrorKind::ValidationError)
                 .description(
                     "there are insufficient funds in the source account for the transfer".into(),
                 )
                 .trace_id(),
-            TransactionError::SourceAccountNotFound(source_account_id) => error
+            TransferValidationError::SourceAccountNotFound(source_account_id) => error
                 .code(ApiErrorCode::TransactionSourceAccountNotFound)
                 .kind(ApiErrorKind::ValidationError)
                 .detail(serde_json::json!({"source_account_id": source_account_id}))
                 .trace_id(),
-            TransactionError::DestinationAccountNotFound(destination_account_id) => error
+            TransferValidationError::DestinationAccountNotFound(destination_account_id) => error
                 .code(ApiErrorCode::TransactionDestinationAccountNotFound)
                 .kind(ApiErrorKind::ValidationError)
                 .detail(serde_json::json!({"destination_account_id": destination_account_id}))
                 .trace_id(),
         }
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct TransferValidationErrors {
-    errors: Vec<TransactionError>,
-}
-
-impl TransferValidationErrors {
-    pub fn add(&mut self, error: TransactionError) {
-        self.errors.push(error);
-    }
-    pub fn exists(&self) -> bool {
-        self.errors.len() > 0
-    }
-}
-
-impl From<TransferValidationErrors> for ApiError {
-    fn from(validation_errors: TransferValidationErrors) -> Self {
-        let status = StatusCode::UNPROCESSABLE_ENTITY;
-        let errors = validation_errors.errors;
-        (status, errors).into()
     }
 }

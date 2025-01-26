@@ -2,8 +2,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{delete, get, post, put},
-    Json, Router,
+    Json,
 };
 use sqlx::types::Uuid;
 use thiserror::Error;
@@ -19,16 +18,7 @@ use crate::{
     domain::models::user::User,
 };
 
-pub fn routes() -> Router<SharedState> {
-    Router::new()
-        .route("/", get(list_users_handler))
-        .route("/", post(add_user_handler))
-        .route("/{id}", get(get_user_handler))
-        .route("/{id}", put(update_user_handler))
-        .route("/{id}", delete(delete_user_handler))
-}
-
-async fn list_users_handler(
+pub async fn list_users_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
@@ -40,7 +30,7 @@ async fn list_users_handler(
     Ok(Json(users))
 }
 
-async fn add_user_handler(
+pub async fn add_user_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
@@ -53,7 +43,7 @@ async fn add_user_handler(
     Ok((StatusCode::CREATED, Json(user)))
 }
 
-async fn get_user_handler(
+pub async fn get_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
@@ -76,7 +66,7 @@ async fn get_user_handler(
     Ok(Json(user))
 }
 
-async fn update_user_handler(
+pub async fn update_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
@@ -91,7 +81,7 @@ async fn update_user_handler(
     Ok(Json(user))
 }
 
-async fn delete_user_handler(
+pub async fn delete_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
@@ -109,7 +99,7 @@ async fn delete_user_handler(
 }
 
 #[derive(Debug, Error)]
-pub enum UserError {
+enum UserError {
     #[error("user not found: {0}")]
     UserNotFound(Uuid),
 }

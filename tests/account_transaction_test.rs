@@ -3,10 +3,11 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    api::transactions::TransactionError,
+    api::handlers::transaction_handlers::TransactionError,
     application::{
         api_error::{ApiError, ApiErrorCode, ApiErrorKind},
         security::roles::UserRole,
+        service::transaction_service::TransferValidationError,
     },
     domain::models::{account::Account, user::User},
 };
@@ -313,7 +314,7 @@ async fn account_transaction_test() {
             );
             assert_eq!(
                 error.message,
-                TransactionError::InsufficientFunds.to_string()
+                TransferValidationError::InsufficientFunds.to_string()
             );
             assert_eq!(error.detail, None);
         }
@@ -367,7 +368,7 @@ async fn transaction_account_validation_test() {
             );
             assert_eq!(
                 error.message,
-                TransactionError::SourceAccountNotFound(source_account_id).to_string()
+                TransferValidationError::SourceAccountNotFound(source_account_id).to_string()
             );
             let json = error.detail.unwrap();
             assert_eq!(json["source_account_id"], source_account_id.to_string());
@@ -383,7 +384,8 @@ async fn transaction_account_validation_test() {
             );
             assert_eq!(
                 error.message,
-                TransactionError::DestinationAccountNotFound(destination_account_id).to_string()
+                TransferValidationError::DestinationAccountNotFound(destination_account_id)
+                    .to_string()
             );
             let json = error.detail.unwrap();
             assert_eq!(

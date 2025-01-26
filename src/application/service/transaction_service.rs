@@ -1,9 +1,8 @@
+use thiserror::Error;
 use uuid::Uuid;
 
 use crate::{
-    api::transactions::{TransactionError, TransferValidationErrors},
     application::{
-        api_error::ApiError,
         repository::{account_repo, transaction_repo},
         state::SharedState,
     },
@@ -15,7 +14,7 @@ pub async fn transfer(
     destination_account_id: Uuid,
     amount_cents: i64,
     state: &SharedState,
-) -> Result<Transaction, ApiError> {
+) -> Result<Transaction, TransferError> {
     tracing::trace!(
         "transfer: source_account_id: {}, destination_account_id: {}, amount_cents: {} ",
         source_account_id,
@@ -26,19 +25,25 @@ pub async fn transfer(
     // Start transaction.
     let mut tx = state.db_pool.begin().await?;
 
-    let mut validation_errors = TransferValidationErrors::default();
+    let mut validation_errors = vec![];
 
     // Find the source account.
     let mut source_account = match account_repo::get_by_id(source_account_id, &mut tx).await {
-        Ok(account) => Some(account),
+        Ok(account) => {
+            // Check the balance of the source account.
+            if account.balance_cents < amount_cents {
+                validation_errors.push(TransferValidationError::InsufficientFunds);
+            }
+            Some(account)
+        }
         Err(e) => {
             let error = match e {
                 sqlx::Error::RowNotFound => {
-                    TransactionError::SourceAccountNotFound(source_account_id)
+                    TransferValidationError::SourceAccountNotFound(source_account_id)
                 }
                 _ => Err(e)?,
             };
-            validation_errors.add(error);
+            validation_errors.push(error);
             None
         }
     };
@@ -50,25 +55,20 @@ pub async fn transfer(
             Err(e) => {
                 let error = match e {
                     sqlx::Error::RowNotFound => {
-                        TransactionError::DestinationAccountNotFound(destination_account_id)
+                        TransferValidationError::DestinationAccountNotFound(destination_account_id)
                     }
                     _ => Err(e)?,
                 };
-                validation_errors.add(error);
+                validation_errors.push(error);
                 None
             }
         };
 
-    if validation_errors.exists() {
-        Err(validation_errors)?
+    if !validation_errors.is_empty() {
+        Err(TransferError::TransferValidationErrors(validation_errors))?
     }
 
     let mut source_account = source_account.take().unwrap();
-    // Check the source balance.
-    if source_account.balance_cents < amount_cents {
-        Err(TransactionError::InsufficientFunds)?
-    }
-
     let mut destination_account = destination_account.take().unwrap();
 
     // Transfer money.
@@ -77,7 +77,6 @@ pub async fn transfer(
 
     // Update accounts.
     account_repo::update(source_account, &mut tx).await?;
-
     account_repo::update(destination_account, &mut tx).await?;
 
     // Add transaction.
@@ -93,4 +92,22 @@ pub async fn transfer(
     tx.commit().await?;
 
     Ok(transaction)
+}
+
+#[derive(Debug, Error)]
+pub enum TransferError {
+    #[error("transfer validation errors")]
+    TransferValidationErrors(Vec<TransferValidationError>),
+    #[error(transparent)]
+    SQLxError(#[from] sqlx::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum TransferValidationError {
+    #[error("insufficient funds")]
+    InsufficientFunds,
+    #[error("source account not found: {0}")]
+    SourceAccountNotFound(Uuid),
+    #[error("destination account not found: {0}")]
+    DestinationAccountNotFound(Uuid),
 }

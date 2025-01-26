@@ -2,8 +2,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{delete, get, post, put},
-    Json, Router,
+    Json,
 };
 use sqlx::types::Uuid;
 
@@ -18,16 +17,7 @@ use crate::{
     domain::models::account::Account,
 };
 
-pub fn routes() -> Router<SharedState> {
-    Router::new()
-        .route("/", get(list_accounts_handler))
-        .route("/", post(add_account_handler))
-        .route("/{id}", get(get_account_handler))
-        .route("/{id}", put(update_account_handler))
-        .route("/{id}", delete(delete_account_handler))
-}
-
-async fn list_accounts_handler(
+pub async fn list_accounts_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
@@ -42,7 +32,7 @@ async fn list_accounts_handler(
     Ok(Json(accounts))
 }
 
-async fn add_account_handler(
+pub async fn add_account_handler(
     api_version: ApiVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
@@ -58,7 +48,7 @@ async fn add_account_handler(
     Ok((StatusCode::CREATED, Json(account)))
 }
 
-async fn get_account_handler(
+pub async fn get_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
@@ -75,7 +65,7 @@ async fn get_account_handler(
     Ok(Json(account))
 }
 
-async fn update_account_handler(
+pub async fn update_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
@@ -93,7 +83,7 @@ async fn update_account_handler(
     Ok(Json(account))
 }
 
-async fn delete_account_handler(
+pub async fn delete_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,

@@ -9,6 +9,7 @@ use crate::application::{
     state::SharedState,
 };
 
+// TODO: the boilerplate errors needs to be refactored.
 pub async fn revoke_global(state: &SharedState) -> bool {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
     tracing::debug!("setting a timestamp for global revoke: {}", timestamp_now);

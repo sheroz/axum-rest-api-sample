@@ -2,7 +2,7 @@ use reqwest::Response;
 use thiserror::Error;
 use uuid::Uuid;
 
-use axum_web::{api::transactions::TransferOrder, domain::models::transaction::Transaction};
+use axum_web::{api::handlers::transaction_handlers::TransferOrder, domain::models::transaction::Transaction};
 
 use crate::common::{
     constants::{API_TRANSACTIONS_PATH, API_V1},
