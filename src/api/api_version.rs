@@ -7,9 +7,7 @@ use axum::{
 };
 use thiserror::Error;
 
-use crate::api::api_error::{ApiError, ApiErrorEntry};
-
-use super::api_error::{ApiErrorCode, ApiErrorKind};
+use crate::api::api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {
