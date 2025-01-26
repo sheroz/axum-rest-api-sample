@@ -90,6 +90,7 @@ pub enum ApiErrorCode {
     TransactionSourceAccountNotFound,
     TransactionDestinationAccountNotFound,
     ResourceNotFound,
+    ApiVersionError,
     DatabaseError,
 }
 

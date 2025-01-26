@@ -5,8 +5,11 @@ use axum::{
     http::{request::Parts, StatusCode},
     RequestPartsExt,
 };
+use thiserror::Error;
 
 use crate::api::api_error::{ApiError, ApiErrorEntry};
+
+use super::api_error::{ApiErrorCode, ApiErrorKind};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {
@@ -37,12 +40,7 @@ impl std::fmt::Display for ApiVersion {
 
 pub fn parse_version(version: &str) -> Result<ApiVersion, ApiError> {
     version.parse().map_or_else(
-        |_| {
-            Err(
-                ApiVersionError::InvalidApiVersion(format!("Unknown API Version: {}", version))
-                    .into(),
-            )
-        },
+        |_| Err(ApiVersionError::InvalidVersion(version.to_owned()).into()),
         |v| Ok(v),
     )
 }
@@ -67,32 +65,22 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ApiVersionError {
-    InvalidApiVersion(String),
+    #[error("unknown version: {0}")]
+    InvalidVersion(String),
+    #[error("parameter is missing: version")]
     ParameterMissing,
+    #[error("could not extract api version")]
     VersionExtractError,
 }
 
 impl From<ApiVersionError> for ApiError {
     fn from(err: ApiVersionError) -> Self {
-        let (status, message) = match err {
-            ApiVersionError::InvalidApiVersion(error_message) => {
-                (StatusCode::NOT_ACCEPTABLE, error_message)
-            }
-            ApiVersionError::ParameterMissing => (
-                StatusCode::NOT_ACCEPTABLE,
-                "parameter is missing: version".to_owned(),
-            ),
-            ApiVersionError::VersionExtractError => (
-                StatusCode::BAD_REQUEST,
-                "Could not extract api version".to_owned(),
-            ),
-        };
+        let error_entry = ApiErrorEntry::new(&err.to_string())
+            .code(ApiErrorCode::ApiVersionError)
+            .kind(ApiErrorKind::ValidationError);
 
-        Self {
-            status,
-            errors: vec![ApiErrorEntry::new(&message)],
-        }
+        (StatusCode::BAD_REQUEST, error_entry).into()
     }
 }
