@@ -11,11 +11,13 @@ use axum_extra::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::application::{
-    api_error::ApiError,
-    config,
-    security::{self, auth_error::*, jwt_auth},
-    state::SharedState,
+use crate::{
+    api::api_error::ApiError,
+    application::{
+        config::Config,
+        security::{self, auth_error::*, jwt_auth},
+        state::SharedState,
+    },
 };
 
 // [JWT Claims]
@@ -172,19 +174,23 @@ where
             AuthError::WrongCredentials
         })?;
 
+    // Take the state from a reference.
+    let state = Arc::from_ref(state);
+
     // Decode the token.
-    let claims = decode_token::<T>(bearer.token())?;
+    let claims = decode_token::<T>(bearer.token(), &state.config)?;
 
     // Check for revoked tokens if enabled by configuration.
-    if config::get().jwt_enable_revoked_tokens {
-        let shared_state: SharedState = Arc::from_ref(state);
-        jwt_auth::validate_revoked(&claims, &shared_state).await?
+    if state.config.jwt_enable_revoked_tokens {
+        jwt_auth::validate_revoked(&claims, &state).await?
     }
     Ok(claims)
 }
 
-pub fn decode_token<T: for<'de> serde::Deserialize<'de>>(token: &str) -> Result<T, AuthError> {
-    let config = config::get();
+pub fn decode_token<T: for<'de> serde::Deserialize<'de>>(
+    token: &str,
+    config: &Config,
+) -> Result<T, AuthError> {
     let mut validation = jsonwebtoken::Validation::default();
     validation.leeway = config.jwt_validation_leeway_seconds as u64;
     let token_data = jsonwebtoken::decode::<T>(token, &config.jwt_keys.decoding, &validation)

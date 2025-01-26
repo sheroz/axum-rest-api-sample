@@ -1,44 +1,35 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::post, Json, Router};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use uuid::Uuid;
+use sqlx::types::Uuid;
 
-use crate::application::{
-    api_error::ApiError,
-    api_version::ApiVersion,
-    repository::user_repo,
-    security::{
-        auth_error::AuthError,
-        jwt_auth::{self, JwtTokens},
-        jwt_claims::{AccessClaims, ClaimsMethods, RefreshClaims},
+use crate::{
+    api::{api_error::ApiError, api_version::ApiVersion},
+    application::{
+        repository::user_repo,
+        security::{
+            auth_error::AuthError,
+            jwt_auth::{self, JwtTokens},
+            jwt_claims::{AccessClaims, ClaimsMethods, RefreshClaims},
+        },
+        service::token_service,
+        state::SharedState,
     },
-    service::token_service,
-    state::SharedState,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
-struct LoginUser {
+pub struct LoginUser {
     username: String,
     password_hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct RevokeUser {
+pub struct RevokeUser {
     user_id: Uuid,
 }
 
-pub fn routes() -> Router<SharedState> {
-    Router::new()
-        .route("/login", post(login_handler))
-        .route("/logout", post(logout_handler))
-        .route("/refresh", post(refresh_handler))
-        .route("/revoke-all", post(revoke_all_handler))
-        .route("/revoke-user", post(revoke_user_handler))
-        .route("/cleanup", post(cleanup_handler))
-}
-
 #[tracing::instrument(level = tracing::Level::TRACE, name = "login", skip_all, fields(username=login.username))]
-async fn login_handler(
+pub async fn login_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     Json(login): Json<LoginUser>,
@@ -47,7 +38,7 @@ async fn login_handler(
     let user = user_repo::get_by_username(&login.username, &state).await?;
     if user.active && user.password_hash == login.password_hash {
         tracing::trace!("access granted, user: {}", user.id);
-        let tokens = jwt_auth::generate_tokens(user);
+        let tokens = jwt_auth::generate_tokens(user, &state.config);
         let response = tokens_to_response(tokens);
         return Ok(response);
     }
@@ -56,7 +47,7 @@ async fn login_handler(
     Err(AuthError::WrongCredentials)?
 }
 
-async fn logout_handler(
+pub async fn logout_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     refresh_claims: RefreshClaims,
@@ -66,7 +57,7 @@ async fn logout_handler(
     jwt_auth::logout(refresh_claims, state).await
 }
 
-async fn refresh_handler(
+pub async fn refresh_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     refresh_claims: RefreshClaims,
@@ -77,7 +68,7 @@ async fn refresh_handler(
 }
 
 // Revoke all issued tokens until now.
-async fn revoke_all_handler(
+pub async fn revoke_all_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
@@ -91,7 +82,7 @@ async fn revoke_all_handler(
 }
 
 // Revoke tokens issued to user until now.
-async fn revoke_user_handler(
+pub async fn revoke_user_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
@@ -109,7 +100,7 @@ async fn revoke_user_handler(
     Ok(())
 }
 
-async fn cleanup_handler(
+pub async fn cleanup_handler(
     api_version: ApiVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,

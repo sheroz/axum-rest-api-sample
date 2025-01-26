@@ -2,10 +2,12 @@ use reqwest::Response;
 use thiserror::Error;
 use uuid::Uuid;
 
-use axum_web::{api::handlers::transaction_handlers::TransferOrder, domain::models::transaction::Transaction};
+use axum_web::{
+    api::handlers::transaction_handlers::TransferOrder, domain::models::transaction::Transaction,
+};
 
 use crate::common::{
-    constants::{API_TRANSACTIONS_PATH, API_V1},
+    constants::{API_PATH_TRANSACTIONS, API_V1},
     utils,
 };
 
@@ -21,7 +23,7 @@ pub async fn get(
     transaction_id: Uuid,
     access_token: &str,
 ) -> Result<Transaction, TransactionResponseError> {
-    let url = utils::build_url(API_V1, API_TRANSACTIONS_PATH, &transaction_id.to_string());
+    let url = utils::build_url(API_V1, API_PATH_TRANSACTIONS, &transaction_id.to_string());
 
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -47,7 +49,7 @@ pub async fn transfer(
     amount_cents: i64,
     access_token: &str,
 ) -> Result<Transaction, TransactionResponseError> {
-    let url = utils::build_url(API_V1, API_TRANSACTIONS_PATH, "transfer");
+    let url = utils::build_url(API_V1, API_PATH_TRANSACTIONS, "transfer");
 
     let transfer_order = TransferOrder {
         source_account_id,

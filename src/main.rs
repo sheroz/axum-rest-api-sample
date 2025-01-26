@@ -1,4 +1,3 @@
-use tokio::sync::oneshot;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use axum_web::application::app;
@@ -20,7 +19,5 @@ async fn main() {
 
     tracing::info!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 
-    let (api_ready_tx, api_ready_rx) = oneshot::channel();
-    app::start_server(api_ready_tx).await;
-    api_ready_rx.await.expect("Could not start server.");
+    app::run().await;
 }

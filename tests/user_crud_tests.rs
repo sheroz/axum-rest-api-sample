@@ -2,7 +2,10 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    application::security::jwt_claims::{self, AccessClaims},
+    application::{
+        config,
+        security::jwt_claims::{self, AccessClaims},
+    },
     domain::models::user::User,
 };
 use reqwest::StatusCode;
@@ -18,7 +21,8 @@ use common::{
 #[serial]
 async fn list_users_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
+    let config = config::load();
+    utils::run_app().await;
 
     // Try unauthorized access to the users handler.
     let (status, _) = users::list("xyz").await.unwrap();
@@ -31,7 +35,7 @@ async fn list_users_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token).unwrap();
+    let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token, &config).unwrap();
     let user_id: Uuid = access_claims.sub.parse().unwrap();
 
     // Try authorized access to the users handler.
@@ -48,7 +52,8 @@ async fn list_users_test() {
 #[serial]
 async fn get_user_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
+    let config = config::load();
+    utils::run_app().await;
 
     // Try unauthorized access to the get user handler
     let (status, _) = users::get(uuid::Uuid::new_v4(), "").await.unwrap();
@@ -61,7 +66,7 @@ async fn get_user_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token).unwrap();
+    let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token, &config).unwrap();
     let user_id = access_claims.sub.parse().unwrap();
 
     // Get the user.
@@ -76,8 +81,8 @@ async fn get_user_test() {
 #[tokio::test]
 #[serial]
 async fn add_get_update_delete_user_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
     let username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
     let mut user = User {

@@ -2,9 +2,9 @@ use hyper::StatusCode;
 use uuid::Uuid;
 
 use crate::{
+    api::api_error::ApiError,
     application::{
-        api_error::ApiError,
-        config,
+        config::Config,
         repository::user_repo,
         security::{auth_error::*, jwt_claims::*},
         service::token_service,
@@ -20,7 +20,7 @@ pub struct JwtTokens {
 
 pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), ApiError> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
-    if config::get().jwt_enable_revoked_tokens {
+    if state.config.jwt_enable_revoked_tokens {
         // Decode and validate the refresh token.
         if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
             return Err(AuthError::InvalidToken.into());
@@ -41,13 +41,13 @@ pub async fn refresh(
     }
 
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
-    if config::get().jwt_enable_revoked_tokens {
+    if state.config.jwt_enable_revoked_tokens {
         revoke_refresh_token(&refresh_claims, &state).await?;
     }
 
     let user_id = refresh_claims.sub.parse().unwrap();
     let user = user_repo::get_by_id(user_id, &state).await?;
-    let tokens = generate_tokens(user);
+    let tokens = generate_tokens(user, &state.config);
     Ok(tokens)
 }
 
@@ -56,7 +56,7 @@ pub async fn cleanup_revoked_and_expired(
     state: &SharedState,
 ) -> Result<usize, ApiError> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
-    if !config::get().jwt_enable_revoked_tokens {
+    if !state.config.jwt_enable_revoked_tokens {
         Err(StatusCode::NOT_ACCEPTABLE)?;
     }
 
@@ -91,9 +91,7 @@ async fn revoke_refresh_token(
     Err(StatusCode::INTERNAL_SERVER_ERROR)?
 }
 
-pub fn generate_tokens(user: User) -> JwtTokens {
-    let config = config::get();
-
+pub fn generate_tokens(user: User, config: &Config) -> JwtTokens {
     let time_now = chrono::Utc::now();
     let iat = time_now.timestamp() as usize;
     let sub = user.id.to_string();

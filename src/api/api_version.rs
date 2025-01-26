@@ -6,7 +6,7 @@ use axum::{
     RequestPartsExt,
 };
 
-use crate::application::api_error::{ApiError, ApiErrorEntry};
+use crate::api::api_error::{ApiError, ApiErrorEntry};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ApiVersion {

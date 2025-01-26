@@ -13,8 +13,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn refresh_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -48,8 +48,8 @@ async fn refresh_test() {
 #[serial]
 async fn refresh_logout_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    let config = config::load();
+    utils::run_app().await;
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);

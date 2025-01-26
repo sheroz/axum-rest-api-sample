@@ -3,11 +3,12 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    api::handlers::transaction_handlers::TransactionError,
-    application::{
+    api::{
         api_error::{ApiError, ApiErrorCode, ApiErrorKind},
-        security::roles::UserRole,
-        service::transaction_service::TransferValidationError,
+        handlers::transaction_handlers::TransactionError,
+    },
+    application::{
+        security::roles::UserRole, service::transaction_service::TransferValidationError,
     },
     domain::models::{account::Account, user::User},
 };
@@ -22,7 +23,7 @@ use common::{
 #[serial]
 #[tokio::test]
 async fn account_unauthorized_test() {
-    utils::start_api().await;
+    utils::run_app().await;
 
     let account = Account {
         id: Uuid::new_v4(),
@@ -49,8 +50,8 @@ async fn account_unauthorized_test() {
 #[serial]
 #[tokio::test]
 async fn transaction_unauthorized_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
     // Try unauthorized access to transaction handlers.
     let access_token = "xyz".to_string();
@@ -78,8 +79,8 @@ async fn transaction_unauthorized_test() {
 #[serial]
 #[tokio::test]
 async fn account_transaction_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -325,8 +326,8 @@ async fn account_transaction_test() {
 #[serial]
 #[tokio::test]
 async fn transaction_account_validation_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -400,8 +401,8 @@ async fn transaction_account_validation_test() {
 #[serial]
 #[tokio::test]
 async fn transaction_non_existing_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)

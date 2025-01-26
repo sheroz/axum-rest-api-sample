@@ -4,7 +4,7 @@ use redis::{aio::MultiplexedConnection, AsyncCommands, RedisResult};
 use tokio::sync::MutexGuard;
 
 use crate::application::{
-    app_const::*,
+    constants::*,
     security::jwt_claims::{ClaimsMethods, RefreshClaims},
     state::SharedState,
 };

@@ -12,7 +12,7 @@ use common::{
 #[serial]
 async fn login_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
+    utils::run_app().await;
 
     // Try unauthorized access to the root handler.
     assert_eq!(

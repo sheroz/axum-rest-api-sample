@@ -1,5 +1,6 @@
-pub mod handlers;
 mod routes;
 
-pub mod auth;
-pub mod router;
+pub mod api_error;
+pub mod api_version;
+pub mod handlers;
+pub mod server;

@@ -17,8 +17,8 @@ use common::{
 #[serial]
 async fn revoke_user_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    let config = config::load();
+    utils::run_app().await;
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
@@ -30,7 +30,7 @@ async fn revoke_user_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    let access_claims: AccessClaims = jwt_claims::decode_token(&access_token).unwrap();
+    let access_claims: AccessClaims = jwt_claims::decode_token(&access_token, &config).unwrap();
     let user_id = access_claims.sub;
 
     assert_eq!(
@@ -52,8 +52,8 @@ async fn revoke_user_test() {
 #[serial]
 async fn revoke_all_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    let config = config::load();
+    utils::run_app().await;
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
@@ -81,8 +81,8 @@ async fn revoke_all_test() {
 #[serial]
 async fn cleanup_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    let config = config::load();
+    utils::run_app().await;
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);

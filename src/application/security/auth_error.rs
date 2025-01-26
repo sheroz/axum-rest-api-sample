@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use thiserror::Error;
 
-use crate::application::api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind};
+use crate::api::api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind};
 
 #[derive(Debug, Error)]
 pub enum AuthError {

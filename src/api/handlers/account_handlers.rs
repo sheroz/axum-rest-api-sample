@@ -7,9 +7,11 @@ use axum::{
 use sqlx::types::Uuid;
 
 use crate::{
-    application::{
+    api::{
         api_error::ApiError,
         api_version::{self, ApiVersion},
+    },
+    application::{
         repository::account_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
         state::SharedState,

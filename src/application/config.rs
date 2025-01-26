@@ -1,10 +1,8 @@
-use std::{fmt, net::SocketAddr, sync::OnceLock};
+use std::{fmt, net::SocketAddr};
 
 use jsonwebtoken::{DecodingKey, EncodingKey};
 
-pub static CONFIG: OnceLock<Config> = OnceLock::new();
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Config {
     // REST API configuration.
     pub service_host: String,
@@ -30,7 +28,7 @@ pub struct Config {
     pub jwt_validation_leeway_seconds: i64,
     pub jwt_enable_revoked_tokens: bool,
 }
-
+#[derive(Clone)]
 pub struct JwtKeys {
     pub encoding: EncodingKey,
     pub decoding: DecodingKey,
@@ -79,7 +77,7 @@ impl Config {
     }
 }
 
-pub fn load() {
+pub fn load() -> Config {
     let env_file = if env_get_or("ENV_TEST", "0") == "1" {
         ".env_test"
     } else {
@@ -116,11 +114,7 @@ pub fn load() {
     };
 
     tracing::trace!("configuration: {:#?}", config);
-    CONFIG.get_or_init(|| config);
-}
-
-pub fn get() -> &'static Config {
-    CONFIG.get().unwrap()
+    config
 }
 
 #[inline]

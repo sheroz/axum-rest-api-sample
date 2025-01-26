@@ -14,8 +14,8 @@ use common::{
 #[serial]
 async fn access_token_expire_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    utils::run_app().await;
+    let config = utils::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
@@ -55,8 +55,8 @@ async fn access_token_expire_test() {
 #[serial]
 async fn refresh_token_expire_test() {
     // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    utils::run_app().await;
+    let config = config::load();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);

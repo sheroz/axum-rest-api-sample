@@ -8,9 +8,11 @@ use sqlx::types::Uuid;
 use thiserror::Error;
 
 use crate::{
-    application::{
+    api::{
         api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind},
         api_version::{self, ApiVersion},
+    },
+    application::{
         repository::user_repo,
         security::jwt_claims::{AccessClaims, ClaimsMethods},
         state::SharedState,
