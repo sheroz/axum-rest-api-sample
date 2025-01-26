@@ -27,7 +27,7 @@ impl std::str::FromStr for ApiVersion {
 
 impl std::fmt::Display for ApiVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let v: &str = match self {
+        let v = match self {
             Self::V1 => "v1",
             Self::V2 => "v2",
         };
