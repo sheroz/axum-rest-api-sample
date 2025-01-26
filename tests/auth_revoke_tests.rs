@@ -28,7 +28,7 @@ async fn revoke_user_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    let access_claims: AccessClaims = jwt_claims::decode_token(&access_token, &config).unwrap();
+    let access_claims: AccessClaims = jwt_claims::decode_token(&access_token, config).unwrap();
     let user_id = access_claims.sub;
 
     assert_eq!(
