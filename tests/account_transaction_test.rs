@@ -75,7 +75,6 @@ async fn transaction_unauthorized_test() {
     }
 }
 
-// TODO: Use isolated database for tests and remove `serial` dependency.
 #[serial]
 #[tokio::test]
 async fn account_transaction_test() {

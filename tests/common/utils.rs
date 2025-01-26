@@ -12,7 +12,8 @@ use crate::common::constants::{API_PATH_HEARTBEAT, API_V1};
 
 pub static CONFIG: OnceLock<Config> = OnceLock::new();
 
-// TODO: Use isolated database for tests and remove `serial` dependency.
+// TODO: use isolated databases and remove all `serial` dependencies.
+
 pub async fn run_app() {
     std::env::set_var("ENV_TEST", "1");
 
