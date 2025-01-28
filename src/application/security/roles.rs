@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-const USER_ROLE_ADMIN: &str = "admin";
-const USER_ROLE_CUSTOMER: &str = "customer";
-const USER_ROLE_GUEST: &str = "guest";
+use crate::application::constants::{USER_ROLE_ADMIN, USER_ROLE_CUSTOMER, USER_ROLE_GUEST};
 
 /// User roles.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
