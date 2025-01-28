@@ -2,7 +2,7 @@ use hyper::StatusCode;
 use uuid::Uuid;
 
 use crate::{
-    api::api_error::ApiError,
+    api::APIError, // TODO: refactor the APIError dependency.
     application::{
         config::Config,
         repository::user_repo,
@@ -18,7 +18,7 @@ pub struct JwtTokens {
     pub refresh_token: String,
 }
 
-pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), ApiError> {
+pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), APIError> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if state.config.jwt_enable_revoked_tokens {
         // Decode and validate the refresh token.
@@ -34,7 +34,7 @@ pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result
 pub async fn refresh(
     refresh_claims: RefreshClaims,
     state: SharedState,
-) -> Result<JwtTokens, ApiError> {
+) -> Result<JwtTokens, APIError> {
     // Decode and validate the refresh token.
     if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
         return Err(AuthError::InvalidToken.into());
@@ -54,7 +54,7 @@ pub async fn refresh(
 pub async fn cleanup_revoked_and_expired(
     _access_claims: &AccessClaims,
     state: &SharedState,
-) -> Result<usize, ApiError> {
+) -> Result<usize, APIError> {
     // Checking the configuration if the usage of the list of revoked tokens is enabled.
     if !state.config.jwt_enable_revoked_tokens {
         Err(StatusCode::NOT_ACCEPTABLE)?;
@@ -82,7 +82,7 @@ pub fn validate_token_type(claims: &RefreshClaims, expected_type: JwtTokenType) 
 async fn revoke_refresh_token(
     refresh_claims: &RefreshClaims,
     state: &SharedState,
-) -> Result<(), ApiError> {
+) -> Result<(), APIError> {
     // Check the validity of refresh token.
     validate_revoked(refresh_claims, state).await?;
     if token_service::revoke_refresh_token(refresh_claims, state).await {
@@ -158,7 +158,7 @@ pub fn generate_tokens(user: User, config: &Config) -> JwtTokens {
 pub async fn validate_revoked<T: std::fmt::Debug + ClaimsMethods + Sync + Send>(
     claims: &T,
     state: &SharedState,
-) -> Result<(), ApiError> {
+) -> Result<(), APIError> {
     match token_service::is_revoked(claims, state).await {
         Some(revoked) => {
             if revoked {

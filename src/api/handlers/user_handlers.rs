@@ -9,8 +9,8 @@ use thiserror::Error;
 
 use crate::{
     api::{
-        api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind},
-        api_version::{self, ApiVersion},
+        version::{self, APIVersion},
+        APIError, APIErrorCode, APIErrorEntry, APIErrorKind,
     },
     application::{
         repository::user_repo,
@@ -21,10 +21,10 @@ use crate::{
 };
 
 pub async fn list_users_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
-) -> Result<Json<Vec<User>>, ApiError> {
+) -> Result<Json<Vec<User>>, APIError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
@@ -33,11 +33,11 @@ pub async fn list_users_handler(
 }
 
 pub async fn add_user_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(user): Json<User>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     access_claims.validate_role_admin()?;
@@ -49,8 +49,8 @@ pub async fn get_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<Json<User>, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<Json<User>, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
@@ -60,9 +60,9 @@ pub async fn get_user_handler(
         .map_err(|e| match e {
             sqlx::Error::RowNotFound => {
                 let user_error = UserError::UserNotFound(id);
-                (user_error.status_code(), ApiErrorEntry::from(user_error)).into()
+                (user_error.status_code(), APIErrorEntry::from(user_error)).into()
             }
-            _ => ApiError::from(e),
+            _ => APIError::from(e),
         })?;
 
     Ok(Json(user))
@@ -73,8 +73,8 @@ pub async fn update_user_handler(
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
     Json(user): Json<User>,
-) -> Result<Json<User>, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<Json<User>, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
@@ -87,8 +87,8 @@ pub async fn delete_user_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<impl IntoResponse, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<impl IntoResponse, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
@@ -114,14 +114,14 @@ impl UserError {
     }
 }
 
-impl From<UserError> for ApiErrorEntry {
+impl From<UserError> for APIErrorEntry {
     fn from(user_error: UserError) -> Self {
         let message = user_error.to_string();
         let doc_url = "https://api.example.com/docs/errors";
         match user_error {
             UserError::UserNotFound(user_id) => Self::new(&message)
-                .code(ApiErrorCode::UserNotFound)
-                .kind(ApiErrorKind::ResourceNotFound)
+                .code(APIErrorCode::UserNotFound)
+                .kind(APIErrorKind::ResourceNotFound)
                 .description(&format!("user with the ID '{}' does not exist in our records", user_id))
                 .detail(serde_json::json!({"user_id": user_id}))
                 .reason("must be an existing user")

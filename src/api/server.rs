@@ -21,9 +21,9 @@ use tower_http::cors::{Any, CorsLayer};
 
 use crate::{
     api::{
-        api_error::ApiError,
-        api_version::{self, ApiVersion},
+        error::APIError,
         routes::{account_routes, auth_routes, transaction_routes, user_routes},
+        version::{self, APIVersion},
     },
     application::{constants::*, security::jwt_claims::AccessClaims, state::SharedState},
 };
@@ -116,7 +116,7 @@ pub async fn logging_middleware(request: Request<Body>, next: Next) -> Response 
     next.run(request).await
 }
 
-pub async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoResponse, ApiError> {
+pub async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoResponse, APIError> {
     if tracing::enabled!(tracing::Level::TRACE) {
         tracing::trace!(
             "current timestamp, chrono::Utc {}",
@@ -135,8 +135,8 @@ pub async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoRespon
 
 pub async fn heartbeat_handler(
     Path((version, id)): Path<(String, String)>,
-) -> Result<impl IntoResponse, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<impl IntoResponse, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("heartbeat: api version: {}", api_version);
     tracing::trace!("heartbeat: received id: {}", id);
     let map = HashMap::from([

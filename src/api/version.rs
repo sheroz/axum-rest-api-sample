@@ -7,15 +7,15 @@ use axum::{
 };
 use thiserror::Error;
 
-use crate::api::api_error::{ApiError, ApiErrorCode, ApiErrorEntry, ApiErrorKind};
+use crate::api::error::{APIError, APIErrorCode, APIErrorEntry, APIErrorKind};
 
 #[derive(Debug, Clone, Copy)]
-pub enum ApiVersion {
+pub enum APIVersion {
     V1,
     V2,
 }
 
-impl std::str::FromStr for ApiVersion {
+impl std::str::FromStr for APIVersion {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -26,7 +26,7 @@ impl std::str::FromStr for ApiVersion {
     }
 }
 
-impl std::fmt::Display for ApiVersion {
+impl std::fmt::Display for APIVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let v = match self {
             Self::V1 => "v1",
@@ -36,18 +36,18 @@ impl std::fmt::Display for ApiVersion {
     }
 }
 
-pub fn parse_version(version: &str) -> Result<ApiVersion, ApiError> {
+pub fn parse_version(version: &str) -> Result<APIVersion, APIError> {
     version.parse().map_or_else(
         |_| Err(ApiVersionError::InvalidVersion(version.to_owned()).into()),
         |v| Ok(v),
     )
 }
 
-impl<S> FromRequestParts<S> for ApiVersion
+impl<S> FromRequestParts<S> for APIVersion
 where
     S: Send + Sync,
 {
-    type Rejection = ApiError;
+    type Rejection = APIError;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         let params: Path<HashMap<String, String>> = parts
@@ -73,11 +73,11 @@ pub enum ApiVersionError {
     VersionExtractError,
 }
 
-impl From<ApiVersionError> for ApiError {
+impl From<ApiVersionError> for APIError {
     fn from(err: ApiVersionError) -> Self {
-        let error_entry = ApiErrorEntry::new(&err.to_string())
-            .code(ApiErrorCode::ApiVersionError)
-            .kind(ApiErrorKind::ValidationError);
+        let error_entry = APIErrorEntry::new(&err.to_string())
+            .code(APIErrorCode::ApiVersionError)
+            .kind(APIErrorKind::ValidationError);
 
         (StatusCode::BAD_REQUEST, error_entry).into()
     }

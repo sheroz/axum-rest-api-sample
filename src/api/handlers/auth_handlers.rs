@@ -4,7 +4,7 @@ use serde_json::json;
 use sqlx::types::Uuid;
 
 use crate::{
-    api::{api_error::ApiError, api_version::ApiVersion},
+    api::{version::APIVersion, APIError, APIErrorCode, APIErrorEntry, APIErrorKind},
     application::{
         repository::user_repo,
         security::{
@@ -30,10 +30,10 @@ pub struct RevokeUser {
 
 #[tracing::instrument(level = tracing::Level::TRACE, name = "login", skip_all, fields(username=login.username))]
 pub async fn login_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     State(state): State<SharedState>,
     Json(login): Json<LoginUser>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     let user = user_repo::get_by_username(&login.username, &state).await?;
     if user.active && user.password_hash == login.password_hash {
@@ -48,20 +48,20 @@ pub async fn login_handler(
 }
 
 pub async fn logout_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     State(state): State<SharedState>,
     refresh_claims: RefreshClaims,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("refresh_claims: {:?}", refresh_claims);
     jwt_auth::logout(refresh_claims, state).await
 }
 
 pub async fn refresh_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     State(state): State<SharedState>,
     refresh_claims: RefreshClaims,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     let new_tokens = jwt_auth::refresh(refresh_claims, state).await?;
     Ok(tokens_to_response(new_tokens))
@@ -69,10 +69,10 @@ pub async fn refresh_handler(
 
 // Revoke all issued tokens until now.
 pub async fn revoke_all_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
     if !token_service::revoke_global(&state).await {
@@ -83,11 +83,11 @@ pub async fn revoke_all_handler(
 
 // Revoke tokens issued to user until now.
 pub async fn revoke_user_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
     Json(revoke_user): Json<RevokeUser>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     if access_claims.sub != revoke_user.user_id.to_string() {
         // Only admin can revoke tokens of other users.
@@ -101,10 +101,10 @@ pub async fn revoke_user_handler(
 }
 
 pub async fn cleanup_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     State(state): State<SharedState>,
     access_claims: AccessClaims,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
     tracing::trace!("authentication details: {:#?}", access_claims);
@@ -124,4 +124,33 @@ fn tokens_to_response(jwt_tokens: JwtTokens) -> impl IntoResponse {
 
     tracing::trace!("JWT: generated response {:#?}", json);
     Json(json)
+}
+
+impl From<AuthError> for APIError {
+    fn from(auth_error: AuthError) -> Self {
+        let (status, code) = match auth_error {
+            AuthError::WrongCredentials => {
+                (StatusCode::UNAUTHORIZED, APIErrorCode::AuthWrongCredentials)
+            }
+            AuthError::MissingCredentials => (
+                StatusCode::BAD_REQUEST,
+                APIErrorCode::AuthMissingCredentials,
+            ),
+            AuthError::TokenCreationError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                APIErrorCode::AuthTokenCreationError,
+            ),
+            AuthError::InvalidToken => (StatusCode::BAD_REQUEST, APIErrorCode::AuthInvalidToken),
+            AuthError::Forbidden => (StatusCode::FORBIDDEN, APIErrorCode::AuthForbidden),
+        };
+
+        let error = APIErrorEntry::new(&auth_error.to_string())
+            .code(code)
+            .kind(APIErrorKind::AuthenticationError);
+
+        Self {
+            status,
+            errors: vec![error],
+        }
+    }
 }

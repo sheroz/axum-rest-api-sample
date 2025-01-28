@@ -70,15 +70,15 @@ use serde::{Deserialize, Serialize};
 //   ]
 // }
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ApiError {
+pub struct APIError {
     #[serde(skip)]
     pub status: StatusCode,
-    pub errors: Vec<ApiErrorEntry>,
+    pub errors: Vec<APIErrorEntry>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum ApiErrorCode {
+pub enum APIErrorCode {
     AuthWrongCredentials,
     AuthMissingCredentials,
     AuthTokenCreationError,
@@ -96,7 +96,7 @@ pub enum ApiErrorCode {
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum ApiErrorKind {
+pub enum APIErrorKind {
     AuthenticationError,
     ResourceNotFound,
     ValidationError,
@@ -104,7 +104,7 @@ pub enum ApiErrorKind {
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct ApiErrorEntry {
+pub struct APIErrorEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -127,7 +127,7 @@ pub struct ApiErrorEntry {
     pub doc_url: Option<String>,
 }
 
-impl ApiErrorEntry {
+impl APIErrorEntry {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_owned(),
@@ -185,24 +185,24 @@ impl ApiErrorEntry {
     }
 }
 
-impl From<sqlx::Error> for ApiErrorEntry {
+impl From<sqlx::Error> for APIErrorEntry {
     fn from(e: sqlx::Error) -> Self {
         Self::new(&e.to_string())
-            .code(ApiErrorCode::DatabaseError)
-            .kind(ApiErrorKind::DatabaseError)
+            .code(APIErrorCode::DatabaseError)
+            .kind(APIErrorKind::DatabaseError)
             .description(&format!("Database error: {}", e))
     }
 }
 
-impl From<(StatusCode, Vec<ApiErrorEntry>)> for ApiError {
-    fn from(error_from: (StatusCode, Vec<ApiErrorEntry>)) -> Self {
+impl From<(StatusCode, Vec<APIErrorEntry>)> for APIError {
+    fn from(error_from: (StatusCode, Vec<APIErrorEntry>)) -> Self {
         let (status, errors) = error_from;
         Self { status, errors }
     }
 }
 
-impl From<(StatusCode, ApiErrorEntry)> for ApiError {
-    fn from(error_from: (StatusCode, ApiErrorEntry)) -> Self {
+impl From<(StatusCode, APIErrorEntry)> for APIError {
+    fn from(error_from: (StatusCode, APIErrorEntry)) -> Self {
         let (status, error_entry) = error_from;
         Self {
             status,
@@ -211,7 +211,7 @@ impl From<(StatusCode, ApiErrorEntry)> for ApiError {
     }
 }
 
-impl From<StatusCode> for ApiError {
+impl From<StatusCode> for APIError {
     fn from(status: StatusCode) -> Self {
         Self {
             status,
@@ -220,7 +220,7 @@ impl From<StatusCode> for ApiError {
     }
 }
 
-impl From<sqlx::Error> for ApiError {
+impl From<sqlx::Error> for APIError {
     fn from(error: sqlx::Error) -> Self {
         let status = match error {
             sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
@@ -228,12 +228,12 @@ impl From<sqlx::Error> for ApiError {
         };
         Self {
             status,
-            errors: vec![ApiErrorEntry::from(error)],
+            errors: vec![APIErrorEntry::from(error)],
         }
     }
 }
 
-impl IntoResponse for ApiError {
+impl IntoResponse for APIError {
     fn into_response(self) -> Response {
         tracing::error!("Error response: {:?}", self);
         (self.status, Json(self)).into_response()

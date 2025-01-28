@@ -1,6 +1,8 @@
+mod error;
 mod routes;
+mod version;
 
-pub mod api_error;
-pub mod api_version;
 pub mod handlers;
 pub mod server;
+pub use error::{APIError, APIErrorCode, APIErrorEntry, APIErrorKind};
+pub use version::APIVersion;

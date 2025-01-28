@@ -3,10 +3,7 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    api::{
-        api_error::{ApiError, ApiErrorCode, ApiErrorKind},
-        handlers::transaction_handlers::TransactionError,
-    },
+    api::{handlers::transaction_handlers::TransactionError, APIError, APIErrorCode, APIErrorKind},
     application::{
         security::roles::UserRole, service::transaction_service::TransferValidationError,
     },
@@ -299,18 +296,18 @@ async fn account_transaction_test() {
         transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
             let body = response.text().await.unwrap();
-            let error_response = serde_json::from_str::<ApiError>(&body).unwrap();
+            let error_response = serde_json::from_str::<APIError>(&body).unwrap();
             assert_eq!(error_response.status, StatusCode::UNPROCESSABLE_ENTITY);
             assert_eq!(error_response.errors.len(), 1);
 
             let error = error_response.errors[0].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::TransactionInsufficientFunds).ok()
+                serde_json::to_string(&APIErrorCode::TransactionInsufficientFunds).ok()
             );
             assert_eq!(
                 error.kind,
-                serde_json::to_string(&ApiErrorKind::ValidationError).ok()
+                serde_json::to_string(&APIErrorKind::ValidationError).ok()
             );
             assert_eq!(
                 error.message,
@@ -353,18 +350,18 @@ async fn transaction_account_validation_test() {
         transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::UNPROCESSABLE_ENTITY);
             let body = response.text().await.unwrap();
-            let error_response = serde_json::from_str::<ApiError>(&body).unwrap();
+            let error_response = serde_json::from_str::<APIError>(&body).unwrap();
             assert_eq!(error_response.status, StatusCode::UNPROCESSABLE_ENTITY);
             assert_eq!(error_response.errors.len(), 2);
 
             let error = error_response.errors[0].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::TransactionSourceAccountNotFound).ok()
+                serde_json::to_string(&APIErrorCode::TransactionSourceAccountNotFound).ok()
             );
             assert_eq!(
                 error.kind,
-                serde_json::to_string(&ApiErrorKind::ValidationError).ok()
+                serde_json::to_string(&APIErrorKind::ValidationError).ok()
             );
             assert_eq!(
                 error.message,
@@ -376,11 +373,11 @@ async fn transaction_account_validation_test() {
             let error = error_response.errors[1].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::TransactionDestinationAccountNotFound).ok()
+                serde_json::to_string(&APIErrorCode::TransactionDestinationAccountNotFound).ok()
             );
             assert_eq!(
                 error.kind,
-                serde_json::to_string(&ApiErrorKind::ValidationError).ok()
+                serde_json::to_string(&APIErrorKind::ValidationError).ok()
             );
             assert_eq!(
                 error.message,
@@ -419,18 +416,18 @@ async fn transaction_non_existing_test() {
         transactions::TransactionResponseError::UnexpectedResponse(response) => {
             assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
             let body = response.text().await.unwrap();
-            let error_response = serde_json::from_str::<ApiError>(&body).unwrap();
+            let error_response = serde_json::from_str::<APIError>(&body).unwrap();
             assert_eq!(error_response.status, StatusCode::UNPROCESSABLE_ENTITY);
             assert_eq!(error_response.errors.len(), 1);
 
             let error = error_response.errors[0].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&ApiErrorCode::TransactionNotFound).ok()
+                serde_json::to_string(&APIErrorCode::TransactionNotFound).ok()
             );
             assert_eq!(
                 error.kind,
-                serde_json::to_string(&ApiErrorKind::ResourceNotFound).ok()
+                serde_json::to_string(&APIErrorKind::ResourceNotFound).ok()
             );
             assert_eq!(
                 error.message,

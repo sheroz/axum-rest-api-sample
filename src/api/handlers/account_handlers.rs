@@ -8,8 +8,8 @@ use sqlx::types::Uuid;
 
 use crate::{
     api::{
-        api_error::ApiError,
-        api_version::{self, ApiVersion},
+        version::{self, APIVersion},
+        APIError,
     },
     application::{
         repository::account_repo,
@@ -20,10 +20,10 @@ use crate::{
 };
 
 pub async fn list_accounts_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
-) -> Result<Json<Vec<Account>>, ApiError> {
+) -> Result<Json<Vec<Account>>, APIError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
 
@@ -35,11 +35,11 @@ pub async fn list_accounts_handler(
 }
 
 pub async fn add_account_handler(
-    api_version: ApiVersion,
+    api_version: APIVersion,
     access_claims: AccessClaims,
     State(state): State<SharedState>,
     Json(account): Json<Account>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
 
@@ -54,8 +54,8 @@ pub async fn get_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<Json<Account>, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<Json<Account>, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
@@ -72,8 +72,8 @@ pub async fn update_account_handler(
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
     Json(account): Json<Account>,
-) -> Result<Json<Account>, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<Json<Account>, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
@@ -89,8 +89,8 @@ pub async fn delete_account_handler(
     access_claims: AccessClaims,
     Path((version, id)): Path<(String, Uuid)>,
     State(state): State<SharedState>,
-) -> Result<impl IntoResponse, ApiError> {
-    let api_version: ApiVersion = api_version::parse_version(&version)?;
+) -> Result<impl IntoResponse, APIError> {
+    let api_version: APIVersion = version::parse_version(&version)?;
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("authentication details: {:#?}", access_claims);
     tracing::trace!("id: {}", id);
