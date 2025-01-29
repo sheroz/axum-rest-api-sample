@@ -10,8 +10,8 @@ Covers:
 - REST API based on [axum](https://github.com/tokio-rs/axum)
   - Routing
   - API versioning
+  - Error handling
   - CORS settings
-  - Error handling (basic)
   - Graceful shutdown
 - Authentication & authorization using `JSON Web Tokens (JWT)`
   - Login, logout, refresh, and revoking operations
@@ -27,6 +27,7 @@ Covers:
   - Database migrations
   - Async connection pooling
   - Async CRUD operations
+  - Transactions
 - Using `Redis` in-memory storage
   - Async `Redis` operations
 - Configuration settings
