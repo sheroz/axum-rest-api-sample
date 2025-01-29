@@ -35,12 +35,13 @@ pub async fn login_handler(
     Json(login): Json<LoginUser>,
 ) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
-    let user = user_repo::get_by_username(&login.username, &state).await?;
-    if user.active && user.password_hash == login.password_hash {
-        tracing::trace!("access granted, user: {}", user.id);
-        let tokens = jwt_auth::generate_tokens(user, &state.config);
-        let response = tokens_to_response(tokens);
-        return Ok(response);
+    if let Ok(user) = user_repo::get_by_username(&login.username, &state).await {
+        if user.active && user.password_hash == login.password_hash {
+            tracing::trace!("access granted, user: {}", user.id);
+            let tokens = jwt_auth::generate_tokens(user, &state.config);
+            let response = tokens_to_response(tokens);
+            return Ok(response);
+        }
     }
 
     tracing::error!("access denied: {:#?}", login);
@@ -128,7 +129,7 @@ fn tokens_to_response(jwt_tokens: JwtTokens) -> impl IntoResponse {
 
 impl From<AuthError> for APIError {
     fn from(auth_error: AuthError) -> Self {
-        let (status, code) = match auth_error {
+        let (status_code, code) = match auth_error {
             AuthError::WrongCredentials => {
                 (StatusCode::UNAUTHORIZED, APIErrorCode::AuthWrongCredentials)
             }
@@ -149,7 +150,7 @@ impl From<AuthError> for APIError {
             .kind(APIErrorKind::AuthenticationError);
 
         Self {
-            status,
+            status: status_code.as_u16(),
             errors: vec![error],
         }
     }

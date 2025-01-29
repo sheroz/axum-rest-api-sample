@@ -32,12 +32,13 @@ async fn wait_for_service(duration: Duration) {
     let timeout = Instant::now() + duration;
     loop {
         let url = build_url(API_V1, API_PATH_HEARTBEAT, "1");
-        let response = reqwest::get(url.as_str()).await.unwrap();
-        if response.status() == StatusCode::OK {
-            break;
+        if let Ok(response) = reqwest::get(url.as_str()).await {
+            if response.status() == StatusCode::OK {
+                break;
+            }
         }
         if Instant::now() > timeout {
-            panic!("Could not start API Service in 5 seconds");
+            panic!("Could not start API Service in: {:?}", duration);
         }
         tokio::time::sleep(Duration::from_millis(20)).await;
     }

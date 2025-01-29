@@ -3,7 +3,7 @@ use sqlx::query_as;
 use uuid::Uuid;
 
 use crate::{
-    application::{repository::RepositoryResult, security::roles::UserRole, state::SharedState},
+    application::{repository::RepositoryResult, state::SharedState},
     domain::models::user::User,
 };
 
@@ -37,7 +37,7 @@ pub async fn add(user: User, state: &SharedState) -> RepositoryResult<User> {
     .bind(user.password_hash)
     .bind(user.password_salt)
     .bind(true)
-    .bind(UserRole::Guest.to_string())
+    .bind(user.roles)
     .bind(time_now)
     .bind(time_now)
     .fetch_one(&state.db_pool)

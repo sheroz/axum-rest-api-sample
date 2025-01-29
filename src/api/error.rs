@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 // API error response samples:
 //
 // {
+//   "status": 404,
 //   "errors": [
 //     {
 //         "code": "user_not_found",
@@ -27,6 +28,7 @@ use serde::{Deserialize, Serialize};
 // }
 //
 // {
+//   "status": 422,
 //   "errors": [
 //     {
 //         "code": "invalid_email",
@@ -71,8 +73,7 @@ use serde::{Deserialize, Serialize};
 // }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct APIError {
-    #[serde(skip)]
-    pub status: StatusCode,
+    pub status: u16,
     pub errors: Vec<APIErrorEntry>,
 }
 
@@ -196,25 +197,28 @@ impl From<sqlx::Error> for APIErrorEntry {
 
 impl From<(StatusCode, Vec<APIErrorEntry>)> for APIError {
     fn from(error_from: (StatusCode, Vec<APIErrorEntry>)) -> Self {
-        let (status, errors) = error_from;
-        Self { status, errors }
+        let (status_code, errors) = error_from;
+        Self {
+            status: status_code.as_u16(),
+            errors,
+        }
     }
 }
 
 impl From<(StatusCode, APIErrorEntry)> for APIError {
     fn from(error_from: (StatusCode, APIErrorEntry)) -> Self {
-        let (status, error_entry) = error_from;
+        let (status_code, error_entry) = error_from;
         Self {
-            status,
+            status: status_code.as_u16(),
             errors: vec![error_entry],
         }
     }
 }
 
 impl From<StatusCode> for APIError {
-    fn from(status: StatusCode) -> Self {
+    fn from(status_code: StatusCode) -> Self {
         Self {
-            status,
+            status: status_code.as_u16(),
             errors: vec![],
         }
     }
@@ -222,12 +226,12 @@ impl From<StatusCode> for APIError {
 
 impl From<sqlx::Error> for APIError {
     fn from(error: sqlx::Error) -> Self {
-        let status = match error {
+        let status_code = match error {
             sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         Self {
-            status,
+            status: status_code.as_u16(),
             errors: vec![APIErrorEntry::from(error)],
         }
     }
@@ -236,6 +240,8 @@ impl From<sqlx::Error> for APIError {
 impl IntoResponse for APIError {
     fn into_response(self) -> Response {
         tracing::error!("Error response: {:?}", self);
-        (self.status, Json(self)).into_response()
+        let status_code =
+            StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        (status_code, Json(self)).into_response()
     }
 }

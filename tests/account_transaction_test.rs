@@ -86,15 +86,12 @@ async fn account_transaction_test() {
     let (access_token, _) = result.unwrap();
 
     // Add user for Alice.
+    let id = Uuid::new_v4();
     let username = "alice";
     let user_alice = User {
-        id: Uuid::new_v4(),
-        username: format!(
-            "test-{}-{}",
-            username,
-            chrono::Utc::now().timestamp() as usize
-        ),
-        email: format!("{}@email.com", username),
+        id,
+        username: format!("test-{}-{}", username, id),
+        email: format!("{}-{}@email.com", username, id),
         password_hash: "xyz123".to_string(),
         password_salt: "xyz123".to_string(),
         active: true,
@@ -139,15 +136,12 @@ async fn account_transaction_test() {
     assert_eq!(result.unwrap(), account_alice);
 
     // Add user for Bob.
+    let id = Uuid::new_v4();
     let username = "bob";
     let user_bob = User {
         id: Uuid::new_v4(),
-        username: format!(
-            "test-{}-{}",
-            username,
-            chrono::Utc::now().timestamp() as usize
-        ),
-        email: format!("{}@email.com", username),
+        username: format!("test-{}-{}", username, id),
+        email: format!("{}-{}@email.com", username, id),
         password_hash: "xyz123".to_string(),
         password_salt: "xyz123".to_string(),
         active: true,
@@ -338,7 +332,7 @@ async fn transaction_account_validation_test() {
     let amount_cents = 100;
 
     let result = transactions::transfer(
-        destination_account_id,
+        source_account_id,
         destination_account_id,
         amount_cents,
         &access_token,
@@ -417,7 +411,7 @@ async fn transaction_non_existing_test() {
             assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
             let body = response.text().await.unwrap();
             let error_response = serde_json::from_str::<APIError>(&body).unwrap();
-            assert_eq!(error_response.status, StatusCode::UNPROCESSABLE_ENTITY);
+            assert_eq!(error_response.status, StatusCode::NOT_FOUND);
             assert_eq!(error_response.errors.len(), 1);
 
             let error = error_response.errors[0].clone();
