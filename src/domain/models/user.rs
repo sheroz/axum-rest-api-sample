@@ -19,6 +19,6 @@ pub struct User {
 
 impl User {
     pub fn is_admin(&self) -> bool {
-        security::roles::is_role_admin(&self.roles)
+        security::roles::contains_role_admin(&self.roles)
     }
 }

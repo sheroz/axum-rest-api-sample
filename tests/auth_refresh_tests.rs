@@ -1,17 +1,20 @@
 use reqwest::StatusCode;
 use serial_test::serial;
 
-use axum_web::application::config;
-
 pub mod common;
-use common::{auth, route, utils, *};
+use common::{
+    auth,
+    constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
+    route, utils,
+};
 
 #[tokio::test]
 #[serial]
 async fn refresh_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
+    // Start the api server.
+    utils::run_app().await;
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();
@@ -42,13 +45,15 @@ async fn refresh_test() {
 #[tokio::test]
 #[serial]
 async fn refresh_logout_test() {
-    // Load the test configuration and start the api server.
-    utils::start_api().await;
-    let config = config::get();
+    // Start the api server.
+    utils::run_app().await;
+
+    let config = utils::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
 
+    // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
         .unwrap();

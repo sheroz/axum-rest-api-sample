@@ -4,10 +4,12 @@ use redis::{aio::MultiplexedConnection, AsyncCommands, RedisResult};
 use tokio::sync::MutexGuard;
 
 use crate::application::{
-    app_const::*,
+    constants::*,
     security::jwt_claims::{ClaimsMethods, RefreshClaims},
     state::SharedState,
 };
+
+// TODO: functions need to be refactored and the boilerplate errors need to be polished.
 
 pub async fn revoke_global(state: &SharedState) -> bool {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;

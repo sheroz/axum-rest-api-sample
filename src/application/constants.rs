@@ -1,8 +1,9 @@
 pub const SERVICE_NAME: &str = "axum-web";
 pub const SERVICE_VERSION: &str = "1.0.0";
 
-// User roles.
+// Roles.
 pub const USER_ROLE_ADMIN: &str = "admin";
+pub const USER_ROLE_CUSTOMER: &str = "customer";
 pub const USER_ROLE_GUEST: &str = "guest";
 
 // JWT related constants.

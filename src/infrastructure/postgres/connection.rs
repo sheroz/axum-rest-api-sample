@@ -1,8 +1,8 @@
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::postgres::PgPoolOptions;
 
-use crate::application::config::Config;
+use crate::{application::config::Config, infrastructure::types::DatabasePool};
 
-pub async fn pgpool(config: &Config) -> Pool<Postgres> {
+pub async fn pgpool(config: &Config) -> DatabasePool {
     match PgPoolOptions::new()
         .max_connections(config.postgres_connection_pool)
         .connect(&config.postgres_url())

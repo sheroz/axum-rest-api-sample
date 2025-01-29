@@ -10,8 +10,8 @@ Covers:
 - REST API based on [axum](https://github.com/tokio-rs/axum)
   - Routing
   - API versioning
+  - Error handling
   - CORS settings
-  - Error handling (basic)
   - Graceful shutdown
 - Authentication & authorization using `JSON Web Tokens (JWT)`
   - Login, logout, refresh, and revoking operations
@@ -27,6 +27,7 @@ Covers:
   - Database migrations
   - Async connection pooling
   - Async CRUD operations
+  - Transactions
 - Using `Redis` in-memory storage
   - Async `Redis` operations
 - Configuration settings
@@ -35,12 +36,17 @@ Covers:
 - Logs
   - `tracing` based logs
 - Tests
-  - `Docker` based end-to-end tests
-  - GitHub CI configuration for running tests
-- Using `Docker` for running services
-  - `PostgreSQL` and `Redis`
+  - End-to-end API tests
+- Using `Docker`
+  - Running `PostgreSQL` and `Redis` services
   - Building the application using the official `Rust` image
   - Running the full stack: API + `PostgreSQL` + `Redis`
+- GitHub CI configuration
+  - Running `cargo deny` to check for security vulnerabilities and licenses
+  - Running `cargo fmt` to check for the Rust code format according to style guidelines
+  - Running `cargo clippy` to catch common mistakes and improving the Rust code
+  - Running tests
+  - Building the application
 
 ## Run
 
