@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
-use crate::application::constants::{USER_ROLE_ADMIN, USER_ROLE_CUSTOMER, USER_ROLE_GUEST};
+use crate::application::{
+    constants::{USER_ROLE_ADMIN, USER_ROLE_CUSTOMER, USER_ROLE_GUEST},
+    security::auth_error::AuthError,
+};
 
 /// User roles.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -46,4 +49,11 @@ pub fn contains_role_admin(roles: &str) -> bool {
 
     let role_admin = UserRole::Admin.to_string();
     roles.split(',').map(|s| s.trim()).any(|x| x == role_admin)
+}
+
+pub fn is_role_admin(roles: &str) -> Result<(), AuthError> {
+    if !contains_role_admin(roles) {
+        return Err(AuthError::Forbidden);
+    }
+    Ok(())
 }

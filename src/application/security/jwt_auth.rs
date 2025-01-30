@@ -1,4 +1,4 @@
-use hyper::StatusCode;
+use axum::http::StatusCode; // TODO: move the dependency to upper level
 use uuid::Uuid;
 
 use crate::{
@@ -19,7 +19,7 @@ pub struct JwtTokens {
 }
 
 pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), APIError> {
-    // Checking the configuration if the usage of the list of revoked tokens is enabled.
+    // Check if revoked tokens are enabled.
     if state.config.jwt_enable_revoked_tokens {
         // Decode and validate the refresh token.
         if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
@@ -40,7 +40,7 @@ pub async fn refresh(
         return Err(AuthError::InvalidToken.into());
     }
 
-    // Checking the configuration if the usage of the list of revoked tokens is enabled.
+    // Check if revoked tokens are enabled.
     if state.config.jwt_enable_revoked_tokens {
         revoke_refresh_token(&refresh_claims, &state).await?;
     }
@@ -55,7 +55,7 @@ pub async fn cleanup_revoked_and_expired(
     _access_claims: &AccessClaims,
     state: &SharedState,
 ) -> Result<usize, APIError> {
-    // Checking the configuration if the usage of the list of revoked tokens is enabled.
+    // Check if revoked tokens are enabled.
     if !state.config.jwt_enable_revoked_tokens {
         Err(StatusCode::NOT_ACCEPTABLE)?;
     }

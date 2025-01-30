@@ -1,4 +1,5 @@
 mod error;
+mod extractors;
 mod routes;
 mod version;
 
