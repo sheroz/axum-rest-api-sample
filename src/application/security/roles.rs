@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::application::{
     constants::{USER_ROLE_ADMIN, USER_ROLE_CUSTOMER, USER_ROLE_GUEST},
-    security::auth_error::AuthError,
+    security::auth::AuthError,
 };
 
 /// User roles.

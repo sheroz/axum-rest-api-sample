@@ -14,9 +14,8 @@ use crate::{
     api::APIError,
     application::{
         security::{
-            auth_error::AuthError,
-            jwt_auth,
-            jwt_claims::{decode_token, AccessClaims, ClaimsMethods, RefreshClaims},
+            auth::{self, AuthError},
+            jwt::{decode_token, AccessClaims, ClaimsMethods, RefreshClaims},
         },
         state::SharedState,
     },
@@ -69,7 +68,7 @@ where
 
     // Check for revoked tokens if enabled by configuration.
     if state.config.jwt_enable_revoked_tokens {
-        jwt_auth::validate_revoked(&claims, &state).await?
+        auth::validate_revoked(&claims, &state).await?
     }
     Ok(claims)
 }

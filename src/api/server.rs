@@ -25,7 +25,7 @@ use crate::{
         routes::{account_routes, auth_routes, transaction_routes, user_routes},
         version::{self, APIVersion},
     },
-    application::{constants::*, security::jwt_claims::AccessClaims, state::SharedState},
+    application::{constants::*, security::jwt::AccessClaims, state::SharedState},
 };
 
 pub async fn start(state: SharedState) {

@@ -8,9 +8,8 @@ use crate::{
     application::{
         repository::user_repo,
         security::{
-            auth_error::AuthError,
-            jwt_auth::{self, JwtTokens},
-            jwt_claims::{AccessClaims, ClaimsMethods, RefreshClaims},
+            auth::{self, AuthError, JwtTokens},
+            jwt::{AccessClaims, ClaimsMethods, RefreshClaims},
         },
         service::token_service,
         state::SharedState,
@@ -38,7 +37,7 @@ pub async fn login_handler(
     if let Ok(user) = user_repo::get_by_username(&login.username, &state).await {
         if user.active && user.password_hash == login.password_hash {
             tracing::trace!("access granted, user: {}", user.id);
-            let tokens = jwt_auth::generate_tokens(user, &state.config);
+            let tokens = auth::generate_tokens(user, &state.config);
             let response = tokens_to_response(tokens);
             return Ok(response);
         }
@@ -55,7 +54,8 @@ pub async fn logout_handler(
 ) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     tracing::trace!("refresh_claims: {:?}", refresh_claims);
-    jwt_auth::logout(refresh_claims, state).await
+    auth::logout(refresh_claims, state).await?;
+    Ok(())
 }
 
 pub async fn refresh_handler(
@@ -64,7 +64,7 @@ pub async fn refresh_handler(
     refresh_claims: RefreshClaims,
 ) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
-    let new_tokens = jwt_auth::refresh(refresh_claims, state).await?;
+    let new_tokens = auth::refresh(refresh_claims, state).await?;
     Ok(tokens_to_response(new_tokens))
 }
 
@@ -76,9 +76,7 @@ pub async fn revoke_all_handler(
 ) -> Result<impl IntoResponse, APIError> {
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
-    if !token_service::revoke_global(&state).await {
-        Err(StatusCode::INTERNAL_SERVER_ERROR)?;
-    }
+    token_service::revoke_global(&state).await?;
     Ok(())
 }
 
@@ -95,9 +93,7 @@ pub async fn revoke_user_handler(
         access_claims.validate_role_admin()?;
     }
     tracing::trace!("revoke_user: {:?}", revoke_user);
-    if !token_service::revoke_user_tokens(&revoke_user.user_id.to_string(), &state).await {
-        Err(StatusCode::INTERNAL_SERVER_ERROR)?;
-    }
+    token_service::revoke_user_tokens(&revoke_user.user_id.to_string(), &state).await?;
     Ok(())
 }
 
@@ -109,7 +105,7 @@ pub async fn cleanup_handler(
     tracing::trace!("api version: {}", api_version);
     access_claims.validate_role_admin()?;
     tracing::trace!("authentication details: {:#?}", access_claims);
-    let deleted = jwt_auth::cleanup_revoked_and_expired(&access_claims, &state).await?;
+    let deleted = auth::cleanup_revoked_and_expired(&access_claims, &state).await?;
     let json = json!({
         "deleted_tokens": deleted,
     });
@@ -143,6 +139,17 @@ impl From<AuthError> for APIError {
             ),
             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, APIErrorCode::AuthInvalidToken),
             AuthError::Forbidden => (StatusCode::FORBIDDEN, APIErrorCode::AuthForbidden),
+            AuthError::RevokedTokensInactive => (
+                StatusCode::BAD_REQUEST,
+                APIErrorCode::AuthRevokedTokensInactive,
+            ),
+            AuthError::RedisError(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, APIErrorCode::RedisError)
+            }
+            AuthError::SQLxError(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                APIErrorCode::DatabaseError,
+            ),
         };
 
         let error = APIErrorEntry::new(&auth_error.to_string())

@@ -84,6 +84,7 @@ pub enum APIErrorCode {
     AuthMissingCredentials,
     AuthTokenCreationError,
     AuthInvalidToken,
+    AuthRevokedTokensInactive,
     AuthForbidden,
     UserNotFound,
     TransactionNotFound,
@@ -93,6 +94,7 @@ pub enum APIErrorCode {
     ResourceNotFound,
     ApiVersionError,
     DatabaseError,
+    RedisError,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -102,6 +104,7 @@ pub enum APIErrorKind {
     ResourceNotFound,
     ValidationError,
     DatabaseError,
+    RedisError,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -195,6 +198,15 @@ impl From<sqlx::Error> for APIErrorEntry {
     }
 }
 
+impl From<redis::RedisError> for APIErrorEntry {
+    fn from(e: redis::RedisError) -> Self {
+        Self::new(&e.to_string())
+            .code(APIErrorCode::RedisError)
+            .kind(APIErrorKind::RedisError)
+            .description(&format!("Redis error: {}", e))
+    }
+}
+
 impl From<(StatusCode, Vec<APIErrorEntry>)> for APIError {
     fn from(error_from: (StatusCode, Vec<APIErrorEntry>)) -> Self {
         let (status_code, errors) = error_from;
@@ -232,6 +244,15 @@ impl From<sqlx::Error> for APIError {
         };
         Self {
             status: status_code.as_u16(),
+            errors: vec![APIErrorEntry::from(error)],
+        }
+    }
+}
+
+impl From<redis::RedisError> for APIError {
+    fn from(error: redis::RedisError) -> Self {
+        Self {
+            status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
             errors: vec![APIErrorEntry::from(error)],
         }
     }

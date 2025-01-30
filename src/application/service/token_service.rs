@@ -5,175 +5,109 @@ use tokio::sync::MutexGuard;
 
 use crate::application::{
     constants::*,
-    security::jwt_claims::{ClaimsMethods, RefreshClaims},
+    security::jwt::{ClaimsMethods, RefreshClaims},
     state::SharedState,
 };
 
-// TODO: functions need to be refactored and the boilerplate errors need to be polished.
-
-pub async fn revoke_global(state: &SharedState) -> bool {
+pub async fn revoke_global(state: &SharedState) -> RedisResult<()> {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
     tracing::debug!("setting a timestamp for global revoke: {}", timestamp_now);
-
-    let redis_result: RedisResult<()> = state
+    state
         .redis
         .lock()
         .await
         .set(JWT_REDIS_REVOKE_GLOBAL_BEFORE_KEY, timestamp_now)
-        .await;
-    if let Err(e) = redis_result {
-        tracing::error!("{}", e);
-        return false;
-    }
-    true
+        .await
 }
 
-pub async fn revoke_user_tokens(user_id: &str, state: &SharedState) -> bool {
+pub async fn revoke_user_tokens(user_id: &str, state: &SharedState) -> RedisResult<()> {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
     tracing::debug!(
         "adding a timestamp for user revoke, user:{}, timestamp: {}",
         user_id,
         timestamp_now
     );
-
-    let redis_result: RedisResult<()> = state
+    state
         .redis
         .lock()
         .await
         .hset(JWT_REDIS_REVOKE_USER_BEFORE_KEY, user_id, timestamp_now)
-        .await;
-    if let Err(e) = redis_result {
-        tracing::error!("{}", e);
-        return false;
-    }
-    true
+        .await
 }
 
 async fn is_global_revoked<T: ClaimsMethods + Sync + Send>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
-) -> Option<bool> {
+) -> RedisResult<bool> {
     // Check in global revoke.
-    let redis_result: RedisResult<Option<String>> =
-        redis.get(JWT_REDIS_REVOKE_GLOBAL_BEFORE_KEY).await;
-    match redis_result {
-        Ok(opt_exp) => {
-            if let Some(exp) = opt_exp {
-                match exp.parse::<usize>() {
-                    Ok(global_exp) => {
-                        if global_exp >= claims.get_iat() {
-                            return Some(true);
-                        }
-                    }
-                    Err(e) => {
-                        tracing::error!("{}", e);
-                        return None;
-                    }
-                }
-            }
-        }
-        Err(e) => {
-            tracing::error!("{}", e);
-            return None;
+    let opt_exp: Option<String> = redis.get(JWT_REDIS_REVOKE_GLOBAL_BEFORE_KEY).await?;
+    if let Some(exp) = opt_exp {
+        let global_exp = exp.parse::<usize>().unwrap();
+        if global_exp >= claims.get_iat() {
+            return Ok(true);
         }
     }
-    Some(false)
+    Ok(false)
 }
 
 async fn is_user_revoked<T: ClaimsMethods + Sync + Send>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
-) -> Option<bool> {
+) -> RedisResult<bool> {
     // Check in user revoke.
     let user_id = claims.get_sub();
-    let redis_result: RedisResult<Option<String>> =
-        redis.hget(JWT_REDIS_REVOKE_USER_BEFORE_KEY, user_id).await;
-    match redis_result {
-        Ok(opt_exp) => {
-            if let Some(exp) = opt_exp {
-                match exp.parse::<usize>() {
-                    Ok(global_exp) => {
-                        if global_exp >= claims.get_iat() {
-                            return Some(true);
-                        }
-                    }
-                    Err(e) => {
-                        tracing::error!("{}", e);
-                        return None;
-                    }
-                }
-            }
-        }
-        Err(e) => {
-            tracing::error!("{}", e);
-            return None;
+    let opt_exp: Option<String> = redis
+        .hget(JWT_REDIS_REVOKE_USER_BEFORE_KEY, user_id)
+        .await?;
+    if let Some(exp) = opt_exp {
+        let global_exp = exp.parse::<usize>().unwrap();
+        if global_exp >= claims.get_iat() {
+            return Ok(true);
         }
     }
-    Some(false)
+
+    Ok(false)
 }
 
 async fn is_token_revoked<T: ClaimsMethods + Sync + Send>(
     claims: &T,
     redis: &mut MutexGuard<'_, redis::aio::MultiplexedConnection>,
-) -> Option<bool> {
+) -> RedisResult<bool> {
     // Check the token in revoked list.
-    let redis_result: RedisResult<bool> = redis
+    redis
         .hexists(JWT_REDIS_REVOKED_TOKENS_KEY, claims.get_jti())
-        .await;
-    match redis_result {
-        Ok(revoked) => Some(revoked),
-        Err(e) => {
-            tracing::error!("{}", e);
-            None
-        }
-    }
+        .await
 }
 
 pub async fn is_revoked<T: std::fmt::Debug + ClaimsMethods + Send + Sync>(
     claims: &T,
     state: &SharedState,
-) -> Option<bool> {
+) -> RedisResult<bool> {
     let mut redis = state.redis.lock().await;
-    match is_global_revoked(claims, &mut redis).await {
-        Some(revoked) => {
-            if revoked {
-                tracing::error!("Access denied (globally revoked): {:#?}", claims);
-                return Some(true);
-            }
-        }
-        None => {
-            return None;
-        }
+
+    let global_revoked = is_global_revoked(claims, &mut redis).await?;
+    if global_revoked {
+        tracing::error!("Access denied (globally revoked): {:#?}", claims);
+        return Ok(true);
     }
 
-    match is_user_revoked(claims, &mut redis).await {
-        Some(revoked) => {
-            if revoked {
-                tracing::error!("Access denied (user revoked): {:#?}", claims);
-                return Some(true);
-            }
-        }
-        None => {
-            return None;
-        }
+    let user_revoked = is_user_revoked(claims, &mut redis).await?;
+    if user_revoked {
+        tracing::error!("Access denied (user revoked): {:#?}", claims);
+        return Ok(true);
     }
 
-    match is_token_revoked(claims, &mut redis).await {
-        Some(revoked) => {
-            if revoked {
-                tracing::error!("Access denied (token revoked): {:#?}", claims);
-                return Some(true);
-            }
-        }
-        None => {
-            return None;
-        }
+    let token_revoked = is_token_revoked(claims, &mut redis).await?;
+    if token_revoked {
+        tracing::error!("Access denied (token revoked): {:#?}", claims);
+        return Ok(true);
     }
-
-    Some(false)
+    
+    drop(redis);
+    Ok(false)
 }
 
-pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -> bool {
+pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -> RedisResult<()> {
     // Adds refersh token and its paired access token into revoked list in Redis.
     // Tokens are tracked by JWT ID that handles the cases of reusing lost tokens and multi-device scenarios.
 
@@ -182,13 +116,9 @@ pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -
 
     let mut redis = state.redis.lock().await;
     for claims_jti in list_to_revoke {
-        let redis_result: RedisResult<()> = redis
+        let _: () = redis
             .hset(JWT_REDIS_REVOKED_TOKENS_KEY, claims_jti, claims.exp)
-            .await;
-        if let Err(e) = redis_result {
-            tracing::error!("{}", e);
-            return false;
-        }
+            .await?;
     }
 
     if tracing::enabled!(tracing::Level::TRACE) {
@@ -196,26 +126,10 @@ pub async fn revoke_refresh_token(claims: &RefreshClaims, state: &SharedState) -
     }
     drop(redis);
 
-    true
+    Ok(())
 }
 
-pub async fn cleanup_expired(state: &SharedState) -> Option<usize> {
-    match delete_expired_tokens(state).await {
-        Ok(deleted) => {
-            tracing::debug!(
-                "count of expired tokens deleted from the revoked list: {}",
-                deleted
-            );
-            Some(deleted)
-        }
-        Err(e) => {
-            tracing::error!("{}", e);
-            None
-        }
-    }
-}
-
-async fn delete_expired_tokens(state: &SharedState) -> RedisResult<usize> {
+pub async fn cleanup_expired(state: &SharedState) -> RedisResult<usize> {
     let timestamp_now = chrono::Utc::now().timestamp() as usize;
 
     let mut redis = state.redis.lock().await;

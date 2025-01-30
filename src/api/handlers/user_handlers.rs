@@ -14,7 +14,7 @@ use crate::{
     },
     application::{
         repository::user_repo,
-        security::jwt_claims::{AccessClaims, ClaimsMethods},
+        security::jwt::{AccessClaims, ClaimsMethods},
         state::SharedState,
     },
     domain::models::user::User,

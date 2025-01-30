@@ -14,7 +14,7 @@ use crate::{
     },
     application::{
         repository::transaction_repo,
-        security::jwt_claims::{AccessClaims, ClaimsMethods},
+        security::jwt::{AccessClaims, ClaimsMethods},
         service::transaction_service::{self, TransferError, TransferValidationError},
         state::SharedState,
     },

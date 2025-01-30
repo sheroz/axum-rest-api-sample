@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::application::{
     config::Config,
-    security::{auth_error::AuthError, roles},
+    security::{auth::AuthError, roles},
 };
 
 // [JWT Claims]
