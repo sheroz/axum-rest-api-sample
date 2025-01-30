@@ -26,8 +26,7 @@ Covers:
 - Using `PostgreSQL`database with `SQLx`
   - Database migrations
   - Async connection pooling
-  - Async CRUD operations
-  - Transactions
+  - Async CRUD operations and transactions
 - Using `Redis` in-memory storage
   - Async `Redis` operations
 - Configuration settings
