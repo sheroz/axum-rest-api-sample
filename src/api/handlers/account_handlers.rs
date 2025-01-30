@@ -13,7 +13,7 @@ use crate::{
     },
     application::{
         repository::account_repo,
-        security::jwt_claims::{AccessClaims, ClaimsMethods},
+        security::jwt::{AccessClaims, ClaimsMethods},
         state::SharedState,
     },
     domain::models::account::Account,

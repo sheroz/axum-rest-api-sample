@@ -1,28 +1,12 @@
-use std::sync::Arc;
-
-use axum::{
-    extract::{FromRef, FromRequestParts},
-    http::request::Parts,
-    RequestPartsExt,
-};
-use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
-    TypedHeader,
-};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    api::APIError, // TODO: refactor the APIError dependency.
-    application::{
-        config::Config,
-        security::{self, auth_error::*, jwt_auth},
-        state::SharedState,
-    },
+use crate::application::{
+    config::Config,
+    security::{auth::AuthError, roles},
 };
 
 // [JWT Claims]
 // [RFC7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4)
-// ToDo: implement role based validation: is_role(admin)
 // roles, groups: https://www.rfc-editor.org/rfc/rfc7643.html#section-4.1.2
 // https://www.rfc-editor.org/rfc/rfc9068.html#name-authorization-claims
 
@@ -89,7 +73,7 @@ pub trait ClaimsMethods {
 
 impl ClaimsMethods for AccessClaims {
     fn validate_role_admin(&self) -> Result<(), AuthError> {
-        is_role_admin(&self.roles)
+        roles::is_role_admin(&self.roles)
     }
     fn get_sub(&self) -> &str {
         &self.sub
@@ -109,7 +93,7 @@ impl ClaimsMethods for AccessClaims {
 }
 impl ClaimsMethods for RefreshClaims {
     fn validate_role_admin(&self) -> Result<(), AuthError> {
-        is_role_admin(&self.roles)
+        roles::is_role_admin(&self.roles)
     }
     fn get_sub(&self) -> &str {
         &self.sub
@@ -126,65 +110,6 @@ impl ClaimsMethods for RefreshClaims {
     fn get_jti(&self) -> &str {
         &self.jti
     }
-}
-
-fn is_role_admin(roles: &str) -> Result<(), AuthError> {
-    if !security::roles::contains_role_admin(roles) {
-        return Err(AuthError::Forbidden);
-    }
-    Ok(())
-}
-
-impl<S> FromRequestParts<S> for AccessClaims
-where
-    SharedState: FromRef<S>,
-    S: Send + Sync,
-{
-    type Rejection = APIError;
-
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        decode_token_from_request_part(parts, state).await
-    }
-}
-
-impl<S> FromRequestParts<S> for RefreshClaims
-where
-    SharedState: FromRef<S>,
-    S: Send + Sync,
-{
-    type Rejection = APIError;
-
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        decode_token_from_request_part(parts, state).await
-    }
-}
-
-async fn decode_token_from_request_part<S, T>(parts: &mut Parts, state: &S) -> Result<T, APIError>
-where
-    SharedState: FromRef<S>,
-    S: Send + Sync,
-    T: for<'de> serde::Deserialize<'de> + std::fmt::Debug + ClaimsMethods + Sync + Send,
-{
-    // Extract the token from the authorization header.
-    let TypedHeader(Authorization(bearer)) = parts
-        .extract::<TypedHeader<Authorization<Bearer>>>()
-        .await
-        .map_err(|_| {
-            tracing::error!("Invalid authorization header");
-            AuthError::WrongCredentials
-        })?;
-
-    // Take the state from a reference.
-    let state = Arc::from_ref(state);
-
-    // Decode the token.
-    let claims = decode_token::<T>(bearer.token(), &state.config)?;
-
-    // Check for revoked tokens if enabled by configuration.
-    if state.config.jwt_enable_revoked_tokens {
-        jwt_auth::validate_revoked(&claims, &state).await?
-    }
-    Ok(claims)
 }
 
 pub fn decode_token<T: for<'de> serde::Deserialize<'de>>(

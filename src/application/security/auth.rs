@@ -1,13 +1,9 @@
-use hyper::StatusCode;
+use thiserror::Error;
 use uuid::Uuid;
 
 use crate::{
-    api::APIError, // TODO: refactor the APIError dependency.
     application::{
-        config::Config,
-        repository::user_repo,
-        security::{auth_error::*, jwt_claims::*},
-        service::token_service,
+        config::Config, repository::user_repo, security::jwt::*, service::token_service,
         state::SharedState,
     },
     domain::models::user::User,
@@ -18,29 +14,30 @@ pub struct JwtTokens {
     pub refresh_token: String,
 }
 
-pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), APIError> {
-    // Checking the configuration if the usage of the list of revoked tokens is enabled.
-    if state.config.jwt_enable_revoked_tokens {
-        // Decode and validate the refresh token.
-        if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
-            return Err(AuthError::InvalidToken.into());
-        }
-        revoke_refresh_token(&refresh_claims, &state).await
-    } else {
-        Err(StatusCode::NOT_ACCEPTABLE)?
+pub async fn logout(refresh_claims: RefreshClaims, state: SharedState) -> Result<(), AuthError> {
+    // Check if revoked tokens are enabled.
+    if !state.config.jwt_enable_revoked_tokens {
+        Err(AuthError::RevokedTokensInactive)?
     }
+
+    // Decode and validate the refresh token.
+    if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
+        return Err(AuthError::InvalidToken.into());
+    }
+    revoke_refresh_token(&refresh_claims, &state).await?;
+    Ok(())
 }
 
 pub async fn refresh(
     refresh_claims: RefreshClaims,
     state: SharedState,
-) -> Result<JwtTokens, APIError> {
+) -> Result<JwtTokens, AuthError> {
     // Decode and validate the refresh token.
     if !validate_token_type(&refresh_claims, JwtTokenType::RefreshToken) {
         return Err(AuthError::InvalidToken.into());
     }
 
-    // Checking the configuration if the usage of the list of revoked tokens is enabled.
+    // Check if revoked tokens are enabled.
     if state.config.jwt_enable_revoked_tokens {
         revoke_refresh_token(&refresh_claims, &state).await?;
     }
@@ -54,41 +51,38 @@ pub async fn refresh(
 pub async fn cleanup_revoked_and_expired(
     _access_claims: &AccessClaims,
     state: &SharedState,
-) -> Result<usize, APIError> {
-    // Checking the configuration if the usage of the list of revoked tokens is enabled.
+) -> Result<usize, AuthError> {
+    // Check if revoked tokens are enabled.
     if !state.config.jwt_enable_revoked_tokens {
-        Err(StatusCode::NOT_ACCEPTABLE)?;
+        Err(AuthError::RevokedTokensInactive)?
     }
 
-    if let Some(deleted) = token_service::cleanup_expired(state).await {
-        return Ok(deleted);
-    }
-
-    Err(StatusCode::INTERNAL_SERVER_ERROR)?
+    let deleted = token_service::cleanup_expired(state).await?;
+    Ok(deleted)
 }
 
 pub fn validate_token_type(claims: &RefreshClaims, expected_type: JwtTokenType) -> bool {
     if claims.typ == expected_type as u8 {
-        return true;
+        true
+    } else {
+        tracing::error!(
+            "Invalid token type. Expected {:?}, Found {:?}",
+            expected_type,
+            JwtTokenType::from(claims.typ),
+        );
+        false
     }
-    tracing::error!(
-        "Invalid token type. Expected {:?}, Found {:?}",
-        expected_type,
-        JwtTokenType::from(claims.typ),
-    );
-    false
 }
 
 async fn revoke_refresh_token(
     refresh_claims: &RefreshClaims,
     state: &SharedState,
-) -> Result<(), APIError> {
+) -> Result<(), AuthError> {
     // Check the validity of refresh token.
     validate_revoked(refresh_claims, state).await?;
-    if token_service::revoke_refresh_token(refresh_claims, state).await {
-        return Ok(());
-    }
-    Err(StatusCode::INTERNAL_SERVER_ERROR)?
+
+    token_service::revoke_refresh_token(refresh_claims, state).await?;
+    Ok(())
 }
 
 pub fn generate_tokens(user: User, config: &Config) -> JwtTokens {
@@ -158,14 +152,30 @@ pub fn generate_tokens(user: User, config: &Config) -> JwtTokens {
 pub async fn validate_revoked<T: std::fmt::Debug + ClaimsMethods + Sync + Send>(
     claims: &T,
     state: &SharedState,
-) -> Result<(), APIError> {
-    match token_service::is_revoked(claims, state).await {
-        Some(revoked) => {
-            if revoked {
-                Err(AuthError::WrongCredentials)?;
-            }
-        }
-        None => Err(StatusCode::INTERNAL_SERVER_ERROR)?,
+) -> Result<(), AuthError> {
+    let revoked = token_service::is_revoked(claims, state).await?;
+    if revoked {
+        Err(AuthError::WrongCredentials)?;
     }
     Ok(())
+}
+
+#[derive(Debug, Error)]
+pub enum AuthError {
+    #[error("wrong credentials")]
+    WrongCredentials,
+    #[error("missing credentials")]
+    MissingCredentials,
+    #[error("token creation error")]
+    TokenCreationError,
+    #[error("invalid token")]
+    InvalidToken,
+    #[error("use of revoked tokens is inactive")]
+    RevokedTokensInactive,
+    #[error("forbidden")]
+    Forbidden,
+    #[error(transparent)]
+    RedisError(#[from] redis::RedisError),
+    #[error(transparent)]
+    SQLxError(#[from] sqlx::Error),
 }

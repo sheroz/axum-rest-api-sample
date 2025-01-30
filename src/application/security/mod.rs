@@ -1,4 +1,3 @@
-pub mod auth_error;
-pub mod jwt_auth;
-pub mod jwt_claims;
+pub mod auth;
+pub mod jwt;
 pub mod roles;

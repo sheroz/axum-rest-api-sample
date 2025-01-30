@@ -13,6 +13,7 @@ use crate::common::constants::{API_PATH_HEARTBEAT, API_V1};
 pub static CONFIG: OnceLock<Config> = OnceLock::new();
 
 // TODO: use isolated databases and remove all `serial` dependencies.
+// TODO: refactor reqwest helpers
 
 pub async fn run_app() {
     std::env::set_var("ENV_TEST", "1");

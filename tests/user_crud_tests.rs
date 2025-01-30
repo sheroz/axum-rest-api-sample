@@ -2,7 +2,7 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    application::security::jwt_claims::{self, AccessClaims},
+    application::security::jwt::{self, AccessClaims},
     domain::models::user::User,
 };
 use reqwest::StatusCode;
@@ -33,7 +33,7 @@ async fn list_users_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token, config).unwrap();
+    let access_claims = jwt::decode_token::<AccessClaims>(&access_token, config).unwrap();
     let user_id: Uuid = access_claims.sub.parse().unwrap();
 
     // Try authorized access to the users handler.
@@ -65,7 +65,7 @@ async fn get_user_test() {
     assert_eq!(status, StatusCode::OK);
     let (access_token, _) = result.unwrap();
 
-    let access_claims = jwt_claims::decode_token::<AccessClaims>(&access_token, config).unwrap();
+    let access_claims = jwt::decode_token::<AccessClaims>(&access_token, config).unwrap();
     let user_id = access_claims.sub.parse().unwrap();
 
     // Get the user.
