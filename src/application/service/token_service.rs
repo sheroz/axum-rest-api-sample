@@ -102,7 +102,7 @@ pub async fn is_revoked<T: std::fmt::Debug + ClaimsMethods + Send + Sync>(
         tracing::error!("Access denied (token revoked): {:#?}", claims);
         return Ok(true);
     }
-    
+
     drop(redis);
     Ok(false)
 }
