@@ -1,6 +1,6 @@
 [package]
 name = "axum-web"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["Sheroz Khaydarov"]
 description = "A sample starter project for building REST API Web service in Rust using axum, JWT, SQLx, PostgreSQL, and Redis"
@@ -19,7 +19,7 @@ tower-http = { version = "0.6", features = ["cors"] }
 tracing = { version = "0.1", features = ["attributes"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http-body-util = { version = "0.1" }
-hyper = { version = "1.5", features = ["full"] }
+hyper = { version = "1.6", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
 
 serde = { version = "1.0", features = ["derive"] }
