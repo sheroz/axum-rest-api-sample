@@ -8,7 +8,7 @@ use axum_web::{
 
 use crate::common::{
     constants::{API_PATH_TRANSACTIONS, API_V1},
-    utils,
+    helpers,
 };
 
 #[derive(Debug, Error)]
@@ -23,7 +23,7 @@ pub async fn get(
     transaction_id: Uuid,
     access_token: &str,
 ) -> Result<Transaction, TransactionResponseError> {
-    let url = utils::build_url(API_V1, API_PATH_TRANSACTIONS, &transaction_id.to_string());
+    let url = helpers::build_url(API_V1, API_PATH_TRANSACTIONS, &transaction_id.to_string());
 
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -49,7 +49,7 @@ pub async fn transfer(
     amount_cents: i64,
     access_token: &str,
 ) -> Result<Transaction, TransactionResponseError> {
-    let url = utils::build_url(API_V1, API_PATH_TRANSACTIONS, "transfer");
+    let url = helpers::build_url(API_V1, API_PATH_TRANSACTIONS, "transfer");
 
     let transfer_order = TransferOrder {
         source_account_id,

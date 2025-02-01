@@ -14,13 +14,13 @@ pub mod common;
 use common::{
     accounts, auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    transactions, users, utils,
+    test_app, transactions, users,
 };
 
 #[serial]
 #[tokio::test]
 async fn account_unauthorized_test() {
-    utils::run_app().await;
+    let test_db = test_app::run().await;
 
     let account = Account {
         id: Uuid::new_v4(),
@@ -42,13 +42,15 @@ async fn account_unauthorized_test() {
         .await
         .unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    test_db.drop_test_database().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn transaction_unauthorized_test() {
     // Start the api server.
-    utils::run_app().await;
+    let test_db = test_app::run().await;
 
     // Try unauthorized access to transaction handlers.
     let access_token = "xyz".to_string();
@@ -70,13 +72,15 @@ async fn transaction_unauthorized_test() {
         }
         _ => panic!("invalid access result"),
     }
+
+    test_db.drop_test_database().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn account_transaction_test() {
     // Start the api server.
-    utils::run_app().await;
+    let test_db = test_app::run().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -311,13 +315,15 @@ async fn account_transaction_test() {
         }
         _ => panic!("invalid transaction transfer result"),
     }
+
+    test_db.drop_test_database().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn transaction_account_validation_test() {
     // Start the api server.
-    utils::run_app().await;
+    let test_db = test_app::run().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -386,13 +392,15 @@ async fn transaction_account_validation_test() {
         }
         _ => panic!("invalid transaction transfer result"),
     }
+
+    test_db.drop_test_database().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn transaction_non_existing_test() {
     // Start the api server.
-    utils::run_app().await;
+    let test_db = test_app::run().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -432,4 +440,6 @@ async fn transaction_non_existing_test() {
         }
         _ => panic!("invalid transaction result"),
     }
+
+    test_db.drop_test_database().await.unwrap();
 }

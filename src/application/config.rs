@@ -2,6 +2,8 @@ use std::{fmt, net::SocketAddr};
 
 use jsonwebtoken::{DecodingKey, EncodingKey};
 
+use crate::infrastructure::database::{DatabaseOptions, PostgresOptions};
+
 #[derive(Clone, Debug)]
 pub struct Config {
     // REST API configuration.
@@ -117,6 +119,27 @@ pub fn load() -> Config {
     config
 }
 
+impl From<Config> for PostgresOptions {
+    fn from(config: Config) -> Self {
+        Self {
+            db: config.postgres_db,
+            host: config.postgres_host,
+            port: config.postgres_port,
+            user: config.postgres_user,
+            password: config.postgres_password,
+            max_connections: config.postgres_connection_pool,
+        }
+    }
+}
+
+impl From<Config> for DatabaseOptions {
+    fn from(config: Config) -> Self {
+        Self {
+            postgres: config.into(),
+        }
+    }
+}
+
 #[inline]
 fn env_get(key: &str) -> String {
     match std::env::var(key) {
@@ -130,11 +153,11 @@ fn env_get(key: &str) -> String {
 }
 
 #[inline]
-fn env_get_or(key: &str, value: &str) -> String {
+fn env_get_or(key: &str, default: &str) -> String {
     if let Ok(v) = std::env::var(key) {
         return v;
     }
-    value.to_string()
+    default.to_owned()
 }
 
 #[inline]

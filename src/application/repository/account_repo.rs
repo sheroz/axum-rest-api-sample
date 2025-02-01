@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::{
     application::repository::RepositoryResult, domain::models::account::Account,
-    infrastructure::types::DatabaseConnection,
+    infrastructure::database::DatabaseConnection,
 };
 
 pub async fn list(connection: &mut DatabaseConnection) -> RepositoryResult<Vec<Account>> {

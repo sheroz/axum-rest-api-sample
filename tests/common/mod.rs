@@ -2,9 +2,13 @@ pub mod accounts;
 pub mod auth;
 pub mod constants;
 pub mod fetch;
+pub mod helpers;
 pub mod route;
+pub mod test_app;
 pub mod transactions;
 pub mod users;
-pub mod utils;
 
 type GenericResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+// TODO: use isolated databases and remove all `serial` dependencies.
+// TODO: refactor reqwest helpers using structured errors

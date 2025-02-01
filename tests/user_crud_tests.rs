@@ -11,16 +11,16 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    users, utils,
+    helpers, test_app, users,
 };
 
 #[tokio::test]
 #[serial]
 async fn list_users_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
-    let config = utils::config();
+    let config = helpers::config();
 
     // Try unauthorized access to the users handler.
     let (status, _) = users::list("xyz").await.unwrap();
@@ -50,9 +50,9 @@ async fn list_users_test() {
 #[serial]
 async fn get_user_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
-    let config = utils::config();
+    let config = helpers::config();
 
     // Try unauthorized access to the get user handler
     let (status, _) = users::get(uuid::Uuid::new_v4(), "").await.unwrap();
@@ -81,7 +81,7 @@ async fn get_user_test() {
 #[serial]
 async fn add_get_update_delete_user_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
     let username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
     let mut user = User {

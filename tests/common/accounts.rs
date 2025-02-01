@@ -4,13 +4,13 @@ use axum_web::domain::models::account::Account;
 
 use crate::common::{
     constants::{API_PATH_ACCOUNTS, API_V1},
-    utils, GenericResult,
+    helpers, GenericResult,
 };
 
 pub async fn list(
     access_token: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<Vec<Account>>)> {
-    let url = utils::build_path(API_V1, API_PATH_ACCOUNTS);
+    let url = helpers::build_path(API_V1, API_PATH_ACCOUNTS);
 
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -33,7 +33,7 @@ pub async fn get(
     account_id: Uuid,
     access_token: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<Account>)> {
-    let url = utils::build_url(API_V1, API_PATH_ACCOUNTS, &account_id.to_string());
+    let url = helpers::build_url(API_V1, API_PATH_ACCOUNTS, &account_id.to_string());
 
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -56,7 +56,7 @@ pub async fn add(
     account: Account,
     access_token: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<Account>)> {
-    let url = utils::build_path(API_V1, API_PATH_ACCOUNTS);
+    let url = helpers::build_path(API_V1, API_PATH_ACCOUNTS);
     let json_param = serde_json::json!(account);
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -80,7 +80,7 @@ pub async fn update(
     account: Account,
     access_token: &str,
 ) -> GenericResult<(reqwest::StatusCode, Option<Account>)> {
-    let url = utils::build_url(API_V1, API_PATH_ACCOUNTS, &account.id.to_string());
+    let url = helpers::build_url(API_V1, API_PATH_ACCOUNTS, &account.id.to_string());
     let json_param = serde_json::json!(account);
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
