@@ -2,6 +2,6 @@ mod database;
 mod postgres;
 
 pub use database::{
-    Database, DatabaseOptions, DatabaseConnection, DatabaseError, DatabasePool, TestDatabase,
+    Database, DatabaseConnection, DatabaseError, DatabaseOptions, DatabasePool, TestDatabase,
 };
 pub use postgres::PostgresOptions;
