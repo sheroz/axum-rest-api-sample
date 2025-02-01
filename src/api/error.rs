@@ -189,21 +189,43 @@ impl APIErrorEntry {
     }
 }
 
+impl From<StatusCode> for APIErrorEntry {
+    fn from(status_code: StatusCode) -> Self {
+        let error_message = status_code.to_string();
+        let error_code = error_message.replace(' ', "_").to_lowercase();
+        Self::new(&error_message).code(error_code)
+    }
+}
+
 impl From<sqlx::Error> for APIErrorEntry {
     fn from(e: sqlx::Error) -> Self {
-        Self::new(&e.to_string())
-            .code(APIErrorCode::DatabaseError)
-            .kind(APIErrorKind::DatabaseError)
-            .description(&format!("Database error: {}", e))
+        // Do not expose database-related internal errors,
+        // except for debug builds.
+        if cfg!(debug_assertions) {
+            Self::new(&e.to_string())
+                .code(APIErrorCode::DatabaseError)
+                .kind(APIErrorKind::DatabaseError)
+                .description(&format!("Database error: {}", e))
+                .trace_id()
+        } else {
+            StatusCode::INTERNAL_SERVER_ERROR.into()
+        }
     }
 }
 
 impl From<redis::RedisError> for APIErrorEntry {
     fn from(e: redis::RedisError) -> Self {
-        Self::new(&e.to_string())
-            .code(APIErrorCode::RedisError)
-            .kind(APIErrorKind::RedisError)
-            .description(&format!("Redis error: {}", e))
+        // Do not expose Redis-related internal errors,
+        // except for debug builds.
+        if cfg!(debug_assertions) {
+            Self::new(&e.to_string())
+                .code(APIErrorCode::RedisError)
+                .kind(APIErrorKind::RedisError)
+                .description(&format!("Redis error: {}", e))
+                .trace_id()
+        } else {
+            StatusCode::INTERNAL_SERVER_ERROR.into()
+        }
     }
 }
 
@@ -231,7 +253,7 @@ impl From<StatusCode> for APIError {
     fn from(status_code: StatusCode) -> Self {
         Self {
             status: status_code.as_u16(),
-            errors: vec![],
+            errors: vec![status_code.into()],
         }
     }
 }
