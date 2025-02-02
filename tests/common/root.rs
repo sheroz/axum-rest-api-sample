@@ -1,6 +1,7 @@
-use crate::common::{helpers, GenericResult};
+use crate::common::{helpers, TestResult};
 
-pub async fn fetch_root(access_token: &str) -> GenericResult<reqwest::StatusCode> {
+// Fetch the root using `reqwest`.
+pub async fn fetch_root(access_token: &str) -> TestResult<reqwest::StatusCode> {
     let url = helpers::config().service_http_addr();
 
     let authorization = format!("Bearer {}", access_token);

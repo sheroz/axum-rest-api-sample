@@ -7,7 +7,7 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    helpers, route, test_app,
+    helpers, root, test_app,
 };
 
 #[tokio::test]
@@ -38,7 +38,7 @@ async fn revoke_user_test() {
 
     // Try access to the root handler with the same token again.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
@@ -68,7 +68,7 @@ async fn revoke_all_test() {
 
     // Try access to the root handler with the same token again.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 

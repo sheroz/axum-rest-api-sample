@@ -5,7 +5,7 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    helpers, route, test_app,
+    helpers, root, test_app,
 };
 
 #[tokio::test]
@@ -21,7 +21,7 @@ async fn logout_test() {
 
     // Try unauthorized access to the root handler.
     assert_eq!(
-        route::fetch_root("").await.unwrap(),
+        root::fetch_root("").await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
@@ -34,7 +34,7 @@ async fn logout_test() {
 
     // Access to the root handler.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::OK
     );
 
@@ -43,7 +43,7 @@ async fn logout_test() {
 
     // Try access to the root handler after logout.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 }

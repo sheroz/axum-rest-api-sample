@@ -6,7 +6,9 @@ use axum_web::application::constants::*;
 pub mod common;
 use common::{
     constants::{API_PATH_HEARTBEAT, API_V1},
-    fetch, helpers, test_app,
+    helpers,
+    hyper_fetch::hyper_fetch,
+    test_app,
 };
 
 #[tokio::test]
@@ -27,7 +29,7 @@ async fn heartbeat_test() {
     assert_eq!(json["heartbeat-id"], heartbeat_id);
 
     // Fetch using `hyper`.
-    let body = fetch::fetch_url_hyper(url.as_str()).await.unwrap();
+    let body = hyper_fetch(url.as_str()).await.unwrap();
     let json: serde_json::Value = serde_json::from_str(&body).unwrap();
     assert_eq!(json["service"], SERVICE_NAME);
     assert_eq!(json["version"], SERVICE_VERSION);

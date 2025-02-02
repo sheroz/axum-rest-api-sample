@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Result};
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -75,6 +77,13 @@ use serde::{Deserialize, Serialize};
 pub struct APIError {
     pub status: u16,
     pub errors: Vec<APIErrorEntry>,
+}
+
+impl Display for APIError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let api_error = serde_json::to_string_pretty(&self).unwrap_or_default();
+        write!(f, "{}", api_error)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]

@@ -3,6 +3,8 @@ use crate::common::{
     helpers, GenericResult,
 };
 
+// TODO: refactor reqwest helpers using structured errors
+
 pub async fn login(
     username: &str,
     password_hash: &str,

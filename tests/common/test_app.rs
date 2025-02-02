@@ -18,7 +18,6 @@ use crate::common::{
 };
 
 // TODO: use isolated databases for all tests.
-// TODO: refactor reqwest helpers using structured errors
 
 pub async fn run() -> TestDatabase {
     // Set the environment variable.

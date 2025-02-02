@@ -5,7 +5,7 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    helpers, route, test_app,
+    helpers, root, test_app,
 };
 
 #[tokio::test]
@@ -31,13 +31,13 @@ async fn refresh_test() {
 
     // Try access to the root handler with old token.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
     // Try access to the root handler with new token.
     assert_eq!(
-        route::fetch_root(&access_token_new).await.unwrap(),
+        root::fetch_root(&access_token_new).await.unwrap(),
         StatusCode::OK
     );
 }
