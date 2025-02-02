@@ -9,6 +9,3 @@ pub mod transactions;
 pub mod users;
 
 type GenericResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
-
-// TODO: use isolated databases and remove all `serial` dependencies.
-// TODO: refactor reqwest helpers using structured errors

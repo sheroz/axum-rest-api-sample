@@ -17,7 +17,7 @@ use crate::common::{
     helpers,
 };
 
-// TODO: use isolated databases and remove all `serial` dependencies.
+// TODO: use isolated databases for all tests.
 // TODO: refactor reqwest helpers using structured errors
 
 pub async fn run() -> TestDatabase {

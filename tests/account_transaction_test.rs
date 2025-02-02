@@ -17,6 +17,8 @@ use common::{
     test_app, transactions, users,
 };
 
+// TODO: remove all `serial` dependencies.
+
 #[serial]
 #[tokio::test]
 async fn account_unauthorized_test() {
