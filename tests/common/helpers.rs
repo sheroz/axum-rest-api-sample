@@ -56,22 +56,6 @@ where
     }
 }
 
-// pub fn assert_api_error_status<T>(result: TestResult<T>, expected: StatusCode) {
-//     assert!(result.is_err());
-//     let error = result.err().unwrap();
-//     match error {
-//         TestError::APIError(api_error) => {
-//             assert_eq!(api_error.status, expected);
-//         }
-//         TestError::NetworkError(error) => panic!("Unexpected network error: {}", error),
-//         TestError::UnexpectedResponse { response } => panic!(
-//             "Unexpected response status. Expected: {}, Found: {}",
-//             expected,
-//             response.status()
-//         ),
-//     }
-// }
-
 #[macro_export]
 macro_rules! assert_api_error_status {
     ($result:expr, $expected:expr) => {
