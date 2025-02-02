@@ -62,7 +62,7 @@ impl PostgresDatabase {
         &self.pool
     }
 
-    pub async fn drop_test_database(&self) -> Result<(), DatabaseError> {
+    pub async fn drop(&self) -> Result<(), DatabaseError> {
         if let Some(test_db_to_drop) = self.test_db_to_drop.as_ref() {
             // Close connections.
             self.pool.close().await;

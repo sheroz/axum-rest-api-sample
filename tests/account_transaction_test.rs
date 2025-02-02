@@ -20,6 +20,7 @@ use common::{
 #[serial]
 #[tokio::test]
 async fn account_unauthorized_test() {
+    // Start api server.
     let test_db = test_app::run().await;
 
     let account = Account {
@@ -43,13 +44,14 @@ async fn account_unauthorized_test() {
         .unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
-    test_db.drop_test_database().await.unwrap();
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn transaction_unauthorized_test() {
-    // Start the api server.
+    // Start api server.
     let test_db = test_app::run().await;
 
     // Try unauthorized access to transaction handlers.
@@ -73,13 +75,14 @@ async fn transaction_unauthorized_test() {
         _ => panic!("invalid access result"),
     }
 
-    test_db.drop_test_database().await.unwrap();
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn account_transaction_test() {
-    // Start the api server.
+    // Start api server.
     let test_db = test_app::run().await;
 
     // Login as an admin.
@@ -132,7 +135,7 @@ async fn account_transaction_test() {
     account_alice.updated_at = account_result.updated_at;
     assert_eq!(account_result, account_alice);
 
-    // Get the added account.
+    // Get added account.
     let (status, result) = accounts::get(account_alice.id, &access_token)
         .await
         .unwrap();
@@ -180,12 +183,12 @@ async fn account_transaction_test() {
     account_bob.updated_at = account_result.updated_at;
     assert_eq!(account_result, account_bob);
 
-    // Get the added account.
+    // Get added account.
     let (status, result) = accounts::get(account_bob.id, &access_token).await.unwrap();
     assert_eq!(status, StatusCode::OK);
     assert_eq!(result.unwrap(), account_bob);
 
-    // list the existing accounts.
+    // list existing accounts.
     let (status, result) = accounts::list(&access_token).await.unwrap();
     assert_eq!(status, reqwest::StatusCode::OK);
     let accounts = result.unwrap();
@@ -316,13 +319,14 @@ async fn account_transaction_test() {
         _ => panic!("invalid transaction transfer result"),
     }
 
-    test_db.drop_test_database().await.unwrap();
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn transaction_account_validation_test() {
-    // Start the api server.
+    // Start api server.
     let test_db = test_app::run().await;
 
     // Login as an admin.
@@ -393,13 +397,14 @@ async fn transaction_account_validation_test() {
         _ => panic!("invalid transaction transfer result"),
     }
 
-    test_db.drop_test_database().await.unwrap();
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[serial]
 #[tokio::test]
 async fn transaction_non_existing_test() {
-    // Start the api server.
+    // Start api server.
     let test_db = test_app::run().await;
 
     // Login as an admin.
@@ -441,5 +446,6 @@ async fn transaction_non_existing_test() {
         _ => panic!("invalid transaction result"),
     }
 
-    test_db.drop_test_database().await.unwrap();
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
