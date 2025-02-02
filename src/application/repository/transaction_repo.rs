@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::{
     application::{repository::RepositoryResult, state::SharedState},
     domain::models::transaction::Transaction,
-    infrastructure::types::DatabaseConnection,
+    infrastructure::database::DatabaseConnection,
 };
 
 pub async fn get_by_id(id: Uuid, state: &SharedState) -> RepositoryResult<Transaction> {

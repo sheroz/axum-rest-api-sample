@@ -5,7 +5,7 @@ use tokio::sync::Mutex;
 use crate::{
     api::server,
     application::{config, state::AppState},
-    infrastructure::{postgres, redis},
+    infrastructure::{database::Database, redis},
 };
 
 pub async fn run() {
@@ -16,13 +16,14 @@ pub async fn run() {
     let redis = redis::open(&config).await;
 
     // Connect to PostgreSQL.
-    let db_pool = postgres::pgpool(&config).await;
+    let db_pool = Database::connect(config.clone().into())
+        .await
+        .expect("Failed to connect to the database.");
 
     // Run migrations.
-    sqlx::migrate!("src/infrastructure/postgres/migrations")
-        .run(&db_pool)
+    Database::migrate(&db_pool)
         .await
-        .unwrap();
+        .expect("Failed to run database migrations.");
 
     // Build the application state.
     let shared_state = Arc::new(AppState {

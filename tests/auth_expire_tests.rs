@@ -5,15 +5,15 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    route, utils,
+    helpers, root, test_app,
 };
 
 #[tokio::test]
 #[serial]
 async fn access_token_expire_test() {
-    // Load the test configuration and start the api server.
-    utils::run_app().await;
-    let config = utils::config();
+    // Start the api server.
+    test_app::run().await;
+    let config = helpers::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);
@@ -33,7 +33,7 @@ async fn access_token_expire_test() {
 
     // Check the access to the root handler with expired token.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
@@ -44,7 +44,7 @@ async fn access_token_expire_test() {
 
     // Try access to the root handler with new token.
     assert_eq!(
-        route::fetch_root(&access_token_new).await.unwrap(),
+        root::fetch_root(&access_token_new).await.unwrap(),
         StatusCode::OK
     );
 }
@@ -52,9 +52,9 @@ async fn access_token_expire_test() {
 #[tokio::test]
 #[serial]
 async fn refresh_token_expire_test() {
-    // Load the test configuration and start the api server.
-    utils::run_app().await;
-    let config = utils::config();
+    // Start the api server.
+    test_app::run().await;
+    let config = helpers::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);

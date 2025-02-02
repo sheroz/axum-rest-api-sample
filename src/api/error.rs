@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Result};
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -75,6 +77,13 @@ use serde::{Deserialize, Serialize};
 pub struct APIError {
     pub status: u16,
     pub errors: Vec<APIErrorEntry>,
+}
+
+impl Display for APIError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let api_error = serde_json::to_string_pretty(&self).unwrap_or_default();
+        write!(f, "{}", api_error)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -189,21 +198,43 @@ impl APIErrorEntry {
     }
 }
 
+impl From<StatusCode> for APIErrorEntry {
+    fn from(status_code: StatusCode) -> Self {
+        let error_message = status_code.to_string();
+        let error_code = error_message.replace(' ', "_").to_lowercase();
+        Self::new(&error_message).code(error_code)
+    }
+}
+
 impl From<sqlx::Error> for APIErrorEntry {
     fn from(e: sqlx::Error) -> Self {
-        Self::new(&e.to_string())
-            .code(APIErrorCode::DatabaseError)
-            .kind(APIErrorKind::DatabaseError)
-            .description(&format!("Database error: {}", e))
+        // Do not expose database-related internal errors,
+        // except for debug builds.
+        if cfg!(debug_assertions) {
+            Self::new(&e.to_string())
+                .code(APIErrorCode::DatabaseError)
+                .kind(APIErrorKind::DatabaseError)
+                .description(&format!("Database error: {}", e))
+                .trace_id()
+        } else {
+            StatusCode::INTERNAL_SERVER_ERROR.into()
+        }
     }
 }
 
 impl From<redis::RedisError> for APIErrorEntry {
     fn from(e: redis::RedisError) -> Self {
-        Self::new(&e.to_string())
-            .code(APIErrorCode::RedisError)
-            .kind(APIErrorKind::RedisError)
-            .description(&format!("Redis error: {}", e))
+        // Do not expose Redis-related internal errors,
+        // except for debug builds.
+        if cfg!(debug_assertions) {
+            Self::new(&e.to_string())
+                .code(APIErrorCode::RedisError)
+                .kind(APIErrorKind::RedisError)
+                .description(&format!("Redis error: {}", e))
+                .trace_id()
+        } else {
+            StatusCode::INTERNAL_SERVER_ERROR.into()
+        }
     }
 }
 
@@ -231,7 +262,7 @@ impl From<StatusCode> for APIError {
     fn from(status_code: StatusCode) -> Self {
         Self {
             status: status_code.as_u16(),
-            errors: vec![],
+            errors: vec![status_code.into()],
         }
     }
 }

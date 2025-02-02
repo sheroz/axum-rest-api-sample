@@ -11,20 +11,21 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    users, utils,
+    helpers::{self},
+    test_app, users,
 };
 
 #[tokio::test]
 #[serial]
 async fn list_users_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
-    let config = utils::config();
+    let config = helpers::config();
 
     // Try unauthorized access to the users handler.
-    let (status, _) = users::list("xyz").await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = users::list("xyz").await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -37,11 +38,9 @@ async fn list_users_test() {
     let user_id: Uuid = access_claims.sub.parse().unwrap();
 
     // Try authorized access to the users handler.
-    let (status, result) = users::list(&access_token).await.unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
-    assert!(result.is_some());
-
-    let users = result.unwrap();
+    let users = users::list(&access_token)
+        .await
+        .expect("User list fetch error.");
     assert!(!users.is_empty());
     assert!(users.iter().any(|u| u.id == user_id));
 }
@@ -50,13 +49,13 @@ async fn list_users_test() {
 #[serial]
 async fn get_user_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
-    let config = utils::config();
+    let config = helpers::config();
 
     // Try unauthorized access to the get user handler
-    let (status, _) = users::get(uuid::Uuid::new_v4(), "").await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = users::get(uuid::Uuid::new_v4(), "").await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -69,11 +68,9 @@ async fn get_user_test() {
     let user_id = access_claims.sub.parse().unwrap();
 
     // Get the user.
-    let (status, result) = users::get(user_id, &access_token).await.unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
-    assert!(result.is_some());
-
-    let user = result.unwrap();
+    let user = users::get(user_id, &access_token)
+        .await
+        .expect("User fetch error.");
     assert_eq!(user.id, user_id);
 }
 
@@ -81,7 +78,7 @@ async fn get_user_test() {
 #[serial]
 async fn add_get_update_delete_user_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
     let username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
     let mut user = User {
@@ -98,17 +95,17 @@ async fn add_get_update_delete_user_test() {
 
     // Try unauthorized access to user handlers.
     let access_token = "xyz".to_string();
-    let (status, _) = users::get(user.id, &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = users::get(user.id, &access_token).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let (status, _) = users::add(user.clone(), &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = users::add(user.clone(), &access_token).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let (status, _) = users::update(user.clone(), &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = users::update(user.clone(), &access_token).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let status = users::delete(user.id, &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = users::delete(user.id, &access_token).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -118,10 +115,9 @@ async fn add_get_update_delete_user_test() {
     let (access_token, _) = result.unwrap();
 
     // Add a user.
-    let (status, result) = users::add(user.clone(), &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::CREATED);
-    assert!(result.is_some());
-    let user_result = result.unwrap();
+    let user_result = users::add(user.clone(), &access_token)
+        .await
+        .expect("User creation error.");
     assert!(user_result.updated_at.is_some());
     assert!(user_result.created_at.is_some());
 
@@ -130,27 +126,26 @@ async fn add_get_update_delete_user_test() {
     assert_eq!(user_result, user);
 
     // Get the added user.
-    let (status, result) = users::get(user.id, &access_token).await.unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
-    assert!(result.is_some());
-    let user_result = result.unwrap();
+    let user_result = users::get(user.id, &access_token)
+        .await
+        .expect("User fetch error.");
     assert_eq!(user_result, user);
 
     // Update user.
     user.username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
-    let (status, result) = users::update(user.clone(), &access_token).await.unwrap();
-    assert_eq!(status, reqwest::StatusCode::OK);
-    assert!(result.is_some());
-    let user_result = result.unwrap();
+    let user_result = users::update(user.clone(), &access_token)
+        .await
+        .expect("User update error.");
     assert_ne!(user_result.updated_at, user.updated_at);
     user.updated_at = user_result.updated_at;
     assert_eq!(user_result, user);
 
     // Delete user.
-    let status = users::delete(user.id, &access_token).await.unwrap();
-    assert_eq!(status, StatusCode::OK);
+    users::delete(user.id, &access_token)
+        .await
+        .expect("User delete error.");
 
     // Check the user.
-    let (status, _) = users::get(user.id, &access_token).await.unwrap();
-    assert_eq!(status, reqwest::StatusCode::NOT_FOUND);
+    let result = users::get(user.id, &access_token).await;
+    assert_api_error_status!(result, StatusCode::NOT_FOUND);
 }

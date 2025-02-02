@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use tokio::sync::Mutex;
 
-use crate::{application::config::Config, infrastructure::types::DatabasePool};
+use crate::{application::config::Config, infrastructure::database::DatabasePool};
 
 pub type SharedState = Arc<AppState>;
 

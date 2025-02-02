@@ -5,14 +5,14 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    route, utils,
+    helpers, root, test_app,
 };
 
 #[tokio::test]
 #[serial]
 async fn refresh_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -31,13 +31,13 @@ async fn refresh_test() {
 
     // Try access to the root handler with old token.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
     // Try access to the root handler with new token.
     assert_eq!(
-        route::fetch_root(&access_token_new).await.unwrap(),
+        root::fetch_root(&access_token_new).await.unwrap(),
         StatusCode::OK
     );
 }
@@ -46,9 +46,9 @@ async fn refresh_test() {
 #[serial]
 async fn refresh_logout_test() {
     // Start the api server.
-    utils::run_app().await;
+    test_app::run().await;
 
-    let config = utils::config();
+    let config = helpers::config();
 
     // Assert that revoked options are enabled.
     assert!(config.jwt_enable_revoked_tokens);

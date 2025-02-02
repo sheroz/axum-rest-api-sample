@@ -7,7 +7,7 @@ use tokio::net::TcpStream;
 use crate::common::GenericResult;
 
 // Fetch using `hyper`.
-pub async fn fetch_url_hyper(url: &str) -> GenericResult<String> {
+pub async fn hyper_fetch(url: &str) -> GenericResult<String> {
     let uri = url.parse::<hyper::Uri>().unwrap();
     let host = uri.host().expect("uri has no host");
     let port = uri.port_u16().unwrap_or(80);

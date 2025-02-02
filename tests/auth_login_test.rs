@@ -5,18 +5,18 @@ pub mod common;
 use common::{
     auth,
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    route, utils,
+    root, test_app,
 };
 
 #[tokio::test]
 #[serial]
 async fn login_test() {
-    // Load the test configuration and start the api server.
-    utils::run_app().await;
+    // Start the api server.
+    test_app::run().await;
 
     // Try unauthorized access to the root handler.
     assert_eq!(
-        route::fetch_root("").await.unwrap(),
+        root::fetch_root("").await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
@@ -44,7 +44,7 @@ async fn login_test() {
 
     // Access to the root handler.
     assert_eq!(
-        route::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&access_token).await.unwrap(),
         StatusCode::OK
     );
 }
