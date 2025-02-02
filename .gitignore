@@ -13,3 +13,4 @@ target/
 *.pdb
 
 axum-api.session.sql
+.DS_Store
