@@ -132,7 +132,8 @@ pub async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoRespon
     }
     Ok(Json(json!({"message": "Hello from Axum-Web!"})))
 }
-
+// TODO: Refactor and rename as `/health`.
+// TODO: Add a separate endpint for `/version`.
 pub async fn heartbeat_handler(
     Path((version, id)): Path<(String, String)>,
 ) -> Result<impl IntoResponse, APIError> {
