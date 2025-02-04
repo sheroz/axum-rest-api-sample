@@ -1,5 +1,8 @@
-### Heartbeat check (public)
-GET http://127.0.0.1:8080/v1/heartbeat/1
+### Health check (public)
+GET http://127.0.0.1:8080/v1/health
+
+### Version check (public)
+GET http://127.0.0.1:8080/v1/version
 
 ### Login
 ### Note: keep the returned tokens to access the protected routes
@@ -91,5 +94,9 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwM
 ### Note: use the `access_token` in `Authorization` header.
 DELETE http://127.0.0.1:8080/v1/users/917646a0-7437-48a0-bb03-a7aa830f8f81
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVGUxODcxNjcwLTU3OTAtNDk0ZS1iMWQwLWYzOWM2NzJmYjg5YyIsImlhdCI6MTcwMzc3ODQwOSwiZXhwIjoxNzAzNzgyMDA5fQ.FWd0cyS5FfcmANp87kEVLt1lJtwgoe4d7rh49ZGKrC0
+
+### TODO: add account endpoints. For details refer to: tests/account_transaction_test.rs
+
+### TODO: add transaction endpoints. For details refer to: tests/account_transaction_test.rs
 
 ### END.

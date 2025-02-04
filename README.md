@@ -14,6 +14,8 @@ Covers:
   - Cross-Origin Resource Sharing (CORS)
   - Graceful shutdown
 - API Endpoints
+  - Health
+  - Version
   - Authentication
   - Users
   - Accounts
@@ -77,10 +79,10 @@ REST API endpoints can be easily tested using following tools:
 - [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
 - [curl](https://curl.se/) samples:
 
-  Heartbeat
+  Health check
 
   ```shell
-  curl -i http://127.0.0.1:8080/v1/heartbeat/1
+  curl -i http://127.0.0.1:8080/v1/health
   ```
 
   Login
