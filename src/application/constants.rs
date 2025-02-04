@@ -1,6 +1,3 @@
-pub const SERVICE_NAME: &str = "axum-web";
-pub const SERVICE_VERSION: &str = "1.0.0";
-
 // Roles.
 pub const USER_ROLE_ADMIN: &str = "admin";
 pub const USER_ROLE_CUSTOMER: &str = "customer";

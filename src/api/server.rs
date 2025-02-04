@@ -1,14 +1,15 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc, time::SystemTime};
 
 use axum::{
     body::Body,
-    extract::{Path, Query, Request},
+    extract::{Query, Request},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
     routing::{any, get},
     Json, Router,
 };
+use chrono::Utc;
 use serde_json::json;
 use tokio::{
     net::TcpListener,
@@ -23,9 +24,8 @@ use crate::{
     api::{
         error::APIError,
         routes::{account_routes, auth_routes, transaction_routes, user_routes},
-        version::{self, APIVersion},
     },
-    application::{constants::*, security::jwt::AccessClaims, state::SharedState},
+    application::{security::jwt::AccessClaims, state::SharedState},
 };
 
 pub async fn start(state: SharedState) {
@@ -51,7 +51,8 @@ pub async fn start(state: SharedState) {
         .route("/", get(root_handler))
         .route("/head", get(head_request_handler))
         .route("/any", any(any_request_handler))
-        .route("/{version}/heartbeat/{id}", get(heartbeat_handler))
+        .route("/{version}/health", get(health_handler))
+        .route("/{version}/version", get(version_handler))
         // Nesting authentication routes.
         .nest("/{version}/auth", auth_routes::routes())
         // Nesting user routes.
@@ -116,40 +117,37 @@ pub async fn logging_middleware(request: Request<Body>, next: Next) -> Response 
     next.run(request).await
 }
 
+// Root handler.
 pub async fn root_handler(access_claims: AccessClaims) -> Result<impl IntoResponse, APIError> {
     if tracing::enabled!(tracing::Level::TRACE) {
-        tracing::trace!(
-            "current timestamp, chrono::Utc {}",
-            chrono::Utc::now().timestamp() as usize
-        );
-        let start = std::time::SystemTime::now();
-        let validation_timestamp = start
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs();
-        tracing::trace!("current timestamp, std::time {}", validation_timestamp);
         tracing::trace!("authentication details: {:#?}", access_claims);
+        let timestamp = SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .as_secs();
+        tracing::trace!("timestamp, std::time {}", timestamp);
+        tracing::trace!("timestamp, chrono::Utc {}", Utc::now().timestamp() as usize);
     }
     Ok(Json(json!({"message": "Hello from Axum-Web!"})))
 }
-// TODO: Refactor and rename as `/health`.
-// TODO: Add a separate endpint for `/version`.
-pub async fn heartbeat_handler(
-    Path((version, id)): Path<(String, String)>,
-) -> Result<impl IntoResponse, APIError> {
-    let api_version: APIVersion = version::parse_version(&version)?;
-    tracing::trace!("heartbeat: api version: {}", api_version);
-    tracing::trace!("heartbeat: received id: {}", id);
-    let map = HashMap::from([
-        ("service".to_string(), SERVICE_NAME.to_string()),
-        ("version".to_string(), SERVICE_VERSION.to_string()),
-        ("heartbeat-id".to_string(), id),
-    ]);
-    Ok(Json(map))
+
+// Health request handler.
+pub async fn health_handler() -> Result<impl IntoResponse, APIError> {
+    Ok(Json(json!({"status": "healthy"})))
 }
 
+// Version request handler.
+pub async fn version_handler() -> Result<impl IntoResponse, APIError> {
+    let result = json!({
+        "name": env!("CARGO_PKG_NAME"),
+        "version": env!("CARGO_PKG_VERSION"),
+    });
+    Ok(Json(result))
+}
+
+// A sample head request handler.
+// Using HEAD requests makes sense if processing (computing) the response body is costly.
 pub async fn head_request_handler(method: Method) -> Response {
-    // Using HEAD requests makes sense if processing (computing) the response body is costly.
     if method == Method::HEAD {
         tracing::debug!("HEAD method found");
         return [("x-some-header", "header from HEAD")].into_response();
@@ -157,6 +155,7 @@ pub async fn head_request_handler(method: Method) -> Response {
     ([("x-some-header", "header from GET")], "body from GET").into_response()
 }
 
+// A sample any request handler.
 pub async fn any_request_handler(
     method: Method,
     headers: HeaderMap,
@@ -172,6 +171,7 @@ pub async fn any_request_handler(
     StatusCode::OK
 }
 
+// 404 handler.
 pub async fn error_404_handler(request: Request) -> impl IntoResponse {
     tracing::error!("route not found: {:?}", request);
     StatusCode::NOT_FOUND

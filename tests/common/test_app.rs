@@ -13,11 +13,11 @@ use axum_web::{
 };
 
 use crate::common::{
-    constants::{API_PATH_HEARTBEAT, API_V1},
+    constants::{API_PATH_HEALTH, API_V1},
     helpers,
 };
 
-// TODO: use isolated databases for all tests.
+// TODO: refactor all tests to use isolated database.
 
 pub async fn run() -> TestDatabase {
     // Set the environment variable.
@@ -55,7 +55,7 @@ pub async fn run() -> TestDatabase {
 async fn wait_for_service(duration: Duration) {
     let timeout = Instant::now() + duration;
     loop {
-        let url = helpers::build_url(API_V1, API_PATH_HEARTBEAT, "1");
+        let url = helpers::build_path(API_V1, API_PATH_HEALTH);
         if let Ok(response) = reqwest::get(url.as_str()).await {
             if response.status() == StatusCode::OK {
                 break;
