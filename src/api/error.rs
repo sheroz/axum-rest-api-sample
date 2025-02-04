@@ -217,6 +217,8 @@ impl From<sqlx::Error> for APIErrorEntry {
                 .description(&format!("Database error: {}", e))
                 .trace_id()
         } else {
+            // The error must be logged here. Otherwise, we would lose it.
+            tracing::error!("SQLx error: {}", e.to_string());
             StatusCode::INTERNAL_SERVER_ERROR.into()
         }
     }
@@ -233,6 +235,8 @@ impl From<redis::RedisError> for APIErrorEntry {
                 .description(&format!("Redis error: {}", e))
                 .trace_id()
         } else {
+            // The error must be logged here. Otherwise, we would lose it.
+            tracing::error!("Redis error: {}", e.to_string());
             StatusCode::INTERNAL_SERVER_ERROR.into()
         }
     }
