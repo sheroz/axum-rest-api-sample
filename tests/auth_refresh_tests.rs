@@ -15,29 +15,27 @@ async fn refresh_test() {
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, refresh_token) = result.unwrap();
+        .expect("Login error.");
 
     // Refresh tokens.
-    let (status, result) = auth::refresh(&refresh_token).await.unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token_new, refresh_token_new) = result.unwrap();
+    let refreshed = auth::refresh(&tokens.refresh_token)
+        .await
+        .expect("Auth refresh error.");
 
-    assert_ne!(access_token, access_token_new);
-    assert_ne!(refresh_token, refresh_token_new);
+    assert_ne!(tokens.access_token, refreshed.access_token);
+    assert_ne!(tokens.refresh_token, refreshed.refresh_token);
 
     // Try access to the root handler with old token.
     assert_eq!(
-        root::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&tokens.access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
     // Try access to the root handler with new token.
     assert_eq!(
-        root::fetch_root(&access_token_new).await.unwrap(),
+        root::fetch_root(&refreshed.access_token).await.unwrap(),
         StatusCode::OK
     );
 
@@ -57,26 +55,24 @@ async fn refresh_logout_test() {
     assert!(config.jwt_enable_revoked_tokens);
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (_, refresh_token) = result.unwrap();
+        .expect("Login error.");
 
     // Refresh tokens.
-    let (status, result) = auth::refresh(&refresh_token).await.unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (_, refresh_token_new) = result.unwrap();
+    let refreshed = auth::refresh(&tokens.refresh_token)
+        .await
+        .expect("Auth refresh error.");
 
     // Try logout with old token.
     assert_eq!(
-        auth::logout(&refresh_token).await.unwrap(),
+        auth::logout(&tokens.refresh_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
     // Logout with new token.
     assert_eq!(
-        auth::logout(&refresh_token_new).await.unwrap(),
+        auth::logout(&refreshed.refresh_token).await.unwrap(),
         StatusCode::OK
     );
 

@@ -22,23 +22,23 @@ async fn revoke_user_test() {
     assert!(config.jwt_enable_revoked_tokens);
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
-    let access_claims: AccessClaims = jwt::decode_token(&access_token, config).unwrap();
+    let access_claims: AccessClaims = jwt::decode_token(&tokens.access_token, config).unwrap();
     let user_id = access_claims.sub;
 
     assert_eq!(
-        auth::revoke_user(&access_token, &user_id).await.unwrap(),
+        auth::revoke_user(&tokens.access_token, &user_id)
+            .await
+            .unwrap(),
         StatusCode::OK
     );
 
     // Try access to the root handler with the same token again.
     assert_eq!(
-        root::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&tokens.access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
@@ -62,17 +62,15 @@ async fn revoke_all_test() {
     assert!(config.jwt_enable_revoked_tokens);
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
-    auth::revoke_all(&access_token).await.unwrap();
+    auth::revoke_all(&tokens.access_token).await.unwrap();
 
     // Try access to the root handler with the same token again.
     assert_eq!(
-        root::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&tokens.access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
 
@@ -96,21 +94,24 @@ async fn cleanup_test() {
     assert!(config.jwt_enable_revoked_tokens);
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, refresh_token) = result.unwrap();
+        .expect("Login error.");
 
-    let _initial_cleanup = auth::cleanup(&access_token).await.unwrap();
+    let _initial_cleanup = auth::cleanup(&tokens.access_token)
+        .await
+        .expect("Auth cleanup error.");
 
     // Expected 2 tokens to expire after resfresh.
-    let (status, result) = auth::refresh(&refresh_token).await.unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (_, refresh_token) = result.unwrap();
+    let refreshed = auth::refresh(&tokens.refresh_token)
+        .await
+        .expect("Auth refresh error.");
 
     // Expected 2 tokens to expire after logout.
-    assert_eq!(auth::logout(&refresh_token).await.unwrap(), StatusCode::OK);
+    assert_eq!(
+        auth::logout(&refreshed.refresh_token).await.unwrap(),
+        StatusCode::OK
+    );
 
     // Wait to make sure that tokens expire.
     tokio::time::sleep(tokio::time::Duration::from_secs(
@@ -122,13 +123,11 @@ async fn cleanup_test() {
     ))
     .await;
 
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
-    let deleted_tokens = auth::cleanup(&access_token).await.unwrap();
+    let deleted_tokens = auth::cleanup(&tokens.access_token).await.unwrap();
     assert!(deleted_tokens >= 4);
 
     // Drop test database.

@@ -10,7 +10,8 @@ use axum_web::{
 
 pub mod common;
 use common::{
-    accounts, auth,
+    accounts,
+    auth::{self, AuthTokens},
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
     test_app, users, TestError,
 };
@@ -32,14 +33,14 @@ async fn account_unauthorized_test() {
     };
 
     // Try unauthorized access to account handlers.
-    let access_token = "xyz".to_string();
-    let result = accounts::get(account.id, &access_token).await;
+    let wrong_access_token = "xyz";
+    let result = accounts::get(account.id, wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let result = accounts::add(account.clone(), &access_token).await;
+    let result = accounts::add(account.clone(), wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let result = accounts::update(account.clone(), &access_token).await;
+    let result = accounts::update(account.clone(), wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Drop test database.
@@ -53,11 +54,14 @@ async fn account_api_error_test() {
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
+
+    let AuthTokens {
+        access_token,
+        refresh_token: _,
+    } = tokens;
 
     // Check for non existing account.
     let account_id = Uuid::new_v4();
@@ -104,11 +108,14 @@ async fn account_test() {
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
+
+    let AuthTokens {
+        access_token,
+        refresh_token: _,
+    } = tokens;
 
     // Add a test user.
     let id = Uuid::new_v4();

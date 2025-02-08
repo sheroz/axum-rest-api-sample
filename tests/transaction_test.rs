@@ -26,12 +26,12 @@ async fn transaction_unauthorized_test() {
     let test_db = test_app::run().await;
 
     // Try unauthorized access to transaction handlers.
-    let access_token = "xyz".to_string();
+    let wrong_access_token = "xyz";
     let some_id = Uuid::new_v4();
-    let result = transactions::get(some_id, &access_token).await;
+    let result = transactions::get(some_id, wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let result = transactions::transfer(some_id, some_id, 0, &access_token).await;
+    let result = transactions::transfer(some_id, some_id, 0, wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Drop test database.
@@ -45,15 +45,13 @@ async fn transaction_non_existing_test() {
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
     // Check for non existing transaction.
     let transaction_id = Uuid::new_v4();
-    let result = transactions::get(transaction_id, &access_token).await;
+    let result = transactions::get(transaction_id, &tokens.access_token).await;
 
     assert!(result.is_err());
     match result.err().unwrap() {
@@ -91,11 +89,9 @@ async fn transaction_transfer_test() {
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
     // Add user for Alice.
     let id = Uuid::new_v4();
@@ -112,7 +108,7 @@ async fn transaction_transfer_test() {
         updated_at: None,
     };
 
-    let _ = users::add(user_alice.clone(), &access_token)
+    let _ = users::add(user_alice.clone(), &tokens.access_token)
         .await
         .expect("User creation error.");
 
@@ -125,10 +121,10 @@ async fn transaction_transfer_test() {
         updated_at: None,
     };
 
-    let result = accounts::get(account_alice.id, &access_token).await;
+    let result = accounts::get(account_alice.id, &tokens.access_token).await;
     assert_api_error_status!(result, StatusCode::NOT_FOUND);
 
-    let account = accounts::add(account_alice.clone(), &access_token)
+    let account = accounts::add(account_alice.clone(), &tokens.access_token)
         .await
         .expect("Account creation error.");
     assert!(account.updated_at.is_some());
@@ -138,7 +134,7 @@ async fn transaction_transfer_test() {
     assert_eq!(account, account_alice);
 
     // Get added account.
-    let account = accounts::get(account_alice.id, &access_token)
+    let account = accounts::get(account_alice.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account, account_alice);
@@ -158,7 +154,7 @@ async fn transaction_transfer_test() {
         updated_at: None,
     };
 
-    let _ = users::add(user_bob.clone(), &access_token)
+    let _ = users::add(user_bob.clone(), &tokens.access_token)
         .await
         .expect("User creation error.");
 
@@ -171,10 +167,10 @@ async fn transaction_transfer_test() {
         updated_at: None,
     };
 
-    let result = accounts::get(account_bob.id, &access_token).await;
+    let result = accounts::get(account_bob.id, &tokens.access_token).await;
     assert_api_error_status!(result, StatusCode::NOT_FOUND);
 
-    let account = accounts::add(account_bob.clone(), &access_token)
+    let account = accounts::add(account_bob.clone(), &tokens.access_token)
         .await
         .expect("Account creation error.");
     assert!(account.updated_at.is_some());
@@ -184,13 +180,13 @@ async fn transaction_transfer_test() {
     assert_eq!(account, account_bob);
 
     // Get added account.
-    let account = accounts::get(account_bob.id, &access_token)
+    let account = accounts::get(account_bob.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account, account_bob);
 
     // list existing accounts.
-    let accounts = accounts::list(&access_token)
+    let accounts = accounts::list(&tokens.access_token)
         .await
         .expect("Fetching the account list error.");
     assert!(accounts.contains(&account_alice));
@@ -198,7 +194,7 @@ async fn transaction_transfer_test() {
 
     // Update accounts.
     account_alice.balance_cents = 100;
-    let account = accounts::update(account_alice.clone(), &access_token)
+    let account = accounts::update(account_alice.clone(), &tokens.access_token)
         .await
         .expect("Account update error.");
     assert_ne!(account.updated_at, account_alice.updated_at);
@@ -206,7 +202,7 @@ async fn transaction_transfer_test() {
     assert_eq!(account, account_alice);
 
     account_bob.balance_cents = 100;
-    let account = accounts::update(account_bob.clone(), &access_token)
+    let account = accounts::update(account_bob.clone(), &tokens.access_token)
         .await
         .expect("Account update error.");
     assert_ne!(account.updated_at, account_bob.updated_at);
@@ -219,7 +215,7 @@ async fn transaction_transfer_test() {
         account_alice.id,
         account_bob.id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await
     .unwrap();
@@ -228,18 +224,18 @@ async fn transaction_transfer_test() {
     assert_eq!(transaction.source_account_id, account_alice.id);
     assert_eq!(transaction.destination_account_id, account_bob.id);
     assert_eq!(transaction.amount_cents, amount_cents);
-    let transaction_persisted = transactions::get(transaction.id, &access_token)
+    let transaction_persisted = transactions::get(transaction.id, &tokens.access_token)
         .await
         .expect("Transaction fetch error.");
     assert_eq!(transaction_persisted, transaction);
 
     // Check for transfer results.
-    let account_alice = accounts::get(account_alice.id, &access_token)
+    let account_alice = accounts::get(account_alice.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_alice.balance_cents, 75);
 
-    let account_bob = accounts::get(account_bob.id, &access_token)
+    let account_bob = accounts::get(account_bob.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_bob.balance_cents, 125);
@@ -250,7 +246,7 @@ async fn transaction_transfer_test() {
         account_bob.id,
         account_alice.id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await
     .expect("Transaction error.");
@@ -261,18 +257,18 @@ async fn transaction_transfer_test() {
     assert_eq!(transaction.amount_cents, amount_cents);
 
     // Check for persisted transaction.
-    let transaction_persisted = transactions::get(transaction.id, &access_token)
+    let transaction_persisted = transactions::get(transaction.id, &tokens.access_token)
         .await
         .expect("Transaction fetch error.");
     assert_eq!(transaction_persisted, transaction);
 
     // Check for transfer results.
-    let account_alice = accounts::get(account_alice.id, &access_token)
+    let account_alice = accounts::get(account_alice.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_alice.balance_cents, 105);
 
-    let account_bob = accounts::get(account_bob.id, &access_token)
+    let account_bob = accounts::get(account_bob.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_bob.balance_cents, 95);
@@ -283,7 +279,7 @@ async fn transaction_transfer_test() {
         account_bob.id,
         account_alice.id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await;
     assert!(result.is_err());
@@ -321,11 +317,9 @@ async fn transaction_validation_test() {
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
     // Check for invalid source account.
     let source_account_id = Uuid::new_v4();
@@ -336,7 +330,7 @@ async fn transaction_validation_test() {
         source_account_id,
         destination_account_id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await;
 
