@@ -1,14 +1,18 @@
+use reqwest::StatusCode;
+use serde::Deserialize;
+
 use crate::common::{
     constants::{API_PATH_AUTH, API_V1},
-    helpers, GenericResult,
+    helpers, TestResult,
 };
 
-// TODO: refactor reqwest helpers using structured errors
+#[derive(Debug, Deserialize)]
+pub struct AuthTokens {
+    pub access_token: String,
+    pub refresh_token: String,
+}
 
-pub async fn login(
-    username: &str,
-    password_hash: &str,
-) -> GenericResult<(reqwest::StatusCode, Option<(String, String)>)> {
+pub async fn login(username: &str, password_hash: &str) -> TestResult<AuthTokens> {
     let url = helpers::build_url(API_V1, API_PATH_AUTH, "login");
 
     let params = format!(
@@ -24,24 +28,12 @@ pub async fn login(
         .send()
         .await?;
 
-    let status_code = response.status();
-    if status_code == reqwest::StatusCode::OK {
-        let json: serde_json::Value = response.json().await.unwrap();
-        let access_token = json["access_token"].as_str().unwrap().to_string();
-        let refresh_token = json["refresh_token"].as_str().unwrap().to_string();
-
-        assert!(!access_token.is_empty());
-        assert!(!refresh_token.is_empty());
-
-        let tokens = Some((access_token, refresh_token));
-        return Ok((status_code, tokens));
-    }
-    Ok((status_code, None))
+    helpers::dispatch_reqwest_response::<AuthTokens>(response, StatusCode::OK)
+        .await
+        .map(|v| v.unwrap())
 }
 
-pub async fn refresh(
-    refresh_token: &str,
-) -> GenericResult<(reqwest::StatusCode, Option<(String, String)>)> {
+pub async fn refresh(refresh_token: &str) -> TestResult<AuthTokens> {
     let url = helpers::build_url(API_V1, API_PATH_AUTH, "refresh");
 
     let authorization = format!("Bearer {}", refresh_token);
@@ -52,22 +44,12 @@ pub async fn refresh(
         .send()
         .await?;
 
-    let status_code = response.status();
-    if status_code == reqwest::StatusCode::OK {
-        let json: serde_json::Value = response.json().await.unwrap();
-        let access_token = json["access_token"].as_str().unwrap().to_string();
-        let refresh_token = json["refresh_token"].as_str().unwrap().to_string();
-
-        assert!(!access_token.is_empty());
-        assert!(!refresh_token.is_empty());
-
-        let tokens = Some((access_token, refresh_token));
-        return Ok((status_code, tokens));
-    }
-    Ok((status_code, None))
+    helpers::dispatch_reqwest_response::<AuthTokens>(response, StatusCode::OK)
+        .await
+        .map(|v| v.unwrap())
 }
 
-pub async fn logout(refresh_token: &str) -> GenericResult<reqwest::StatusCode> {
+pub async fn logout(refresh_token: &str) -> TestResult<StatusCode> {
     let url = helpers::build_url(API_V1, API_PATH_AUTH, "logout");
 
     let authorization = format!("Bearer {}", refresh_token);
@@ -81,7 +63,7 @@ pub async fn logout(refresh_token: &str) -> GenericResult<reqwest::StatusCode> {
     Ok(response.status())
 }
 
-pub async fn revoke_all(access_token: &str) -> GenericResult<reqwest::StatusCode> {
+pub async fn revoke_all(access_token: &str) -> TestResult<StatusCode> {
     let url = helpers::build_url(API_V1, API_PATH_AUTH, "revoke-all");
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()
@@ -93,7 +75,7 @@ pub async fn revoke_all(access_token: &str) -> GenericResult<reqwest::StatusCode
     Ok(response.status())
 }
 
-pub async fn revoke_user(access_token: &str, user_id: &str) -> GenericResult<reqwest::StatusCode> {
+pub async fn revoke_user(access_token: &str, user_id: &str) -> TestResult<StatusCode> {
     let url = helpers::build_url(API_V1, API_PATH_AUTH, "revoke-user");
     let params = format!("{{\"user_id\":\"{}\"}}", user_id);
     let authorization = format!("Bearer {}", access_token);
@@ -108,7 +90,7 @@ pub async fn revoke_user(access_token: &str, user_id: &str) -> GenericResult<req
     Ok(response.status())
 }
 
-pub async fn cleanup(access_token: &str) -> GenericResult<u64> {
+pub async fn cleanup(access_token: &str) -> TestResult<u64> {
     let url = helpers::build_url(API_V1, API_PATH_AUTH, "cleanup");
     let authorization = format!("Bearer {}", access_token);
     let response = reqwest::Client::new()

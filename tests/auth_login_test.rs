@@ -11,8 +11,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn login_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     // Try unauthorized access to the root handler.
     assert_eq!(
@@ -21,30 +21,27 @@ async fn login_test() {
     );
 
     let username_wrong = format!("{}1", TEST_ADMIN_USERNAME);
-    let (status, _) = auth::login(&username_wrong, TEST_ADMIN_PASSWORD_HASH)
-        .await
-        .unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = auth::login(&username_wrong, TEST_ADMIN_PASSWORD_HASH).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     let password_wrong = format!("{}1", TEST_ADMIN_PASSWORD_HASH);
-    let (status, _) = auth::login(TEST_ADMIN_USERNAME, &password_wrong)
-        .await
-        .unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = auth::login(TEST_ADMIN_USERNAME, &password_wrong).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let (status, _) = auth::login(&username_wrong, &password_wrong).await.unwrap();
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let result = auth::login(&username_wrong, &password_wrong).await;
+    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
     // Access to the root handler.
     assert_eq!(
-        root::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&tokens.access_token).await.unwrap(),
         StatusCode::OK
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

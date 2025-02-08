@@ -17,8 +17,7 @@ use crate::common::{
     helpers,
 };
 
-// TODO: refactor all tests to use isolated database.
-
+#[must_use]
 pub async fn run() -> TestDatabase {
     // Set the environment variable.
     std::env::set_var("ENV_TEST", "1");

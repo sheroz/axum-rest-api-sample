@@ -11,5 +11,3 @@ pub mod users;
 
 pub use error::TestError;
 pub type TestResult<T> = Result<T, TestError>;
-
-pub type GenericResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;

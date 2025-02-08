@@ -17,36 +17,7 @@ use common::{
     test_app, transactions, users, TestError,
 };
 
-// TODO: run tests in parallel and remove `serial` dependencies.
-
-#[serial]
-#[tokio::test]
-async fn account_unauthorized_test() {
-    // Start api server.
-    let test_db = test_app::run().await;
-
-    let account = Account {
-        id: Uuid::new_v4(),
-        user_id: Uuid::new_v4(),
-        balance_cents: 0,
-        created_at: None,
-        updated_at: None,
-    };
-
-    // Try unauthorized access to account handlers.
-    let access_token = "xyz".to_string();
-    let result = accounts::get(account.id, &access_token).await;
-    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
-
-    let result = accounts::add(account.clone(), &access_token).await;
-    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
-
-    let result = accounts::update(account.clone(), &access_token).await;
-    assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
-
-    // Drop test database.
-    test_db.drop().await.unwrap();
-}
+// TODO: run transaction tests in parallel and remove `serial` dependencies.
 
 #[serial]
 #[tokio::test]
@@ -55,12 +26,12 @@ async fn transaction_unauthorized_test() {
     let test_db = test_app::run().await;
 
     // Try unauthorized access to transaction handlers.
-    let access_token = "xyz".to_string();
+    let wrong_access_token = "xyz";
     let some_id = Uuid::new_v4();
-    let result = transactions::get(some_id, &access_token).await;
+    let result = transactions::get(some_id, wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
-    let result = transactions::transfer(some_id, some_id, 0, &access_token).await;
+    let result = transactions::transfer(some_id, some_id, 0, wrong_access_token).await;
     assert_api_error_status!(result, StatusCode::UNAUTHORIZED);
 
     // Drop test database.
@@ -69,16 +40,58 @@ async fn transaction_unauthorized_test() {
 
 #[serial]
 #[tokio::test]
-async fn account_transaction_transfer_test() {
+async fn transaction_non_existing_test() {
     // Start api server.
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
+
+    // Check for non existing transaction.
+    let transaction_id = Uuid::new_v4();
+    let result = transactions::get(transaction_id, &tokens.access_token).await;
+
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        TestError::APIError(api_error) => {
+            assert_eq!(api_error.status, StatusCode::NOT_FOUND);
+            assert_eq!(api_error.errors.len(), 1);
+
+            let error_entry = api_error.errors[0].clone();
+            assert_eq!(
+                error_entry.code,
+                serde_json::to_string(&APIErrorCode::TransactionNotFound).ok()
+            );
+            assert_eq!(
+                error_entry.kind,
+                serde_json::to_string(&APIErrorKind::ResourceNotFound).ok()
+            );
+            assert_eq!(
+                error_entry.message,
+                TransactionError::TransactionNotFound(transaction_id).to_string()
+            );
+            let json = error_entry.detail.unwrap();
+            assert_eq!(json["transaction_id"], transaction_id.to_string());
+        }
+        _ => panic!("invalid transaction result"),
+    }
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
+}
+
+#[serial]
+#[tokio::test]
+async fn transaction_transfer_test() {
+    // Start api server.
+    let test_db = test_app::run().await;
+
+    // Login as an admin.
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+        .await
+        .expect("Login error.");
 
     // Add user for Alice.
     let id = Uuid::new_v4();
@@ -95,7 +108,7 @@ async fn account_transaction_transfer_test() {
         updated_at: None,
     };
 
-    let _ = users::add(user_alice.clone(), &access_token)
+    let _ = users::add(user_alice.clone(), &tokens.access_token)
         .await
         .expect("User creation error.");
 
@@ -108,10 +121,10 @@ async fn account_transaction_transfer_test() {
         updated_at: None,
     };
 
-    let result = accounts::get(account_alice.id, &access_token).await;
+    let result = accounts::get(account_alice.id, &tokens.access_token).await;
     assert_api_error_status!(result, StatusCode::NOT_FOUND);
 
-    let account = accounts::add(account_alice.clone(), &access_token)
+    let account = accounts::add(account_alice.clone(), &tokens.access_token)
         .await
         .expect("Account creation error.");
     assert!(account.updated_at.is_some());
@@ -121,7 +134,7 @@ async fn account_transaction_transfer_test() {
     assert_eq!(account, account_alice);
 
     // Get added account.
-    let account = accounts::get(account_alice.id, &access_token)
+    let account = accounts::get(account_alice.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account, account_alice);
@@ -141,7 +154,7 @@ async fn account_transaction_transfer_test() {
         updated_at: None,
     };
 
-    let _ = users::add(user_bob.clone(), &access_token)
+    let _ = users::add(user_bob.clone(), &tokens.access_token)
         .await
         .expect("User creation error.");
 
@@ -154,10 +167,10 @@ async fn account_transaction_transfer_test() {
         updated_at: None,
     };
 
-    let result = accounts::get(account_bob.id, &access_token).await;
+    let result = accounts::get(account_bob.id, &tokens.access_token).await;
     assert_api_error_status!(result, StatusCode::NOT_FOUND);
 
-    let account = accounts::add(account_bob.clone(), &access_token)
+    let account = accounts::add(account_bob.clone(), &tokens.access_token)
         .await
         .expect("Account creation error.");
     assert!(account.updated_at.is_some());
@@ -167,13 +180,13 @@ async fn account_transaction_transfer_test() {
     assert_eq!(account, account_bob);
 
     // Get added account.
-    let account = accounts::get(account_bob.id, &access_token)
+    let account = accounts::get(account_bob.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account, account_bob);
 
     // list existing accounts.
-    let accounts = accounts::list(&access_token)
+    let accounts = accounts::list(&tokens.access_token)
         .await
         .expect("Fetching the account list error.");
     assert!(accounts.contains(&account_alice));
@@ -181,7 +194,7 @@ async fn account_transaction_transfer_test() {
 
     // Update accounts.
     account_alice.balance_cents = 100;
-    let account = accounts::update(account_alice.clone(), &access_token)
+    let account = accounts::update(account_alice.clone(), &tokens.access_token)
         .await
         .expect("Account update error.");
     assert_ne!(account.updated_at, account_alice.updated_at);
@@ -189,7 +202,7 @@ async fn account_transaction_transfer_test() {
     assert_eq!(account, account_alice);
 
     account_bob.balance_cents = 100;
-    let account = accounts::update(account_bob.clone(), &access_token)
+    let account = accounts::update(account_bob.clone(), &tokens.access_token)
         .await
         .expect("Account update error.");
     assert_ne!(account.updated_at, account_bob.updated_at);
@@ -202,7 +215,7 @@ async fn account_transaction_transfer_test() {
         account_alice.id,
         account_bob.id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await
     .unwrap();
@@ -211,18 +224,18 @@ async fn account_transaction_transfer_test() {
     assert_eq!(transaction.source_account_id, account_alice.id);
     assert_eq!(transaction.destination_account_id, account_bob.id);
     assert_eq!(transaction.amount_cents, amount_cents);
-    let transaction_persisted = transactions::get(transaction.id, &access_token)
+    let transaction_persisted = transactions::get(transaction.id, &tokens.access_token)
         .await
         .expect("Transaction fetch error.");
     assert_eq!(transaction_persisted, transaction);
 
     // Check for transfer results.
-    let account_alice = accounts::get(account_alice.id, &access_token)
+    let account_alice = accounts::get(account_alice.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_alice.balance_cents, 75);
 
-    let account_bob = accounts::get(account_bob.id, &access_token)
+    let account_bob = accounts::get(account_bob.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_bob.balance_cents, 125);
@@ -233,7 +246,7 @@ async fn account_transaction_transfer_test() {
         account_bob.id,
         account_alice.id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await
     .expect("Transaction error.");
@@ -244,18 +257,18 @@ async fn account_transaction_transfer_test() {
     assert_eq!(transaction.amount_cents, amount_cents);
 
     // Check for persisted transaction.
-    let transaction_persisted = transactions::get(transaction.id, &access_token)
+    let transaction_persisted = transactions::get(transaction.id, &tokens.access_token)
         .await
         .expect("Transaction fetch error.");
     assert_eq!(transaction_persisted, transaction);
 
     // Check for transfer results.
-    let account_alice = accounts::get(account_alice.id, &access_token)
+    let account_alice = accounts::get(account_alice.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_alice.balance_cents, 105);
 
-    let account_bob = accounts::get(account_bob.id, &access_token)
+    let account_bob = accounts::get(account_bob.id, &tokens.access_token)
         .await
         .expect("Account fetch error.");
     assert_eq!(account_bob.balance_cents, 95);
@@ -266,7 +279,7 @@ async fn account_transaction_transfer_test() {
         account_bob.id,
         account_alice.id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await;
     assert!(result.is_err());
@@ -275,20 +288,20 @@ async fn account_transaction_transfer_test() {
             assert_eq!(api_error.status, StatusCode::UNPROCESSABLE_ENTITY);
             assert_eq!(api_error.errors.len(), 1);
 
-            let error = api_error.errors[0].clone();
+            let error_entry = api_error.errors[0].clone();
             assert_eq!(
-                error.code,
+                error_entry.code,
                 serde_json::to_string(&APIErrorCode::TransactionInsufficientFunds).ok()
             );
             assert_eq!(
-                error.kind,
+                error_entry.kind,
                 serde_json::to_string(&APIErrorKind::ValidationError).ok()
             );
             assert_eq!(
-                error.message,
+                error_entry.message,
                 TransferValidationError::InsufficientFunds.to_string()
             );
-            assert_eq!(error.detail, None);
+            assert_eq!(error_entry.detail, None);
         }
         _ => panic!("invalid transaction transfer result"),
     }
@@ -299,16 +312,14 @@ async fn account_transaction_transfer_test() {
 
 #[serial]
 #[tokio::test]
-async fn transaction_account_validation_test() {
+async fn transaction_validation_test() {
     // Start api server.
     let test_db = test_app::run().await;
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
+        .expect("Login error.");
 
     // Check for invalid source account.
     let source_account_id = Uuid::new_v4();
@@ -319,7 +330,7 @@ async fn transaction_account_validation_test() {
         source_account_id,
         destination_account_id,
         amount_cents,
-        &access_token,
+        &tokens.access_token,
     )
     .await;
 
@@ -329,20 +340,20 @@ async fn transaction_account_validation_test() {
             assert_eq!(api_error.status, StatusCode::UNPROCESSABLE_ENTITY);
             assert_eq!(api_error.errors.len(), 2);
 
-            let error = api_error.errors[0].clone();
+            let error_entry = api_error.errors[0].clone();
             assert_eq!(
-                error.code,
+                error_entry.code,
                 serde_json::to_string(&APIErrorCode::TransactionSourceAccountNotFound).ok()
             );
             assert_eq!(
-                error.kind,
+                error_entry.kind,
                 serde_json::to_string(&APIErrorKind::ValidationError).ok()
             );
             assert_eq!(
-                error.message,
+                error_entry.message,
                 TransferValidationError::SourceAccountNotFound(source_account_id).to_string()
             );
-            let json = error.detail.unwrap();
+            let json = error_entry.detail.unwrap();
             assert_eq!(json["source_account_id"], source_account_id.to_string());
 
             let error = api_error.errors[1].clone();
@@ -366,52 +377,6 @@ async fn transaction_account_validation_test() {
             );
         }
         _ => panic!("invalid transaction transfer result"),
-    }
-
-    // Drop test database.
-    test_db.drop().await.unwrap();
-}
-
-#[serial]
-#[tokio::test]
-async fn transaction_non_existing_test() {
-    // Start api server.
-    let test_db = test_app::run().await;
-
-    // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
-        .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, _) = result.unwrap();
-
-    // Check for non existing transaction.
-    let transaction_id = Uuid::new_v4();
-    let result = transactions::get(transaction_id, &access_token).await;
-
-    assert!(result.is_err());
-    match result.err().unwrap() {
-        TestError::APIError(api_error) => {
-            assert_eq!(api_error.status, StatusCode::NOT_FOUND);
-            assert_eq!(api_error.errors.len(), 1);
-
-            let error = api_error.errors[0].clone();
-            assert_eq!(
-                error.code,
-                serde_json::to_string(&APIErrorCode::TransactionNotFound).ok()
-            );
-            assert_eq!(
-                error.kind,
-                serde_json::to_string(&APIErrorKind::ResourceNotFound).ok()
-            );
-            assert_eq!(
-                error.message,
-                TransactionError::TransactionNotFound(transaction_id).to_string()
-            );
-            let json = error.detail.unwrap();
-            assert_eq!(json["transaction_id"], transaction_id.to_string());
-        }
-        _ => panic!("invalid transaction result"),
     }
 
     // Drop test database.

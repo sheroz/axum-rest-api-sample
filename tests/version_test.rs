@@ -10,7 +10,7 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn version_test() {
-    // Start the api server.
+    // Start API server.
     let test_db = test_app::run().await;
 
     let url = helpers::build_path(API_V1, API_PATH_VERSION);
@@ -22,5 +22,6 @@ async fn version_test() {
     assert_eq!(json["name"], env!("CARGO_PKG_NAME"));
     assert_eq!(json["version"], env!("CARGO_PKG_VERSION"));
 
+    // Drop test database.
     test_db.drop().await.unwrap();
 }

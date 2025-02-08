@@ -11,8 +11,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn logout_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -26,24 +26,28 @@ async fn logout_test() {
     );
 
     // Login as an admin.
-    let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
+    let tokens = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
         .await
-        .unwrap();
-    assert_eq!(status, StatusCode::OK);
-    let (access_token, refresh_token) = result.unwrap();
+        .expect("Login error.");
 
     // Access to the root handler.
     assert_eq!(
-        root::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&tokens.access_token).await.unwrap(),
         StatusCode::OK
     );
 
     // Logout.
-    assert_eq!(auth::logout(&refresh_token).await.unwrap(), StatusCode::OK);
+    assert_eq!(
+        auth::logout(&tokens.refresh_token).await.unwrap(),
+        StatusCode::OK
+    );
 
     // Try access to the root handler after logout.
     assert_eq!(
-        root::fetch_root(&access_token).await.unwrap(),
+        root::fetch_root(&tokens.access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

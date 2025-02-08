@@ -1,7 +1,9 @@
+use reqwest::StatusCode;
+
 use crate::common::{helpers, TestResult};
 
 // Fetch the root using `reqwest`.
-pub async fn fetch_root(access_token: &str) -> TestResult<reqwest::StatusCode> {
+pub async fn fetch_root(access_token: &str) -> TestResult<StatusCode> {
     let url = helpers::config().service_http_addr();
 
     let authorization = format!("Bearer {}", access_token);
@@ -12,7 +14,7 @@ pub async fn fetch_root(access_token: &str) -> TestResult<reqwest::StatusCode> {
         .await?;
 
     let response_status = response.status();
-    if response_status == reqwest::StatusCode::OK {
+    if response_status == StatusCode::OK {
         let found = response.text().await.unwrap();
         let expected = r#"{"message":"Hello from Axum-Web!"}"#;
         assert_eq!(found, expected);

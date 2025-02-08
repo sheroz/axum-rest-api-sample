@@ -12,7 +12,7 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn health_test() {
-    // Start the api server.
+    // Start API server.
     let test_db = test_app::run().await;
 
     let url = helpers::build_path(API_V1, API_PATH_HEALTH);
@@ -29,5 +29,6 @@ async fn health_test() {
     let json: serde_json::Value = serde_json::from_str(&body).unwrap();
     assert_eq!(json["status"], "healthy");
 
+    // Drop test database.
     test_db.drop().await.unwrap();
 }
