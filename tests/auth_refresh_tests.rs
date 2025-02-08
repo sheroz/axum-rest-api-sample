@@ -11,8 +11,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn refresh_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     // Login as an admin.
     let (status, result) = auth::login(TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD_HASH)
@@ -40,13 +40,16 @@ async fn refresh_test() {
         root::fetch_root(&access_token_new).await.unwrap(),
         StatusCode::OK
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[tokio::test]
 #[serial]
 async fn refresh_logout_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -76,4 +79,7 @@ async fn refresh_logout_test() {
         auth::logout(&refresh_token_new).await.unwrap(),
         StatusCode::OK
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

@@ -11,8 +11,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn login_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     // Try unauthorized access to the root handler.
     assert_eq!(
@@ -47,4 +47,7 @@ async fn login_test() {
         root::fetch_root(&access_token).await.unwrap(),
         StatusCode::OK
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

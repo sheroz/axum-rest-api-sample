@@ -208,13 +208,16 @@ impl From<StatusCode> for APIErrorEntry {
 
 impl From<sqlx::Error> for APIErrorEntry {
     fn from(e: sqlx::Error) -> Self {
-        // Do not expose database-related internal specifics, except for debug builds.
+        // Do not disclose database-related internal specifics, except for debug builds.
         if cfg!(debug_assertions) {
-            Self::new(&e.to_string())
-                .code(APIErrorCode::DatabaseError)
-                .kind(APIErrorKind::DatabaseError)
-                .description(&format!("Database error: {}", e))
-                .trace_id()
+            let (code, kind) = match e {
+                sqlx::Error::RowNotFound => (
+                    APIErrorCode::ResourceNotFound,
+                    APIErrorKind::ResourceNotFound,
+                ),
+                _ => (APIErrorCode::DatabaseError, APIErrorKind::DatabaseError),
+            };
+            Self::new(&e.to_string()).code(code).kind(kind).trace_id()
         } else {
             // Build the entry with a trace id to find the exact error in the log when needed.
             let error_entry = Self::from(StatusCode::INTERNAL_SERVER_ERROR).trace_id();
@@ -228,7 +231,7 @@ impl From<sqlx::Error> for APIErrorEntry {
 
 impl From<redis::RedisError> for APIErrorEntry {
     fn from(e: redis::RedisError) -> Self {
-        // Do not expose Redis-related internal specifics, except for debug builds.
+        // Do not disclose Redis-related internal specifics, except for debug builds.
         if cfg!(debug_assertions) {
             Self::new(&e.to_string())
                 .code(APIErrorCode::RedisError)

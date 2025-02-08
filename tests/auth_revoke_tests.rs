@@ -13,8 +13,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn revoke_user_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -42,15 +42,19 @@ async fn revoke_user_test() {
         StatusCode::UNAUTHORIZED
     );
 
-    // Needs pause to pass authentication of next logins.
+    // Currently, timestamps in claims are defined as the number of seconds since Epoch (RFC 7519).
+    // We need to pause for one second so as not to interfere with the authentication of the next logins.
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[tokio::test]
 #[serial]
 async fn revoke_all_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -72,15 +76,19 @@ async fn revoke_all_test() {
         StatusCode::UNAUTHORIZED
     );
 
-    // Needs pause to pass authentication of next logins.
+    // Currently, timestamps in claims are defined as the number of seconds since Epoch (RFC 7519).
+    // We need to pause for one second so as not to interfere with the authentication of the next logins.
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[tokio::test]
 #[serial]
 async fn cleanup_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -122,4 +130,7 @@ async fn cleanup_test() {
 
     let deleted_tokens = auth::cleanup(&access_token).await.unwrap();
     assert!(deleted_tokens >= 4);
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

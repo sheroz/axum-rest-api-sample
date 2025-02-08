@@ -18,8 +18,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn list_users_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -43,13 +43,16 @@ async fn list_users_test() {
         .expect("User list fetch error.");
     assert!(!users.is_empty());
     assert!(users.iter().any(|u| u.id == user_id));
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[tokio::test]
 #[serial]
 async fn get_user_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -72,13 +75,16 @@ async fn get_user_test() {
         .await
         .expect("User fetch error.");
     assert_eq!(user.id, user_id);
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[tokio::test]
 #[serial]
 async fn add_get_update_delete_user_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let username = format!("test-{}", chrono::Utc::now().timestamp() as usize);
     let mut user = User {
@@ -148,4 +154,7 @@ async fn add_get_update_delete_user_test() {
     // Check the user.
     let result = users::get(user.id, &access_token).await;
     assert_api_error_status!(result, StatusCode::NOT_FOUND);
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

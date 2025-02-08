@@ -11,8 +11,8 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn logout_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
 
     let config = helpers::config();
 
@@ -46,4 +46,7 @@ async fn logout_test() {
         root::fetch_root(&access_token).await.unwrap(),
         StatusCode::UNAUTHORIZED
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }

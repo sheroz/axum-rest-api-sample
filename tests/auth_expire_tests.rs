@@ -11,8 +11,9 @@ use common::{
 #[tokio::test]
 #[serial]
 async fn access_token_expire_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
+
     let config = helpers::config();
 
     // Assert that revoked options are enabled.
@@ -47,13 +48,17 @@ async fn access_token_expire_test() {
         root::fetch_root(&access_token_new).await.unwrap(),
         StatusCode::OK
     );
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
 
 #[tokio::test]
 #[serial]
 async fn refresh_token_expire_test() {
-    // Start the api server.
-    test_app::run().await;
+    // Start API server.
+    let test_db = test_app::run().await;
+
     let config = helpers::config();
 
     // Assert that revoked options are enabled.
@@ -75,4 +80,7 @@ async fn refresh_token_expire_test() {
     // Try to refresh with expired token
     let (status, _) = auth::refresh(&refresh_token).await.unwrap();
     assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    // Drop test database.
+    test_db.drop().await.unwrap();
 }
