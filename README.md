@@ -55,21 +55,6 @@ Covers:
   - Running tests
   - Building the application
 
-## Run
-
-Running the REST API service (debug release):
-
-```shell
-docker-compose up -d
-cargo run
-```
-
-Running the Docker based full stack build: [docker-compose.full.yml](docker-compose.full.yml)
-
-```shell
-docker-compose -f docker-compose.full.yml up -d
-```
-
 ## REST API Endpoints
 
 - List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
@@ -101,6 +86,21 @@ REST API endpoints can be easily tested using following tools:
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkNTFlNjE4Ny1jYmFjLTQ0ZmEtOWE5NS04ZjFkZWJkYmFlZWEiLCJqdGkiOiIwN2Y3OWE0OC1kMWFhLTQ1ZjItOWE5NS05Y2M5MGZiY2UyYTciLCJpYXQiOjE3MzYwMTA3MjIsImV4cCI6MTczNjAxNDMyMiwidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.3f2c_5PyPXMhgu0FIX4--SGjnSDW1GLxL0ba6gSImfM"
   ```
+
+## Run
+
+Running the REST API service (debug release):
+
+```shell
+docker-compose up -d
+cargo run
+```
+
+Running the Docker based full stack build: [docker-compose.full.yml](docker-compose.full.yml)
+
+```shell
+docker-compose -f docker-compose.full.yml up -d
+```
 
 ## Tests
 
