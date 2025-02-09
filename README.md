@@ -89,7 +89,7 @@ REST API endpoints can be easily tested using following tools:
 
 ## Run
 
-Running the REST API service (debug release):
+Running the REST API service (debug build):
 
 ```shell
 docker-compose up -d
