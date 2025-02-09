@@ -50,48 +50,47 @@ Covers:
 
 ## REST API Endpoints
 
-### Public Endpoints
-
-- **Health:** `GET /v1/health`
-- **Version:** `GET /v1/version`
-
-### Authentication
-
-- **Login:** `POST /v1/auth/login`
-- **Refresh Tokens:** `POST /v1/auth/refresh`
-- **Logout:** `POST /v1/auth/logout`
-- **Revoke Tokens Issued to the User:** `POST /v1/auth/revoke-user`
-- **Revoke All Issued Tokens:** `POST /v1/auth/revoke-all`
-- **Cleanup Revoked Tokens:** `POST /v1/auth/cleanup`
-
-### Users
-
-- **List Users:** `GET /v1/users`
-- **Get User by ID:** `GET /v1/users/{user_id}`
-- **Add a New User:** `POST /v1/users`
-- **Update User:** `PUT /v1/users/{user_id}`
-- **Delete User:** `DELETE /v1/users/{user_id}`
-
-### Accounts
-
-- **List Accounts:** `GET /v1/accounts`
-- **Get Account by ID:** `GET /v1/accounts/{account_id}`
-- **Add a New Account:** `POST /v1/accounts`
-- **Update Account:** `PUT /v1/accounts/{account_id}`
-
-### Transactions
-
-- **Transfer Money:** `POST /v1/transactions/transfer`
-- **Get Transaction by ID:** `GET /v1/transactions/{transaction_id}`
-
-## REST API Documentation And Request Samples
-
 - List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
 - API request samples in the format RFC 2616: [tests/endpoints.http](/tests/endpoints.http)
 
-REST API endpoints can be easily tested using following tools:
+### Public Endpoints
 
-- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code (supports RFC 2616 format).
+- Health: `GET /v1/health`
+- Version: `GET /v1/version`
+
+### Authentication
+
+- Login: `POST /v1/auth/login`
+- Refresh Tokens: `POST /v1/auth/refresh`
+- Logout: `POST /v1/auth/logout`
+- Revoke Tokens Issued to the User: `POST /v1/auth/revoke-user`
+- Revoke All Issued Tokens: `POST /v1/auth/revoke-all`
+- Cleanup Revoked Tokens: `POST /v1/auth/cleanup`
+
+### Users
+
+- List Users: `GET /v1/users`
+- Get User by ID: `GET /v1/users/{user_id}`
+- Add a New User: `POST /v1/users`
+- Update User: `PUT /v1/users/{user_id}`
+- Delete User: `DELETE /v1/users/{user_id}`
+
+### Accounts
+
+- List Accounts: `GET /v1/accounts`
+- Get Account by ID: `GET /v1/accounts/{account_id}`
+- Add a New Account: `POST /v1/accounts`
+- Update Account: `PUT /v1/accounts/{account_id}`
+
+### Transactions
+
+- Transfer Money: `POST /v1/transactions/transfer`
+- Get Transaction by ID: `GET /v1/transactions/{transaction_id}`
+
+## REST API endpoints can be manually tested using
+
+- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
+Supports RFC 2616 format used in request samples: [tests/endpoints.http](/tests/endpoints.http).
 - [curl](https://curl.se/) samples:
 
   Health check
@@ -116,44 +115,40 @@ REST API endpoints can be easily tested using following tools:
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkNTFlNjE4Ny1jYmFjLTQ0ZmEtOWE5NS04ZjFkZWJkYmFlZWEiLCJqdGkiOiIwN2Y3OWE0OC1kMWFhLTQ1ZjItOWE5NS05Y2M5MGZiY2UyYTciLCJpYXQiOjE3MzYwMTA3MjIsImV4cCI6MTczNjAxNDMyMiwidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.3f2c_5PyPXMhgu0FIX4--SGjnSDW1GLxL0ba6gSImfM"
   ```
 
-## Run
-
-Running the REST API service (debug build):
-
-```shell
-docker-compose up -d
-cargo run
-```
-
-Running the Docker based full stack build: [docker-compose.full.yml](docker-compose.full.yml)
-
-```shell
-docker-compose -f docker-compose.full.yml up -d
-```
-
-## Tests
+## Running end-to-end API tests
 
 REST API tests: [/tests](/tests)
-
-Running tests:
 
 ```shell
 docker-compose up -d
 cargo test
 ```
 
-Running the service in test configuration:
+## Running the service (debug build)
+
+```shell
+docker-compose up -d
+cargo run
+```
+
+## Running the service in test configuration
 
 ```shell
 ENV_TEST=1 cargo run
 ```
 
-## Logging
+## Running the service at a specific log level
 
 Setting the `RUST_LOG` - logging level on the launch:
 
 ```shell
 RUST_LOG=info,hyper=debug,axum_web=trace cargo run
+```
+
+## Running the Docker based full stack build
+
+```shell
+docker-compose -f docker-compose.full.yml up -d
 ```
 
 ## Project Stage
