@@ -55,6 +55,21 @@ Covers:
   - Running tests
   - Building the application
 
+## Run
+
+Running the REST API service (debug release):
+
+```shell
+docker-compose up -d
+cargo run
+```
+
+Running the Docker based full stack build: [docker-compose.full.yml](docker-compose.full.yml)
+
+```shell
+docker-compose -f docker-compose.full.yml up -d
+```
+
 ## REST API Endpoints
 
 - List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
