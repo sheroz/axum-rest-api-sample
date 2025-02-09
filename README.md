@@ -70,13 +70,14 @@ Running the Docker based full stack build: [docker-compose.full.yml](docker-comp
 docker-compose -f docker-compose.full.yml up -d
 ```
 
-## REST API endpoints
+## REST API Endpoints
 
-Please check for the list of available REST API endpoints: [tests/endpoints.http](/tests/endpoints.http)
+- List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
+- API request samples in the format RFC 2616: [tests/endpoints.http](/tests/endpoints.http)
 
 REST API endpoints can be easily tested using following tools:
 
-- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
+- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code (supports RFC 2616 format).
 - [curl](https://curl.se/) samples:
 
   Health check
