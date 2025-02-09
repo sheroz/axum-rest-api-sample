@@ -95,8 +95,40 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwM
 DELETE http://127.0.0.1:8080/v1/users/917646a0-7437-48a0-bb03-a7aa830f8f81
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYzUxN2IwMC05NjhhLTRiOTUtYWY5NC1kZjBmZDI4NmZiNTEiLCJqdGkiOiJBVGUxODcxNjcwLTU3OTAtNDk0ZS1iMWQwLWYzOWM2NzJmYjg5YyIsImlhdCI6MTcwMzc3ODQwOSwiZXhwIjoxNzAzNzgyMDA5fQ.FWd0cyS5FfcmANp87kEVLt1lJtwgoe4d7rh49ZGKrC0
 
-### TODO: add account endpoints. For details refer to: tests/account_transaction_test.rs
+### List accounts
+### Note: use the `access_token` in `Authorization` header.
+GET http://127.0.0.1:8080/v1/accounts
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTY5YTMyNi0zZTU3LTRiYjYtOTQ2Yy0xYmY3YjQwYjhjMzMiLCJqdGkiOiJjZTE3ODk2My0wZGY2LTQxOGYtOTUwMy02NjY1OGU3ZDA3ZTQiLCJpYXQiOjE3MzkxMDQ5NTMsImV4cCI6MTczOTEwODU1MywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.R5noU7ZIbmOWMev54Uk13Ykpkl02zFhP7C1XMEW-FgQ
+ 
+### Get account
+### Note: use the `access_token` in `Authorization` header.
+GET http://127.0.0.1:8080/v1/accounts/9a7a8f34-a949-42e3-b552-e1818069003c
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTY5YTMyNi0zZTU3LTRiYjYtOTQ2Yy0xYmY3YjQwYjhjMzMiLCJqdGkiOiJjZTE3ODk2My0wZGY2LTQxOGYtOTUwMy02NjY1OGU3ZDA3ZTQiLCJpYXQiOjE3MzkxMDQ5NTMsImV4cCI6MTczOTEwODU1MywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.R5noU7ZIbmOWMev54Uk13Ykpkl02zFhP7C1XMEW-FgQ
 
-### TODO: add transaction endpoints. For details refer to: tests/account_transaction_test.rs
+### Add a new account
+### Note: use the `access_token` in `Authorization` header.
+POST http://127.0.0.1:8080/v1/accounts
+Content-type: application/json; charset=utf8
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTY5YTMyNi0zZTU3LTRiYjYtOTQ2Yy0xYmY3YjQwYjhjMzMiLCJqdGkiOiJjZTE3ODk2My0wZGY2LTQxOGYtOTUwMy02NjY1OGU3ZDA3ZTQiLCJpYXQiOjE3MzkxMDQ5NTMsImV4cCI6MTczOTEwODU1MywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.R5noU7ZIbmOWMev54Uk13Ykpkl02zFhP7C1XMEW-FgQ
+
+{
+    "id": "72022566-44e2-44a4-bf07-485c6a56d506",
+    "user_id": "917646a0-7437-48a0-bb03-a7aa830f8f81",
+    "balance_cents": 0
+}
+
+### Update account
+### Note: use the `access_token` in `Authorization` header.
+PUT http://127.0.0.1:8080/v1/accounts/917646a0-7437-48a0-bb03-a7aa830f8f81
+Content-type: application/json; charset=utf8
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTY5YTMyNi0zZTU3LTRiYjYtOTQ2Yy0xYmY3YjQwYjhjMzMiLCJqdGkiOiJjZTE3ODk2My0wZGY2LTQxOGYtOTUwMy02NjY1OGU3ZDA3ZTQiLCJpYXQiOjE3MzkxMDQ5NTMsImV4cCI6MTczOTEwODU1MywidHlwIjowLCJyb2xlcyI6ImFkbWluIn0.R5noU7ZIbmOWMev54Uk13Ykpkl02zFhP7C1XMEW-FgQ
+
+{
+    "id": "72022566-44e2-44a4-bf07-485c6a56d506",
+    "user_id": "917646a0-7437-48a0-bb03-a7aa830f8f81",
+    "balance_cents": 100
+}
+
+### TODO: add transaction endpoints. For details refer to: tests/transaction_test.rs
 
 ### END.

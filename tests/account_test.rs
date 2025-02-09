@@ -80,11 +80,12 @@ async fn account_api_error_test() {
 
             assert_eq!(
                 error_entry.code,
-                serde_json::to_string(&APIErrorCode::ResourceNotFound).ok()
+                Some(APIErrorCode::ResourceNotFound.to_string())
             );
+
             assert_eq!(
                 error_entry.kind,
-                serde_json::to_string(&APIErrorKind::ResourceNotFound).ok()
+                Some(APIErrorKind::ResourceNotFound.to_string())
             );
 
             // We expect to see raw database error message for non production builds.

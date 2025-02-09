@@ -89,12 +89,12 @@ impl Display for APIError {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum APIErrorCode {
-    AuthWrongCredentials,
-    AuthMissingCredentials,
-    AuthTokenCreationError,
-    AuthInvalidToken,
-    AuthRevokedTokensInactive,
-    AuthForbidden,
+    AuthenticationWrongCredentials,
+    AuthenticationMissingCredentials,
+    AuthenticationTokenCreationError,
+    AuthenticationInvalidToken,
+    AuthenticationRevokedTokensInactive,
+    AuthenticationForbidden,
     UserNotFound,
     TransactionNotFound,
     TransactionInsufficientFunds,
@@ -106,6 +106,16 @@ pub enum APIErrorCode {
     RedisError,
 }
 
+impl Display for APIErrorCode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "{}",
+            serde_json::json!(self).as_str().unwrap_or_default()
+        )
+    }
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum APIErrorKind {
@@ -114,6 +124,16 @@ pub enum APIErrorKind {
     ValidationError,
     DatabaseError,
     RedisError,
+}
+
+impl Display for APIErrorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "{}",
+            serde_json::json!(self).as_str().unwrap_or_default()
+        )
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -149,13 +169,13 @@ impl APIErrorEntry {
         }
     }
 
-    pub fn code<S: Serialize>(mut self, code: S) -> Self {
-        self.code = serde_json::to_string(&code).ok();
+    pub fn code<S: ToString>(mut self, code: S) -> Self {
+        self.code = Some(code.to_string());
         self
     }
 
-    pub fn kind<S: Serialize>(mut self, kind: S) -> Self {
-        self.kind = serde_json::to_string(&kind).ok();
+    pub fn kind<S: ToString>(mut self, kind: S) -> Self {
+        self.kind = Some(kind.to_string());
         self
     }
 

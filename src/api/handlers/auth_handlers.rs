@@ -126,22 +126,26 @@ fn tokens_to_response(jwt_tokens: JwtTokens) -> impl IntoResponse {
 impl From<AuthError> for APIError {
     fn from(auth_error: AuthError) -> Self {
         let (status_code, code) = match auth_error {
-            AuthError::WrongCredentials => {
-                (StatusCode::UNAUTHORIZED, APIErrorCode::AuthWrongCredentials)
-            }
+            AuthError::WrongCredentials => (
+                StatusCode::UNAUTHORIZED,
+                APIErrorCode::AuthenticationWrongCredentials,
+            ),
             AuthError::MissingCredentials => (
                 StatusCode::BAD_REQUEST,
-                APIErrorCode::AuthMissingCredentials,
+                APIErrorCode::AuthenticationMissingCredentials,
             ),
             AuthError::TokenCreationError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                APIErrorCode::AuthTokenCreationError,
+                APIErrorCode::AuthenticationTokenCreationError,
             ),
-            AuthError::InvalidToken => (StatusCode::BAD_REQUEST, APIErrorCode::AuthInvalidToken),
-            AuthError::Forbidden => (StatusCode::FORBIDDEN, APIErrorCode::AuthForbidden),
+            AuthError::InvalidToken => (
+                StatusCode::BAD_REQUEST,
+                APIErrorCode::AuthenticationInvalidToken,
+            ),
+            AuthError::Forbidden => (StatusCode::FORBIDDEN, APIErrorCode::AuthenticationForbidden),
             AuthError::RevokedTokensInactive => (
                 StatusCode::BAD_REQUEST,
-                APIErrorCode::AuthRevokedTokensInactive,
+                APIErrorCode::AuthenticationRevokedTokensInactive,
             ),
             AuthError::RedisError(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, APIErrorCode::RedisError)
