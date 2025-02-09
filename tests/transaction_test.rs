@@ -62,11 +62,11 @@ async fn transaction_non_existing_test() {
             let error_entry = api_error.errors[0].clone();
             assert_eq!(
                 error_entry.code,
-                serde_json::to_string(&APIErrorCode::TransactionNotFound).ok()
+                Some(APIErrorCode::TransactionNotFound.to_string())
             );
             assert_eq!(
                 error_entry.kind,
-                serde_json::to_string(&APIErrorKind::ResourceNotFound).ok()
+                Some(APIErrorKind::ResourceNotFound.to_string())
             );
             assert_eq!(
                 error_entry.message,
@@ -291,11 +291,11 @@ async fn transaction_transfer_test() {
             let error_entry = api_error.errors[0].clone();
             assert_eq!(
                 error_entry.code,
-                serde_json::to_string(&APIErrorCode::TransactionInsufficientFunds).ok()
+                Some(APIErrorCode::TransactionInsufficientFunds.to_string())
             );
             assert_eq!(
                 error_entry.kind,
-                serde_json::to_string(&APIErrorKind::ValidationError).ok()
+                Some(APIErrorKind::ValidationError.to_string())
             );
             assert_eq!(
                 error_entry.message,
@@ -343,11 +343,11 @@ async fn transaction_validation_test() {
             let error_entry = api_error.errors[0].clone();
             assert_eq!(
                 error_entry.code,
-                serde_json::to_string(&APIErrorCode::TransactionSourceAccountNotFound).ok()
+                Some(APIErrorCode::TransactionSourceAccountNotFound.to_string())
             );
             assert_eq!(
                 error_entry.kind,
-                serde_json::to_string(&APIErrorKind::ValidationError).ok()
+                Some(APIErrorKind::ValidationError.to_string())
             );
             assert_eq!(
                 error_entry.message,
@@ -359,12 +359,9 @@ async fn transaction_validation_test() {
             let error = api_error.errors[1].clone();
             assert_eq!(
                 error.code,
-                serde_json::to_string(&APIErrorCode::TransactionDestinationAccountNotFound).ok()
+                Some(APIErrorCode::TransactionDestinationAccountNotFound.to_string())
             );
-            assert_eq!(
-                error.kind,
-                serde_json::to_string(&APIErrorKind::ValidationError).ok()
-            );
+            assert_eq!(error.kind, Some(APIErrorKind::ValidationError.to_string()));
             assert_eq!(
                 error.message,
                 TransferValidationError::DestinationAccountNotFound(destination_account_id)
