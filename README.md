@@ -50,42 +50,6 @@ Covers:
 
 ## REST API Endpoints
 
-### Public Endpoints
-
-- **Health:** `GET /v1/health`
-- **Version:** `GET /v1/version`
-
-### Authentication
-
-- **Login:** `POST /v1/auth/login`
-- **Refresh Tokens:** `POST /v1/auth/refresh`
-- **Logout:** `POST /v1/auth/logout`
-- **Revoke Tokens Issued to the User:** `POST /v1/auth/revoke-user`
-- **Revoke All Issued Tokens:** `POST /v1/auth/revoke-all`
-- **Cleanup Revoked Tokens:** `POST /v1/auth/cleanup`
-
-### Users
-
-- **List Users:** `GET /v1/users`
-- **Get User by ID:** `GET /v1/users/{user_id}`
-- **Add a New User:** `POST /v1/users`
-- **Update User:** `PUT /v1/users/{user_id}`
-- **Delete User:** `DELETE /v1/users/{user_id}`
-
-### Accounts
-
-- **List Accounts:** `GET /v1/accounts`
-- **Get Account by ID:** `GET /v1/accounts/{account_id}`
-- **Add a New Account:** `POST /v1/accounts`
-- **Update Account:** `PUT /v1/accounts/{account_id}`
-
-### Transactions
-
-- **Transfer Money:** `POST /v1/transactions/transfer`
-- **Get Transaction by ID:** `GET /v1/transactions/{transaction_id}`
-
-## REST API Documentation And Request Samples
-
 - List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
 - API request samples in the format RFC 2616: [tests/endpoints.http](/tests/endpoints.http)
 
@@ -123,11 +87,11 @@ Covers:
 - Transfer Money: `POST /v1/transactions/transfer`
 - Get Transaction by ID: `GET /v1/transactions/{transaction_id}`
 
-## REST API endpoints can be manually tested using
+## REST API Request Samples
 
-- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
+- Using [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
 Supports RFC 2616 format used in request samples: [tests/endpoints.http](/tests/endpoints.http).
-- [curl](https://curl.se/) samples:
+- Using [curl](https://curl.se/):
 
   Health check
 
