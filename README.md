@@ -5,9 +5,9 @@
 
 The brief description (draft): [https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html](https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html)
 
-## A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
+A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
 
-Covers:
+## Covers
 
 - REST API server based on [axum](https://github.com/tokio-rs/axum)
   - Routing
