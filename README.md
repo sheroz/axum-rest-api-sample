@@ -3,8 +3,6 @@
 [![build & test](https://github.com/sheroz/axum-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/axum-web/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/axum-web)](https://github.com/sheroz/axum-web/tree/main/LICENSE)
 
-The brief description (draft): [https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html](https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html)
-
 A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
 
 ## Covers
