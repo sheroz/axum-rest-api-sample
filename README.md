@@ -3,8 +3,6 @@
 [![build & test](https://github.com/sheroz/axum-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/axum-web/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/axum-web)](https://github.com/sheroz/axum-web/tree/main/LICENSE)
 
-The brief description (draft): [https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html](https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html)
-
 A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
 
 ## Covers
@@ -55,44 +53,10 @@ A sample starter project for building REST API Web service in Rust using `axum`,
 - List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
 - API request samples in the format RFC 2616: [tests/endpoints.http](/tests/endpoints.http)
 
-### Public Endpoints
+## API Request Samples
 
-- Health: `GET /v1/health`
-- Version: `GET /v1/version`
-
-### Authentication
-
-- Login: `POST /v1/auth/login`
-- Refresh Tokens: `POST /v1/auth/refresh`
-- Logout: `POST /v1/auth/logout`
-- Revoke Tokens Issued to the User: `POST /v1/auth/revoke-user`
-- Revoke All Issued Tokens: `POST /v1/auth/revoke-all`
-- Cleanup Revoked Tokens: `POST /v1/auth/cleanup`
-
-### Users
-
-- List Users: `GET /v1/users`
-- Get User by ID: `GET /v1/users/{user_id}`
-- Add a New User: `POST /v1/users`
-- Update User: `PUT /v1/users/{user_id}`
-- Delete User: `DELETE /v1/users/{user_id}`
-
-### Accounts
-
-- List Accounts: `GET /v1/accounts`
-- Get Account by ID: `GET /v1/accounts/{account_id}`
-- Add a New Account: `POST /v1/accounts`
-- Update Account: `PUT /v1/accounts/{account_id}`
-
-### Transactions
-
-- Transfer Money: `POST /v1/transactions/transfer`
-- Get Transaction by ID: `GET /v1/transactions/{transaction_id}`
-
-## REST API Request Samples
-
-- Using [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code.
-Supports RFC 2616 format used in request samples: [tests/endpoints.http](/tests/endpoints.http).
+- Using [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for Visual Studio Code,
+supports RFC 2616, request samples: [tests/endpoints.http](/tests/endpoints.http).
 - Using [curl](https://curl.se/):
 
   Health check
