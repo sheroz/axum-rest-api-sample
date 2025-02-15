@@ -48,6 +48,14 @@ pub async fn transfer(
         }
     };
 
+    // Check if accounts are distinct.
+    if source_account_id == destination_account_id {
+        validation_errors.push(TransferValidationError::AccountsAreSame);
+
+        // No need for futher validations.
+        return Err(TransferError::TransferValidationErrors(validation_errors))?;
+    }
+
     // Find the destination account.
     let mut destination_account =
         match account_repo::get_by_id(destination_account_id, &mut tx).await {
@@ -110,4 +118,6 @@ pub enum TransferValidationError {
     SourceAccountNotFound(Uuid),
     #[error("destination account not found: {0}")]
     DestinationAccountNotFound(Uuid),
+    #[error("source and destination accounts must be different")]
+    AccountsAreSame,
 }

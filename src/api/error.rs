@@ -8,6 +8,9 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+pub const API_DOCUMENT_URL: &str =
+    "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md";
+
 // API error response samples:
 //
 // {
@@ -23,8 +26,8 @@ use serde::{Deserialize, Serialize};
 //         "instance": "/api/v1/users/12345",
 //         "trace_id": "3d2b4f2d00694354a00522fe3bb86158",
 //         "timestamp": "2024-01-19T16:58:34.123+0000",
-//         "help": "please check if the user ID is correct or refer to our documentation at https://api.example.com/docs/errors#user_not_found for more information",
-//         "doc_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user ID is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
+//         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     }
 //   ]
 // }
@@ -42,8 +45,8 @@ use serde::{Deserialize, Serialize};
 //         "instance": "/api/v1/users/12345",
 //         "trace_id": "fbb9fdf5394d4abe8e42b49c3246310b",
 //         "timestamp": "2024-01-19T16:58:35.225+0000",
-//         "help": "please check if the user email is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_email for more information",
-//         "doc_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user email is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
+//         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     },
 //     {
 //         "code": "invalid_birthdate",
@@ -55,8 +58,8 @@ use serde::{Deserialize, Serialize};
 //         "instance": "/api/v1/users/12345",
 //         "trace_id": "8a250eaa650943b085934771fb35ba54",
 //         "timestamp": "2024-01-19T16:59:03.124+0000",
-//         "help": "please check if the user birthdate is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information."
-//         "doc_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user birthdate is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information."
+//         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     },
 //     {
 //         "code": "invalid_role",
@@ -68,8 +71,8 @@ use serde::{Deserialize, Serialize};
 //         "instance": "/api/v1/users/12345",
 //         "trace_id": "e023ebc3ab3e4c02b08247d9c5f03aa8",
 //         "timestamp": "2024-01-19T16:59:03.124+0000",
-//         "help": "please check if the user role is correct or refer to our documentation at https://api.example.com/docs/errors#invalid_birthdate for more information",
-//         "doc_url": "https://api.example.com/docs/errors"
+//         "help": "please check if the user role is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
+//         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     },
 //   ]
 // }
@@ -97,9 +100,10 @@ pub enum APIErrorCode {
     AuthenticationForbidden,
     UserNotFound,
     TransactionNotFound,
-    TransactionInsufficientFunds,
-    TransactionSourceAccountNotFound,
-    TransactionDestinationAccountNotFound,
+    TransferInsufficientFunds,
+    TransferSourceAccountNotFound,
+    TransferDestinationAccountNotFound,
+    TransferAccountsAreSame,
     ResourceNotFound,
     ApiVersionError,
     DatabaseError,

@@ -126,21 +126,25 @@ impl From<TransferValidationError> for APIErrorEntry {
         let error = Self::new(&transfer_validation_error.to_string());
         match transfer_validation_error {
             TransferValidationError::InsufficientFunds => error
-                .code(APIErrorCode::TransactionInsufficientFunds)
+                .code(APIErrorCode::TransferInsufficientFunds)
                 .kind(APIErrorKind::ValidationError)
                 .description(
                     "there are insufficient funds in the source account for the transfer".into(),
                 )
                 .trace_id(),
             TransferValidationError::SourceAccountNotFound(source_account_id) => error
-                .code(APIErrorCode::TransactionSourceAccountNotFound)
+                .code(APIErrorCode::TransferSourceAccountNotFound)
                 .kind(APIErrorKind::ValidationError)
                 .detail(serde_json::json!({"source_account_id": source_account_id}))
                 .trace_id(),
             TransferValidationError::DestinationAccountNotFound(destination_account_id) => error
-                .code(APIErrorCode::TransactionDestinationAccountNotFound)
+                .code(APIErrorCode::TransferDestinationAccountNotFound)
                 .kind(APIErrorKind::ValidationError)
                 .detail(serde_json::json!({"destination_account_id": destination_account_id}))
+                .trace_id(),
+            TransferValidationError::AccountsAreSame => error
+                .code(APIErrorCode::TransferAccountsAreSame)
+                .kind(APIErrorKind::ValidationError)
                 .trace_id(),
         }
     }

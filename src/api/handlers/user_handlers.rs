@@ -9,6 +9,7 @@ use thiserror::Error;
 
 use crate::{
     api::{
+        error::API_DOCUMENT_URL,
         version::{self, APIVersion},
         APIError, APIErrorCode, APIErrorEntry, APIErrorKind,
     },
@@ -117,7 +118,6 @@ impl UserError {
 impl From<UserError> for APIErrorEntry {
     fn from(user_error: UserError) -> Self {
         let message = user_error.to_string();
-        let doc_url = "https://api.example.com/docs/errors";
         match user_error {
             UserError::UserNotFound(user_id) => Self::new(&message)
                 .code(APIErrorCode::UserNotFound)
@@ -127,8 +127,8 @@ impl From<UserError> for APIErrorEntry {
                 .reason("must be an existing user")
                 .instance(&format!("/api/v1/users/{}", user_id))
                 .trace_id()
-                .help(&format!("please check if the user ID is correct or refer to our documentation at {}#user_not_found for more information", doc_url))
-                .doc_url(doc_url)
+                .help(&format!("please check if the user ID is correct or refer to our documentation at {}#errors for more information", API_DOCUMENT_URL))
+                .doc_url(API_DOCUMENT_URL)
         }
     }
 }
