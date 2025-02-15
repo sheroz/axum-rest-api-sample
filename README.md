@@ -50,7 +50,7 @@ A sample starter project for building REST API Web service in Rust using `axum`,
 
 ## REST API Endpoints
 
-- List of available API endpoints: [docs/API-endpoints.md](/docs/API-Endpoints.md)
+- List of available API endpoints: [docs/api-docs.md](/docs/api-docs.md)
 - API request samples in the format RFC 2616: [tests/endpoints.http](/tests/endpoints.http)
 
 ## API Request Samples

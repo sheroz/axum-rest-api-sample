@@ -313,4 +313,23 @@
 
 ---
 
-### END
+## Errors
+
+- `authentication_wrong_credentials`: The provided credentials are incorrect.
+- `authentication_missing_credentials`: Required authentication credentials are missing.
+- `authentication_token_creation_error`: There was an error creating the authentication token.
+- `authentication_invalid_token`: The provided authentication token is invalid.
+- `authentication_revoked_tokens_inactive`: The provided token has been revoked and is inactive.
+- `authentication_forbidden`: The user does not have permission to access the requested resource.
+- `user_not_found`: The specified user was not found.
+- `transaction_not_found`: The specified transaction was not found.
+- `transfer_insufficient_funds`: The source account does not have sufficient funds for the transfer.
+- `transfer_source_account_not_found`: The source account for the transfer was not found.
+- `transfer_destination_account_not_found`: The destination account for the transfer was not found.
+- `transfer_accounts_are_same`: The source and destination accounts for the transfer are the same.
+- `resource_not_found`: The requested resource was not found.
+- `api_version_error`: There is an error with the API version.
+- `database_error`: There was an error with the database operation.
+- `redis_error`: There was an error with the Redis operation.
+
+## END
