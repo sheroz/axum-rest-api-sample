@@ -112,12 +112,12 @@ pub enum TransferError {
 
 #[derive(Debug, Error)]
 pub enum TransferValidationError {
-    #[error("insufficient funds")]
+    #[error("source account does not have sufficient funds for the transfer")]
     InsufficientFunds,
     #[error("source account not found: {0}")]
     SourceAccountNotFound(Uuid),
     #[error("destination account not found: {0}")]
     DestinationAccountNotFound(Uuid),
-    #[error("source and destination accounts must be different")]
+    #[error("source and destination accounts are the same")]
     AccountsAreSame,
 }

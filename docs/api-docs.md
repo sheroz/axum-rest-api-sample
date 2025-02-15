@@ -315,7 +315,7 @@
 
 ## Errors
 
-The possible error codes and description.
+### The possible error codes and description
 
 - `authentication_wrong_credentials`: The provided credentials are incorrect.
 - `authentication_missing_credentials`: Required authentication credentials are missing.
@@ -334,4 +334,64 @@ The possible error codes and description.
 - `database_error`: There was an error with the database operation.
 - `redis_error`: There was an error with the Redis operation.
 
-## END
+### The possible error kinds and description
+
+- `authentication_error`: An error occurred during the authentication process.
+- `resource_not_found`: The requested resource could not be found.
+- `validation_error`: There was a validation error with the provided data.
+- `database_error`: An error occurred with the database operation.
+- `redis_error`: An error occurred with the Redis operation.
+
+### API error response samples
+
+```json
+ {
+   "status": 404,
+   "errors": [
+     {
+         "code": "user_not_found",
+         "kind": "resource_not_found",
+         "message": "user not found: 12345",
+         "description": "user with the ID '12345' does not exist in our records",
+         "detail": { "user_id": "12345" },
+         "reason": "must be an existing user",
+         "instance": "/api/v1/users/12345",
+         "trace_id": "3d2b4f2d00694354a00522fe3bb86158",
+         "timestamp": "2024-01-19T16:58:34.123+0000",
+         "help": "please check if the user ID is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
+         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
+     }
+   ]
+ }
+```
+
+```json
+ {
+   "status": 422,
+   "errors": [
+     {
+         "code": "transfer_insufficient_funds",
+         "kind": "validation_error",
+         "message": "source account does not have sufficient funds for the transfer",
+         "reason": "source account balance must be sufficient to cover the transfer amount",
+         "instance": "/api/v1/transactions/transfer",
+         "trace_id": "fbb9fdf5394d4abe8e42b49c3246310b",
+         "timestamp": "2024-01-19T16:58:35.225+0000",
+         "help": "please check the source account balance or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
+         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
+     },
+     {
+         "code": "transfer_destination_account_not_found",
+         "kind": "validation_error",
+         "message": "destination account not found: d424cfe9-c042-41db-9a8e-8da5715fea10",
+         "detail": { "destination_account_id": "d424cfe9-c042-41db-9a8e-8da5715fea10" },
+         "reason": "must be an existing account",
+         "instance": "/api/v1/transactions/transfer",
+         "trace_id": "8a250eaa650943b085934771fb35ba54",
+         "timestamp": "2024-01-19T16:59:03.124+0000",
+         "help": "please check if the destination account ID is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information.",
+         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
+     },
+   ]
+ }
+```

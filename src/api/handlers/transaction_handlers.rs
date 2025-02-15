@@ -128,23 +128,24 @@ impl From<TransferValidationError> for APIErrorEntry {
             TransferValidationError::InsufficientFunds => error
                 .code(APIErrorCode::TransferInsufficientFunds)
                 .kind(APIErrorKind::ValidationError)
-                .description(
-                    "there are insufficient funds in the source account for the transfer".into(),
-                )
+                .reason("source account balance must be sufficient to cover the transfer amount")
                 .trace_id(),
             TransferValidationError::SourceAccountNotFound(source_account_id) => error
                 .code(APIErrorCode::TransferSourceAccountNotFound)
                 .kind(APIErrorKind::ValidationError)
                 .detail(serde_json::json!({"source_account_id": source_account_id}))
+                .reason("must be an existing account")
                 .trace_id(),
             TransferValidationError::DestinationAccountNotFound(destination_account_id) => error
                 .code(APIErrorCode::TransferDestinationAccountNotFound)
                 .kind(APIErrorKind::ValidationError)
                 .detail(serde_json::json!({"destination_account_id": destination_account_id}))
+                .reason("must be an existing account")
                 .trace_id(),
             TransferValidationError::AccountsAreSame => error
                 .code(APIErrorCode::TransferAccountsAreSame)
                 .kind(APIErrorKind::ValidationError)
+                .reason("source and destination accounts must be different")
                 .trace_id(),
         }
     }

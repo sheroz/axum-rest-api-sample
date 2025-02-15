@@ -128,7 +128,7 @@ impl From<UserError> for APIErrorEntry {
                 .instance(&format!("/api/v1/users/{}", user_id))
                 .trace_id()
                 .help(&format!("please check if the user ID is correct or refer to our documentation at {}#errors for more information", API_DOCUMENT_URL))
-                .doc_url(API_DOCUMENT_URL)
+                .doc_url()
         }
     }
 }
