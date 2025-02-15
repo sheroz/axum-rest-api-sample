@@ -32,22 +32,44 @@ pub const API_DOCUMENT_URL: &str =
 //   ]
 // }
 //
+// ---
+//
 // {
 //   "status": 422,
 //   "errors": [
 //     {
-//         "code": "invalid_email",
+//         "code": "transfer_insufficient_funds",
 //         "kind": "validation_error",
-//         "message": "user email is not valid",
-//         "description": "validation error in your request",
-//         "detail": { "email": "xyz@12345" },
-//         "reason": "must be a valid email address",
-//         "instance": "/api/v1/users/12345",
+//         "message": "source account does not have sufficient funds for the transfer",
+//         "reason": "source account balance must be sufficient to cover the transfer amount",
+//         "instance": "/api/v1/transactions/transfer",
 //         "trace_id": "fbb9fdf5394d4abe8e42b49c3246310b",
 //         "timestamp": "2024-01-19T16:58:35.225+0000",
-//         "help": "please check if the user email is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
+//         "help": "please check the source account balance or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
 //         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     },
+//     {
+//         "code": "transfer_destination_account_not_found",
+//         "kind": "validation_error",
+//         "message": "destination account not found: d424cfe9-c042-41db-9a8e-8da5715fea10",
+//         "detail": { "destination_account_id": "d424cfe9-c042-41db-9a8e-8da5715fea10" },
+//         "reason": "must be an existing account",
+//         "instance": "/api/v1/transactions/transfer",
+//         "trace_id": "8a250eaa650943b085934771fb35ba54",
+//         "timestamp": "2024-01-19T16:59:03.124+0000",
+//         "help": "please check if the destination account ID is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information.",
+//         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
+//     },
+//   ]
+// }
+//
+// ---
+//
+// (Users endpoint can be extended to handle these validations)
+//
+// {
+//   "status": 422,
+//   "errors": [
 //     {
 //         "code": "invalid_birthdate",
 //         "kind": "validation_error",
@@ -58,13 +80,13 @@ pub const API_DOCUMENT_URL: &str =
 //         "instance": "/api/v1/users/12345",
 //         "trace_id": "8a250eaa650943b085934771fb35ba54",
 //         "timestamp": "2024-01-19T16:59:03.124+0000",
-//         "help": "please check if the user birthdate is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information."
+//         "help": "please check if the user birthdate is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information.",
 //         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     },
 //     {
 //         "code": "invalid_role",
 //         "kind": "validation_error",
-//         "message": "user birthdate is not correct",
+//         "message": "role not valid",
 //         "description": "validation error in your request",
 //         "detail": { role: "superadmin" },
 //         "reason": "allowed roles: ['customer', 'guest']",
@@ -74,8 +96,7 @@ pub const API_DOCUMENT_URL: &str =
 //         "help": "please check if the user role is correct or refer to our documentation at https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md#errors for more information",
 //         "doc_url": "https://github.com/sheroz/axum-rest-api-sample/blob/main/docs/api-docs.md"
 //     },
-//   ]
-// }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct APIError {
     pub status: u16,
@@ -216,8 +237,8 @@ impl APIErrorEntry {
         self
     }
 
-    pub fn doc_url(mut self, doc_url: &str) -> Self {
-        self.doc_url = Some(doc_url.to_owned());
+    pub fn doc_url(mut self) -> Self {
+        self.doc_url = Some(API_DOCUMENT_URL.to_owned());
         self
     }
 }
