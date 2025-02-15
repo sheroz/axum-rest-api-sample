@@ -315,6 +315,8 @@
 
 ## Errors
 
+The possible error codes and description.
+
 - `authentication_wrong_credentials`: The provided credentials are incorrect.
 - `authentication_missing_credentials`: Required authentication credentials are missing.
 - `authentication_token_creation_error`: There was an error creating the authentication token.
