@@ -8,9 +8,9 @@ A sample starter project for building REST API Web service in Rust using `axum`,
 ## Covers
 
 - REST API server based on [axum](https://github.com/tokio-rs/axum)
-  - Routing
+  - Routing and request handling
   - API versioning
-  - API Error responses (structured format)
+  - API Error handling using structured format
   - Cross-Origin Resource Sharing (CORS)
   - Graceful shutdown
 - Authentication & authorization using `JSON Web Tokens (JWT)`
