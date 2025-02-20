@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Update the Rust toolchain to the latest stable version
-      run: rustup default 1.85 && rustc --version
     - uses: EmbarkStudios/cargo-deny-action@v2
+      with:
+        rust-version: "1.85"
 
   cargo-fmt-clippy:
     runs-on: ubuntu-latest
