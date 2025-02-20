@@ -3,13 +3,15 @@
 [![build & test](https://github.com/sheroz/axum-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/axum-web/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/axum-web)](https://github.com/sheroz/axum-web/tree/main/LICENSE)
 
-A sample starter project for building REST API Web service in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
+This project demonstrates how to build a REST API web server in Rust using `axum`, `JSON Web Tokens (JWT)`, `SQLx`, `PostgreSQL`, and `Redis`
+
+The REST API web server supports JWT-based authentication and authorization, asynchronous database operations for user and account models, a basic transaction example that transfers money between accounts, and detailed API error handling in a structured format.
 
 The brief description: [rust-axum-rest-api-postgres-redis-jwt-docker.html](https://sheroz.com/pages/blog/rust-axum-rest-api-postgres-redis-jwt-docker.html)
 
 ## Covers
 
-- REST API server based on [axum](https://github.com/tokio-rs/axum)
+- REST API web server based on [axum](https://github.com/tokio-rs/axum)
   - Routing and request handling
   - API versioning
   - API Error handling using structured format
