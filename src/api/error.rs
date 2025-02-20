@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter, Result};
 
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

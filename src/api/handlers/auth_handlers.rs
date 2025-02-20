@@ -1,10 +1,10 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::types::Uuid;
 
 use crate::{
-    api::{version::APIVersion, APIError, APIErrorCode, APIErrorEntry, APIErrorKind},
+    api::{APIError, APIErrorCode, APIErrorEntry, APIErrorKind, version::APIVersion},
     application::{
         repository::user_repo,
         security::{

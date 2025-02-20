@@ -2,8 +2,9 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 
 use crate::common::{
+    TestResult,
     constants::{API_PATH_AUTH, API_V1},
-    helpers, TestResult,
+    helpers,
 };
 
 #[derive(Debug, Deserialize)]

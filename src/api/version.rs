@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{FromRequestParts, Path},
-    http::{request::Parts, StatusCode},
     RequestPartsExt,
+    extract::{FromRequestParts, Path},
+    http::{StatusCode, request::Parts},
 };
 use thiserror::Error;
 

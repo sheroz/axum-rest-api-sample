@@ -3,7 +3,7 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use axum_web::{
-    api::{handlers::transaction_handlers::TransactionError, APIErrorCode, APIErrorKind},
+    api::{APIErrorCode, APIErrorKind, handlers::transaction_handlers::TransactionError},
     application::{
         security::roles::UserRole, service::transaction_service::TransferValidationError,
     },
@@ -12,10 +12,10 @@ use axum_web::{
 
 pub mod common;
 use common::{
-    accounts,
+    TestError, accounts,
     auth::{self, AuthTokens},
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    test_app, transactions, users, TestError,
+    test_app, transactions, users,
 };
 
 // TODO: run transaction tests in parallel and remove `serial` dependencies.

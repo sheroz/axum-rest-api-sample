@@ -10,10 +10,10 @@ use axum_web::{
 
 pub mod common;
 use common::{
-    accounts,
+    TestError, accounts,
     auth::{self, AuthTokens},
     constants::{TEST_ADMIN_PASSWORD_HASH, TEST_ADMIN_USERNAME},
-    test_app, users, TestError,
+    test_app, users,
 };
 
 // TODO: run account tests in parallel and remove `serial` dependencies.
