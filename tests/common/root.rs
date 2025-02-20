@@ -1,6 +1,6 @@
 use reqwest::StatusCode;
 
-use crate::common::{helpers, TestResult};
+use crate::common::{TestResult, helpers};
 
 // Fetch the root using `reqwest`.
 pub async fn fetch_root(access_token: &str) -> TestResult<StatusCode> {

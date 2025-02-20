@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use redis::{aio::MultiplexedConnection, AsyncCommands, RedisResult};
+use redis::{AsyncCommands, RedisResult, aio::MultiplexedConnection};
 use tokio::sync::MutexGuard;
 
 use crate::application::{

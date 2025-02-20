@@ -3,8 +3,9 @@ use reqwest::StatusCode;
 use uuid::Uuid;
 
 use crate::common::{
+    TestResult,
     constants::{API_PATH_USERS, API_V1},
-    helpers, TestResult,
+    helpers,
 };
 
 pub async fn list(access_token: &str) -> TestResult<Vec<User>> {

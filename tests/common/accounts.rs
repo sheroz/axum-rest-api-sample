@@ -4,8 +4,9 @@ use axum_web::domain::models::account::Account;
 use reqwest::StatusCode;
 
 use crate::common::{
+    TestResult,
     constants::{API_PATH_ACCOUNTS, API_V1},
-    helpers, TestResult,
+    helpers,
 };
 
 pub async fn list(access_token: &str) -> TestResult<Vec<Account>> {

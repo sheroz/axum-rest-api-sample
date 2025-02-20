@@ -1,17 +1,17 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use sqlx::types::Uuid;
 use thiserror::Error;
 
 use crate::{
     api::{
+        APIError, APIErrorCode, APIErrorEntry, APIErrorKind,
         error::API_DOCUMENT_URL,
         version::{self, APIVersion},
-        APIError, APIErrorCode, APIErrorEntry, APIErrorKind,
     },
     application::{
         repository::user_repo,

@@ -6,8 +6,9 @@ use axum_web::{
 };
 
 use crate::common::{
+    TestResult,
     constants::{API_PATH_TRANSACTIONS, API_V1},
-    helpers, TestResult,
+    helpers,
 };
 
 pub async fn get(transaction_id: Uuid, access_token: &str) -> TestResult<Transaction> {

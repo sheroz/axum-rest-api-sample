@@ -1,15 +1,15 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use sqlx::types::Uuid;
 
 use crate::{
     api::{
-        version::{self, APIVersion},
         APIError,
+        version::{self, APIVersion},
     },
     application::{
         repository::account_repo,

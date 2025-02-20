@@ -1,5 +1,5 @@
 use chrono::Utc;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{PgPool, postgres::PgPoolOptions};
 
 use crate::infrastructure::database::{DatabaseError, DatabaseOptions};
 

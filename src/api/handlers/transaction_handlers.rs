@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
@@ -9,8 +9,8 @@ use thiserror::Error;
 
 use crate::{
     api::{
-        version::{self, APIVersion},
         APIError, APIErrorCode, APIErrorEntry, APIErrorKind,
+        version::{self, APIVersion},
     },
     application::{
         repository::transaction_repo,

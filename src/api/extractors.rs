@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use axum::{
+    RequestPartsExt,
     extract::{FromRef, FromRequestParts},
     http::request::Parts,
-    RequestPartsExt,
 };
 use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
     TypedHeader,
+    headers::{Authorization, authorization::Bearer},
 };
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     application::{
         security::{
             auth::{self, AuthError},
-            jwt::{decode_token, AccessClaims, ClaimsMethods, RefreshClaims},
+            jwt::{AccessClaims, ClaimsMethods, RefreshClaims, decode_token},
         },
         state::SharedState,
     },
