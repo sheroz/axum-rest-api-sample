@@ -20,7 +20,7 @@ use crate::common::{
 #[must_use]
 pub async fn run() -> TestDatabase {
     // Set the environment variable.
-    std::env::set_var("ENV_TEST", "1");
+    unsafe { std::env::set_var("ENV_TEST", "1") };
 
     // Load configuration.
     let config = config::load();
