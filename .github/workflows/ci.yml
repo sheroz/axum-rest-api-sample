@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Update the Rust toolchain to the latest stable version
-      run: rustup default 1.85 && rustup component add rustfmt && rustc --version
+      run: rustup default 1.85 && rustup component add rustfmt && rustup component add clippy && rustc --version
     - name: Cargo formatting check
       run: cargo fmt --all -- --check
     - name: Cargo clippy check
