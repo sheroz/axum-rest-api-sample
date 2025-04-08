@@ -1,6 +1,6 @@
 [package]
 name = "axum-web"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 authors = ["Sheroz Khaydarov"]
 description = "A sample starter project for building REST API Web service in Rust using axum, JWT, SQLx, PostgreSQL, and Redis"
@@ -13,8 +13,8 @@ rust-version = "1.85"
 dotenvy = "0.15"
 axum = { version = "0.8" }
 axum-extra = { version = "0.10", features = ["typed-header"] }
-tokio = { version = "1.43", features = ["full"] }
-bytes = "1.9"
+tokio = { version = "1.44", features = ["full"] }
+bytes = "1.10"
 tower-http = { version = "0.6", features = ["cors"] }
 tracing = { version = "0.1", features = ["attributes"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -24,7 +24,7 @@ hyper-util = { version = "0.1", features = ["full"] }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-uuid = { version = "1.13", features = [
+uuid = { version = "1.16", features = [
     "v4",
     "fast-rng",
     "macro-diagnostics",
@@ -33,7 +33,7 @@ uuid = { version = "1.13", features = [
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
 
-redis = { version = "0.28", features = ["tokio-comp"] }
+redis = { version = "0.29", features = ["tokio-comp"] }
 sqlx = { version = "0.8.3", features = [
     "runtime-tokio-rustls",
     "postgres",
