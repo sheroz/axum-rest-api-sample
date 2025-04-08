@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.4 (2025-04-09)
+
+* chore: updated dependencies
+
 ## 0.1.3 (2025-02-20)
 
 * refactor: upgrade to Rust v1.85, edition 2024
