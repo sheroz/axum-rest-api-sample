@@ -6,7 +6,9 @@ RUN cp /opt/target/release/axum-web .
 RUN cargo clean
 
 FROM ubuntu:24.04
-RUN apt-get update && apt-get install -y vim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends vim \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt
 COPY --from=builder /opt/axum-web .
 EXPOSE 8080
