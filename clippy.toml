@@ -1,8 +1,8 @@
-msrv = "1.85"
+msrv = "1.89"
 
 disallowed-types = [
     { path = "std::collections::LinkedList", reason = "LinkedList as a slow and almost never needed" },
-    { path = "ring::digest::SHA1_FOR_LEGACY_USE_ONLY", reason = "SHA-1 is cryptographically broken, and we are building new code so should not use it" },
+    { path = "ring::digest::SHA1_FOR_LEGACY_USE_ONLY", reason = "SHA-1 is cryptographically broken, and we are building new code so should not use it", allow-invalid = true },
 ]
 disallowed-macros = [
     "std::dbg",

@@ -35,7 +35,7 @@ impl PostgresOptions {
         self.db.clone()
     }
 
-    pub fn set_max_connections(&mut self, max_connections: u32) {
+    pub const fn set_max_connections(&mut self, max_connections: u32) {
         self.max_connections = max_connections
     }
 
