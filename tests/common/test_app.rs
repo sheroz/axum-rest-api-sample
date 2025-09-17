@@ -55,10 +55,10 @@ async fn wait_for_service(duration: Duration) {
     let timeout = Instant::now() + duration;
     loop {
         let url = helpers::build_path(API_V1, API_PATH_HEALTH);
-        if let Ok(response) = reqwest::get(url.as_str()).await {
-            if response.status() == StatusCode::OK {
-                break;
-            }
+        if let Ok(response) = reqwest::get(url.as_str()).await
+            && response.status() == StatusCode::OK
+        {
+            break;
         }
         if Instant::now() > timeout {
             panic!("Could not start API Server in: {:?}", duration);
