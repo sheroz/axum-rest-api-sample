@@ -1,4 +1,4 @@
-msrv = "1.89"
+msrv = "1.90"
 
 disallowed-types = [
     { path = "std::collections::LinkedList", reason = "LinkedList as a slow and almost never needed" },
