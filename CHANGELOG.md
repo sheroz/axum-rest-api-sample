@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.6 (2025-09-22)
+
+* refactor: upgrade to Rust v1.90
+* chore: updated dependencies
+
 ## 0.1.5 (2025-09-17)
 
 * security fix: tracing-subscriber upgraded to prevent CVE-2025-58160
