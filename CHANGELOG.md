@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * chore: updated to axum 0.8.7 and Rust v1.92
 * chore: updated other dependencies
+* security fix: using `aws_lc_rs` crypto backend for `jsonwebtoken` to prevent RUSTSEC-2023-0071
 
 ## 0.1.6 (2025-09-22)
 
