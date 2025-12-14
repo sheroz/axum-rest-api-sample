@@ -42,7 +42,7 @@ sqlx = { version = "0.8", features = [
     "chrono",
 ] }
 
-jsonwebtoken = { version = "10.2", features = ["rust_crypto"] }
+jsonwebtoken = {version = "10", default-features = false, features = ["aws_lc_rs"] }
 
 [dev-dependencies]
 serial_test = "3.2"
