@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.7 (2025-12-14)
+
+* chore: updated to axum 0.8.7 and Rust v1.92
+* chore: updated other dependencies
+
 ## 0.1.6 (2025-09-22)
 
 * refactor: upgrade to Rust v1.90
