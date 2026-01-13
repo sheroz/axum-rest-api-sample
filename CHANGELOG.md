@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.8 (2026-01-13)
+
+* security fix: rsa crate updated to 0.9.10 to prevent CVE-2026-21895
+* chore: updated to axum 0.8.8
+* chore: updated other dependencies
+
 ## 0.1.7 (2025-12-14)
 
 * chore: updated to axum 0.8.7 and Rust v1.92
