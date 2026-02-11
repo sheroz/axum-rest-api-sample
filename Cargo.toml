@@ -1,20 +1,20 @@
 [package]
 name = "axum-web"
-version = "0.1.7"
+version = "0.1.9"
 edition = "2024"
 authors = ["Sheroz Khaydarov"]
 description = "A sample starter project for building REST API Web service in Rust using axum, JWT, SQLx, PostgreSQL, and Redis"
 readme = "README.md"
 repository = "https://github.com/sheroz/axum-web"
 license = "MIT"
-rust-version = "1.92"
+rust-version = "1.93"
 
 [dependencies]
 dotenvy = "0.15"
 axum = { version = "0.8" }
 axum-extra = { version = "0.12", features = ["typed-header"] }
 tokio = { version = "1.48", features = ["full"] }
-bytes = "1.10"
+bytes = "1.11"
 tower-http = { version = "0.6", features = ["cors"] }
 tracing = { version = "0.1", features = ["attributes"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -46,4 +46,4 @@ jsonwebtoken = {version = "10", default-features = false, features = ["aws_lc_rs
 
 [dev-dependencies]
 serial_test = "3.2"
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.13", features = ["json"] }

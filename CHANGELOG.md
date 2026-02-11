@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.9 (2026-02-11)
+
+* security fix: `jsonwebtoken` updated to 0.10.3 to prevent CVE-2026-25537
+* security fix: `bytes` updated to 1.11.1 to prevent CVE-2026-25541
+* chore: updated other dependencies
+* chore: updated to Rust v1.93
+
 ## 0.1.8 (2026-01-13)
 
-* security fix: rsa crate updated to 0.9.10 to prevent CVE-2026-21895
+* security fix: `rsa` updated to 0.9.10 to prevent CVE-2026-21895
 * chore: updated to axum 0.8.8
 * chore: updated other dependencies
 
