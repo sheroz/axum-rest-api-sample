@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.10 (2026-03-10)
+
+* security fix: `aws-lc-sys` updated to prevent GHSA-vw5v-4f2q-w9xf, GHSA-65p9-r9h6-22vj, GHSA-hfpc-8r3f-gw53
+* chore: updated dependencies
+* chore: updated to Rust v1.94
+
 ## 0.1.9 (2026-02-11)
 
 * security fix: `jsonwebtoken` updated to 0.10.3 to prevent CVE-2026-25537
