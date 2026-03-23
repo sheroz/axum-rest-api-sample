@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.11 (2026-03-23)
+
+* security fix: `aws-lc-sys` updated to prevent GHSA-394x-vwmw-crm3
+* chore: updated dependencies
+
 ## 0.1.10 (2026-03-10)
 
 * security fix: `aws-lc-sys` updated to prevent GHSA-vw5v-4f2q-w9xf, GHSA-65p9-r9h6-22vj, GHSA-hfpc-8r3f-gw53
